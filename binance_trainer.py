@@ -124,8 +124,8 @@ class PurpleTrader:
                 active = self.get_one_epoch_input(z)
                 signals = []
                 network.reset()
-                for n in range(1, self.hd+1):
-                    out = network.activate(active[self.hd-n])
+                for n in range(self.hd):
+                    out = network.activate(active[n])
                 for x in range(len(out)):
                     signals.append(out[x])
                 #rng = iter(shuffle(rng))
@@ -147,7 +147,7 @@ class PurpleTrader:
                         #print("sold ", sym)
                     #skip the hold case because we just dont buy or sell hehe
                     if(z > self.epoch_len+rand_start-2):
-                        end_prices[sym] = self.hs.currentHists[sym]['close'][self.epoch_len+rand_start]
+                        end_prices[sym] = self.hs.currentHists[sym]['close'][rand_start]
             result_val = portfolio.get_total_btc_value(end_prices)
             print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
             ft = result_val[0]

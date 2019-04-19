@@ -123,7 +123,7 @@ class PurpleTrader:
         self.cppn = the_cppn
 
     def run_champs(self):
-        genomes = neat.Checkpointer.restore_checkpoint("tradegod-checkpoint-28").population
+        genomes = neat.Checkpointer.restore_checkpoint("tradegod-checkpoint-27").population
         fitness_data = {}
         best_fitness = 0.0
         for g_ix in genomes:
@@ -152,8 +152,8 @@ class PurpleTrader:
                 active = self.get_one_epoch_input(z)
                 signals = []
                 network.reset()
-                for n in range(self.hd):
-                    out = network.activate(active[(z-self.hd)+n])
+                for n in range(1,self.hd+1):
+                    out = network.activate(active[self.hd-n])
                 for x in range(len(out)):
                     signals.append(out[x])
                     sym2 = list(self.hs.currentHists.keys())[x]
@@ -234,4 +234,4 @@ class PurpleTrader:
 
 
 pt = PurpleTrader(8)
-pt.run_champs(3365)
+pt.run_champs()
