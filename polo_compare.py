@@ -18,6 +18,7 @@ from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
 from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork
 from NTree import nDimensionTree
+import json
 # Local
 class PurpleTrader:
 
@@ -63,11 +64,6 @@ class PurpleTrader:
         self.set_substrate()
         self.set_leaf_names()
         self.epoch_len = hist_depth
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> 181192e8878092f4a354b5defb6924c43cab208e
 
     def set_leaf_names(self):
         for l in range(len(self.in_shapes[0])):
@@ -88,11 +84,7 @@ class PurpleTrader:
                 center = self.tree.cs[treex]
                 self.in_shapes.append((center.coord[0]+(ix*x_increment), center.coord[1] - (ix2*y_increment), center.coord[2]+.5))
         self.subStrate = Substrate(self.in_shapes, self.out_shapes)
-<<<<<<< HEAD
-
-=======
         #self.leaf_names.append('bias')
->>>>>>> 181192e8878092f4a354b5defb6924c43cab208e
     def set_portfolio_keys(self, folio):
         for k in self.hs.currentHists.keys():
             folio.ledger[k] = 0
@@ -132,6 +124,7 @@ class PurpleTrader:
 
     def run_champs(self):
         genomes = neat.Checkpointer.restore_checkpoint("tradegod-checkpoint-28").population
+        
         fitness_data = {}
         best_fitness = 0.0
         for g_ix in genomes:
@@ -143,6 +136,7 @@ class PurpleTrader:
 
     def run_champ(self, g_ix):
         genomes = neat.Checkpointer.restore_checkpoint("./tradegod-checkpoint-27").population
+        print(json.dumps(genomes))
         self.load_net_easy(genomes[g_ix])
         start = self.hs.hist_full_size - self.epoch_len
         network = ESNetwork(self.subStrate, self.cppn, self.params)
@@ -249,4 +243,4 @@ class PurpleTrader:
 
 
 pt = PurpleTrader(8)
-pt.run_champs(3365)
+pt.run_champ(3365)
