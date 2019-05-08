@@ -224,6 +224,7 @@ class PaperTrader:
                                 neat.species.DefaultSpeciesSet, neat.stagnation.DefaultStagnation,
                                 'config_trader')
     def __init__(self, ticker_len, start_amount, histdepth):
+        self.trade_hist = {}
         self.polo = Poloniex()
         self.hist_depth = histdepth
         self.ticker_len = ticker_len
@@ -302,6 +303,10 @@ class PaperTrader:
         return master_active
 
     def poloTrader(self):
+        try:
+            trade_df = pd.read_json("./live_hist/json_hist.json")
+        except:
+            trade_df = pd.DataFrame()
         end_prices = {}
         active = self.get_one_bar_input_2d()
         self.load_net()
@@ -327,16 +332,28 @@ class PaperTrader:
                     p = self.get_price('BTC_'+sym)
                     print("buying: ", sym)
                     self.folio.buy_coin(sym, p)
+                else:
+
             except:
                 print("error buying or selling")
             #skip the hold case because we just dont buy or sell hehe
             end_prices[sym] = self.hs.currentHists[sym]["close"].iloc[-1]
-        if(self.folio.get_total_btc_value_no_sell(end_prices)[0] > self.folio.start *1.1):
+        
+        self.trade_hist["date"] = datetime.now()
+        self.trade_hist["portfoliovalue"] = self.folio.get_total_btc_value_no_sell(end_prices)[0] 
+        self.trade_hist["portfolio"] = self.folio.ledger
+        self.trade_hist["percentchange"] = ((self.trade_hist["portfoliovalue"] - self.folio.start)/sefl.folio.start)*100
+        trade_df.append(self.trade_hist)
+        trade_df.to_json("./live_hist/json_hist.json")
+        '''
+        if(self.trade_hist["portfoliovalue"] > self.folio.start *1.1):
             self.folio.start = self.folio.get_total_btc_value(end_prices)[0]
+        '''
         if datetime.now() >= self.end_ts:
             port_info = self.folio.get_total_btc_value(end_prices)
             print("total val: ", port_info[0], "btc balance: ", port_info[1])
             return
+        
         else:
             print(self.get_current_balance())
             for t in range(2):
