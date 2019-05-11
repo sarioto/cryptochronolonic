@@ -15,6 +15,7 @@ from crypto_evolution import CryptoFolio
 from random import randint, shuffle
 import requests
 from pytorch_neat.cppn import create_cppn
+from NTree import nDimensionTree
 # Local
 import neat.nn
 import neat
@@ -22,7 +23,6 @@ import _pickle as pickle
 from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
 from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork
-from NTree import nDimensionTree
 #polo = Poloniex('key', 'secret')
 key = ""
 secret = ""
@@ -211,22 +211,23 @@ class LiveTrader:
         self.poloTrader()
 
 class PaperTrader:
-    in_shapes = []
-    out_shapes = []
     params = {"initial_depth": 2,
             "max_depth": 4,
             "variance_threshold": 0.00013,
             "band_threshold": 0.00013,
             "iteration_level": 3,
             "division_threshold": 0.00013,
-            "max_weight": 3.0,
+            "max_weight": 5.0,
             "activation": "tanh"}
+    in_shapes = []
+    out_shapes = []
 
     # Config for CPPN.
     config = neat.config.Config(neat.genome.DefaultGenome, neat.reproduction.DefaultReproduction,
                                 neat.species.DefaultSpeciesSet, neat.stagnation.DefaultStagnation,
                                 'config_trader')
     def __init__(self, ticker_len, start_amount, histdepth):
+        self.trade_hist = {}
         self.polo = Poloniex()
         self.hist_depth = histdepth
         self.ticker_len = ticker_len
@@ -234,23 +235,21 @@ class PaperTrader:
         self.start_amount = start_amount
         self.hs = HistWorker()
         self.refresh_data()
+        self.folio = CryptoFolio(start_amount, list(self.hs.currentHists.keys()))
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = self.hs.hist_shaped.shape[0]
-        self.folio = CryptoFolio(start_amount, list(self.hs.currentHists.keys()))
         self.leaf_names = []
         #num_leafs = 2**(len(self.node_names)-1)//2
         self.tree = nDimensionTree((0.0, 0.0, 0.0), 1.0, 1)
         self.tree.divide_childrens()
         self.set_substrate()
         self.set_leaf_names()
-        self.epoch_len = self.hist_depth
+        self.epoch_len = histdepth
         self.load_net()
         print(self.hs.coin_dict)
         self.poloTrader()
+        
 
-    def refresh_data(self):
-        self.hs.pull_polo_live(21)
-        self.hs.combine_live_frames(89)
     def set_leaf_names(self):
         for l in range(len(self.in_shapes[0])):
             self.leaf_names.append('leaf_one_'+str(l))
@@ -270,14 +269,40 @@ class PaperTrader:
                 center = self.tree.cs[treex]
                 self.in_shapes.append((center.coord[0]+(ix*x_increment), center.coord[1] - (ix2*y_increment), center.coord[2]+.5))
         self.subStrate = Substrate(self.in_shapes, self.out_shapes)
+
+    def set_portfolio_keys(self, folio):
+        for k in self.hs.currentHists.keys():
+            folio.ledger[k] = 0
+
+    def refresh_data(self):
+        self.hs.pull_polo_live(21)
+        self.hs.combine_live_frames(89)
+
     def load_net(self):
         #file = open("./champ_gens/thot-checkpoint-13",'rb')
         g = neat.Checkpointer.restore_checkpoint("./binance_champs_2/tradegod-checkpoint-32")
+        '''
         best_fit = 0.0
-        g = g.population[4040]
+        for gx in g.population:
+            if g.population[gx].fitness != None:
+                if g.population[gx].fitness > best_fit:
+                    bestg = g.population[gx]
+        g = bestg
+        '''
         #file.close()
+        g = g.population[4029]
         [the_cppn] = create_cppn(g, self.config, self.leaf_names, ['cppn_out'])
         self.cppn = the_cppn
+
+    def make_shapes(self):
+        self.in_shapes = []
+        self.out_shapes = []
+        sign = 1
+        for ix in range(1,self.outputs+1):
+            sign = sign *-1
+            self.out_shapes.append((0.0-(sign*.005*ix), -1.0, -1.0))
+            for ix2 in range(1,(self.inputs//self.outputs)+1):
+                self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 1.0))
 
     def reset_tickers(self):
         try:
@@ -311,6 +336,10 @@ class PaperTrader:
         return master_active
 
     def poloTrader(self):
+        try:
+            trade_df = pd.read_json("./live_hist/json_hist.json")
+        except:
+            trade_df = pd.DataFrame()
         end_prices = {}
         active = self.get_one_bar_input_2d()
         self.load_net()
@@ -318,16 +347,13 @@ class PaperTrader:
         network = ESNetwork(sub, self.cppn, self.params)
         net = network.create_phenotype_network_nd('paper_net.png')
         net.reset()
-        signals = []
         for n in range(1, self.hist_depth+1):
             out = net.activate(active[self.hist_depth-n])
-        for x in range(len(out)):
-            signals.append(out[x])
+        #print(len(out))
+        rng = len(out)
         #rng = iter(shuffle(rng))
-        sorted_shit = np.argsort(signals)[::-1]
-        #print(sorted_shit, len(sorted_shit))
-        #print(len(sorted_shit), len(key_list))
-        for x in sorted_shit:
+        self.reset_tickers()
+        for x in np.random.permutation(rng):
             sym = self.hs.coin_dict[x]
             #print(out[x])
             try:
@@ -343,12 +369,27 @@ class PaperTrader:
                 print("error buying or selling")
             #skip the hold case because we just dont buy or sell hehe
             end_prices[sym] = self.hs.currentHists[sym]["close"].iloc[-1]
-        if(self.folio.get_total_btc_value_no_sell(end_prices)[0] > self.folio.start *1.1):
+        
+        self.trade_hist["date"] = datetime.now()
+        self.trade_hist["portfoliovalue"] = self.folio.get_total_btc_value_no_sell(end_prices)[0] 
+        #self.trade_hist["portfolio"] = self.folio.ledger
+        self.trade_hist["percentchange"] = ((self.trade_hist["portfoliovalue"] - self.folio.start)/self.folio.start)*100
+        newDf = pd.DataFrame.from_dict(self.trade_hist, orient='index')
+        self.trade_hist = {}
+        print(newDf)
+        trade_df.append(newDf)
+        print(newDf)
+        with open('./live_hist/json_hist.json', 'w') as f:
+            f.write(trade_df.to_json())
+        '''
+        if(self.trade_hist["portfoliovalue"] > self.folio.start *1.1):
             self.folio.start = self.folio.get_total_btc_value(end_prices)[0]
+        '''
         if datetime.now() >= self.end_ts:
             port_info = self.folio.get_total_btc_value(end_prices)
             print("total val: ", port_info[0], "btc balance: ", port_info[1])
             return
+        
         else:
             print(self.get_current_balance())
             for t in range(2):
