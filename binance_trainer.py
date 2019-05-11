@@ -37,7 +37,7 @@ class PurpleTrader:
     # Config for CPPN.
     config = neat.config.Config(neat.genome.DefaultGenome, neat.reproduction.DefaultReproduction,
                                 neat.species.DefaultSpeciesSet, neat.stagnation.DefaultStagnation,
-                                'config_trader')
+                                'config_trader0')
 
     start_idx = 0
     highest_returns = 0
@@ -57,7 +57,7 @@ class PurpleTrader:
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = len(self.hs.coin_dict)
         print(self.inputs, self.outputs)
-        self.epoch_len = 144
+        self.epoch_len = 672
         #self.node_names = ['x1', 'y1', 'z1', 'x2', 'y2', 'z2', 'weight']
         self.leaf_names = []
         #num_leafs = 2**(len(self.node_names)-1)//2
@@ -125,7 +125,7 @@ class PurpleTrader:
                 signals = []
                 network.reset()
                 for n in range(self.hd):
-                    out = network.activate(active[n])
+                    out = network.activate(active[(self.hd-1)-n])
                 for x in range(len(out)):
                     signals.append(out[x])
                 #rng = iter(shuffle(rng))

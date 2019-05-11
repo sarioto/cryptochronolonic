@@ -49,7 +49,7 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.combine_binance_frames_vol_sorted(21)
+        self.hs.combine_binance_frames_vol_sorted(8)
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
@@ -123,7 +123,7 @@ class PurpleTrader:
         self.cppn = the_cppn
 
     def run_champs(self):
-        genomes = neat.Checkpointer.restore_checkpoint("tradegod-checkpoint-27").population
+        genomes = neat.Checkpointer.restore_checkpoint("tradegod-checkpoint-69").population
         fitness_data = {}
         best_fitness = 0.0
         for g_ix in genomes:
@@ -134,7 +134,7 @@ class PurpleTrader:
             fitness = self.evaluate(net, network, start, genomes[g_ix], g_ix)
 
     def run_champ(self, g_ix):
-        genomes = neat.Checkpointer.restore_checkpoint("./tradegod-checkpoint-27").population
+        genomes = neat.Checkpointer.restore_checkpoint("./tradegod-checkpoint-69").population
         self.load_net_easy(genomes[g_ix])
         start = self.hs.hist_full_size - self.epoch_len
         network = ESNetwork(self.subStrate, self.cppn, self.params)
@@ -152,8 +152,8 @@ class PurpleTrader:
                 active = self.get_one_epoch_input(z)
                 signals = []
                 network.reset()
-                for n in range(len(self.hd)):
-                    out = network.activate(active[n])
+                for n in range(self.hd):
+                    out = network.activate(active[(self.hd-1)-n])
                 for x in range(len(out)):
                     signals.append(out[x])
                     sym2 = list(self.hs.currentHists.keys())[x]
@@ -173,7 +173,7 @@ class PurpleTrader:
                             ft.write('sell,')
                             ft.write(str(portfolio.ledger[sym])+",")
                             ft.write(str(self.hs.currentHists[sym]['close'][z])+",")
-                            ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[z])+ " \n")
+                            ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[0])+ " \n")
                         #print("bought ", sym)
                     elif(out[x] > .5):
                         did_buy = portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
@@ -184,14 +184,14 @@ class PurpleTrader:
                             ft.write('buy,')
                             ft.write(str(portfolio.target_amount)+",")
                             ft.write(str(self.hs.currentHists[sym]['close'][z])+",")
-                            ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[z])+ " \n")
+                            ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[0])+ " \n")
                     else:
                         ft.write(str(self.hs.currentHists[sym]['date'][z]) + ",")
                         ft.write(sym +",")
                         ft.write('none,')
                         ft.write("0.0,")
                         ft.write(str(self.hs.currentHists[sym]['close'][z])+",")
-                        ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[z])+ " \n")
+                        ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[0])+ " \n")
                         #print("sold ", sym)
                 new_ref = portfolio.get_total_btc_value_no_sell(end_prices)[0]
                     #skip the hold case because we just dont buy or sell heh
