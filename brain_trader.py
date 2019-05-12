@@ -15,7 +15,7 @@ from crypto_evolution import CryptoFolio
 from random import randint, shuffle
 import requests
 from pytorch_neat.cppn import create_cppn
-from NTree import nDimensionTree
+from NTree import nDimensionTree, nDimensionGoldenTree
 # Local
 import neat.nn
 import neat
@@ -240,7 +240,7 @@ class PaperTrader:
         self.outputs = self.hs.hist_shaped.shape[0]
         self.leaf_names = []
         #num_leafs = 2**(len(self.node_names)-1)//2
-        self.tree = nDimensionTree((0.0, 0.0, 0.0), 1.0, 1)
+        self.tree = nDimensionGoldenTree((0.0, 0.0, 0.0), 1.0, 1)
         self.tree.divide_childrens()
         self.set_substrate()
         self.set_leaf_names()
@@ -375,12 +375,11 @@ class PaperTrader:
         #self.trade_hist["portfolio"] = self.folio.ledger
         self.trade_hist["percentchange"] = ((self.trade_hist["portfoliovalue"] - self.folio.start)/self.folio.start)*100
         newDf = pd.DataFrame.from_dict(self.trade_hist, orient='index')
+        print(self.trade_hist)
         self.trade_hist = {}
-        print(newDf)
-        trade_df.append(newDf)
-        print(newDf)
+        trade_df = trade_df.append(newDf)
         with open('./live_hist/json_hist.json', 'w') as f:
-            f.write(trade_df.to_json())
+            f.write(trade_df.to_json(orient="index"))
         '''
         if(self.trade_hist["portfoliovalue"] > self.folio.start *1.1):
             self.folio.start = self.folio.get_total_btc_value(end_prices)[0]
