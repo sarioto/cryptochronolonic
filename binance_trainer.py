@@ -17,7 +17,7 @@ import _pickle as pickle
 from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
 from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork
-from NTree import nDimensionTree
+#from NTree import nDimensionTree, nDimensionGoldenTree
 # Local
 class PurpleTrader:
 
@@ -61,8 +61,8 @@ class PurpleTrader:
         #self.node_names = ['x1', 'y1', 'z1', 'x2', 'y2', 'z2', 'weight']
         self.leaf_names = []
         #num_leafs = 2**(len(self.node_names)-1)//2
-        self.tree = nDimensionTree((0.0, 0.0, 0.0), 1.0, 1)
-        self.tree.divide_childrens()
+        #self.tree = nDimensionGoldenTree((0.0, 0.0, 0.0), 1.0, 1)
+        #self.tree.divide_childrens()
         self.set_substrate()
         self.set_leaf_names()
         
@@ -112,7 +112,7 @@ class PurpleTrader:
         rand_start = self.rand_start
         [cppn] = create_cppn(g, config, self.leaf_names, ['cppn_out'])
         net = ESNetwork(self.subStrate, cppn, self.params)
-        network = net.create_phenotype_network_nd()
+        network = net.create_phenotype_network_nd("training_net.png")
         portfolio_start = 1.0
         key_list = list(self.hs.currentHists.keys())
         portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict)
@@ -157,8 +157,8 @@ class PurpleTrader:
 
 
     def eval_fitness(self, genomes, config):
-        max_batch_size = (self.hs.hist_full_size-self.hd) // 13
-        min_batch_size = (self.hs.hist_full_size-self.hd) // 5
+        min_batch_size = (self.hs.hist_full_size-self.hd) // 13
+        max_batch_size = (self.hs.hist_full_size-self.hd) // 5
         self.epoch_len = randint(min_batch_size, max_batch_size)
         self.rand_start = randint(self.hd, self.hs.hist_full_size - self.epoch_len)
         runner = neat.ParallelEvaluator(8, self.evaluate)
@@ -195,7 +195,7 @@ if __name__ == '__main__':
     winner_net = network.create_phenotype_network_nd('dabestest.png')  # This will also draw winner_net.
 
     # Save CPPN if wished reused and draw it to file.
-    draw_net(cppn, filename="es_trade_god")
+    #draw_net(cppn, filename="es_trade_god")
 
 
     '''

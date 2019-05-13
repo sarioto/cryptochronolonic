@@ -1,4 +1,7 @@
 import itertools
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+
 
 class nDimensionTree:
     
@@ -58,14 +61,56 @@ class nDimensionGoldenTree:
                 # us new root position in this dimension as spot to offset from
                 child_root.append(new_center + (self.sub_width/(2*self.signs[i][y])))
             self.cs.append(nDimensionGoldenTree(child_root, self.sub_width/2, self.lvl+1))
-'''
-tree = nDimensionGoldenTree([0.0, 0.0, 0.0], 1.0, 1)
 
-tree.sub_divide()
+'''
+
+tree = nDimensionGoldenTree([0.0, 0.0, 0.0], 2.0, 1)
+
+tree.divide_childrens()
+xs = []
+ys = []
+zs = []
+
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
 
 for i in tree.cs:
-    print(i.coord)
-'''
-                
+    xs.append(i.coord[0])
+    ys.append(i.coord[1])
+    zs.append(i.coord[2])
+    xc = (tree.coord[0], i.coord[0])
+    yc = (tree.coord[1], i.coord[1])
+    zc = (tree.coord[2], i.coord[2])
+    ax.plot3D(xc, yc, zc, color='g')
+for i in tree.cs:
+    i.divide_childrens()
+    for ix in i.cs:
+        xs.append(ix.coord[0])
+        ys.append(ix.coord[1])
+        zs.append(ix.coord[2])
+        xc = (i.coord[0], ix.coord[0])
+        yc = (i.coord[1], ix.coord[1])
+        zc = (i.coord[2], ix.coord[2])
+        ax.plot3D(xc, yc, zc, color='g')
+for i in tree.cs:
+    i.divide_childrens()
+    for x in i.cs:
+        x.divide_childrens()
+        for ix in x.cs:
+            xs.append(ix.coord[0])
+            ys.append(ix.coord[1])
+            zs.append(ix.coord[2])
+            xc = (i.coord[0], ix.coord[0])
+            yc = (i.coord[1], ix.coord[1])
+            zc = (i.coord[2], ix.coord[2])
+            ax.plot3D(xc, yc, zc, color='g')
+ax.scatter(xs, ys, zs, c='r', marker='o')
 
+ax.set_xlabel('X Label')
+ax.set_ylabel('Y Label')
+ax.set_zlabel('Z Label')
+
+plt.show()    
+'''
 

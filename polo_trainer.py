@@ -23,7 +23,7 @@ class PurpleTrader:
     #needs to be initialized so as to allow for 62 outputs that return a coordinate
 
     # ES-HyperNEAT specific parameters.
-    params = {"initial_depth": 2,
+    params = {"initial_depth": 3,
             "max_depth": 4,
             "variance_threshold": 0.00013,
             "band_threshold": 0.00013,
@@ -51,7 +51,7 @@ class PurpleTrader:
         self.hs.combine_binance_frames()
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
-        self.end_idx = len(self.hs.currentHists["ZEC"])
+        self.end_idx = len(self.hs.hist_shaped[0])
         self.but_target = .1
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = self.hs.hist_shaped.shape[0]
@@ -149,7 +149,7 @@ class PurpleTrader:
         for idx, g in genomes:
             [cppn] = create_cppn(g, config, self.leaf_names, ['cppn_out'])
             network = ESNetwork(self.subStrate, cppn, self.params)
-            net = network.create_phenotype_network_nd()
+            net = network.create_phenotype_network_nd('training_net.png')
             g.fitness = self.evaluate(net, network, r_start, g)
         return
 # Create the population and run the XOR task by providing the above fitness function.
