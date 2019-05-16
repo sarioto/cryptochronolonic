@@ -17,7 +17,7 @@ import _pickle as pickle
 from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
 from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork
-#from NTree import nDimensionTree, nDimensionGoldenTree
+from NTree import nDimensionTree, nDimensionGoldenTree
 # Local
 class PurpleTrader:
 
@@ -58,11 +58,11 @@ class PurpleTrader:
         self.outputs = len(self.hs.coin_dict)
         print(self.inputs, self.outputs)
         self.epoch_len = 144
-        #self.node_names = ['x1', 'y1', 'z1', 'x2', 'y2', 'z2', 'weight']
+        self.node_names = ['x1', 'y1', 'z1', 'x2', 'y2', 'z2', 'weight']
         self.leaf_names = []
-        #num_leafs = 2**(len(self.node_names)-1)//2
-        #self.tree = nDimensionGoldenTree((0.0, 0.0, 0.0), 1.0, 1)
-        #self.tree.divide_childrens()
+        num_leafs = 2**(len(self.node_names)-1)//2
+        self.tree = nDimensionGoldenTree((0.0, 0.0, 0.0), 1.0, 1)
+        self.tree.divide_childrens()
         self.set_substrate()
         self.set_leaf_names()
         

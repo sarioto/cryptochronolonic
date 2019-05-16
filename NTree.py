@@ -62,7 +62,7 @@ class nDimensionGoldenTree:
                 child_root.append(new_center + (self.sub_width/(2*self.signs[i][y])))
             self.cs.append(nDimensionGoldenTree(child_root, self.sub_width/2, self.lvl+1))
 
-'''
+
 
 tree = nDimensionGoldenTree([0.0, 0.0, 0.0], 2.0, 1)
 
@@ -112,5 +112,5 @@ ax.set_ylabel('Y Label')
 ax.set_zlabel('Z Label')
 
 plt.show()    
-'''
+
 
