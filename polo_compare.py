@@ -24,7 +24,7 @@ class PurpleTrader:
     #needs to be initialized so as to allow for 62 outputs that return a coordinate
 
     # ES-HyperNEAT specific parameters.
-    params = {"initial_depth": 2,
+    params = {"initial_depth": 3,
             "max_depth": 4,
             "variance_threshold": 0.00013,
             "band_threshold": 0.00013,
@@ -49,7 +49,7 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.combine_binance_frames_vol_sorted(21)
+        self.hs.combine_polo_frames_vol_sorted()
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
@@ -123,7 +123,7 @@ class PurpleTrader:
         self.cppn = the_cppn
         
     def run_champs(self):
-        genomes = neat.Checkpointer.restore_checkpoint("./binance_champs_2/tradegod-checkpoint-33").population
+        genomes = neat.Checkpointer.restore_checkpoint("./binance_champs_2/tradegod-checkpoint-10").population
         fitness_data = {}
         best_fitness = 0.0
         best_ix = ""
@@ -142,7 +142,7 @@ class PurpleTrader:
             pickle.dump(best_ix, output)
 
     def run_champ(self):
-        genome = neat.Checkpointer.restore_checkpoint("./binance_champs_2/tradegod-checkpoint-32").population[4040]
+        genome = neat.Checkpointer.restore_checkpoint("./binance_champs_2/tradegod-checkpoint-").population[4040]
         self.load_net_easy(genome)
         start = self.hs.hist_full_size - self.epoch_len
         network = ESNetwork(self.subStrate, self.cppn, self.params)
@@ -205,12 +205,12 @@ class PurpleTrader:
                         ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[0])+ " \n")
                         #print("sold ", sym)
                 new_ref = portfolio.get_total_btc_value_no_sell(end_prices)[0]
-                '''                
+                                
                 if(new_ref > 1.10 * port_ref or new_ref < .9*port_ref):
                     port_ref = portfolio.get_total_btc_value_no_sell(end_prices)[0]
                     portfolio.start = port_ref
                     #skip the hold case because we just dont buy or sell heh
-                ''' 
+                 
 
         result_val = portfolio.get_total_btc_value(end_prices)
         print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2], p_name)

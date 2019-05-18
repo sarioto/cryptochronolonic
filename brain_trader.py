@@ -23,12 +23,13 @@ import _pickle as pickle
 from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
 from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork
+from tinydb import TinyDB, Query
 #polo = Poloniex('key', 'secret')
 key = ""
 secret = ""
 
 class LiveTrader:
-    params = {"initial_depth": 2,
+    params = {"initial_depth": 3,
             "max_depth": 4,
             "variance_threshold": 0.00013,
             "band_threshold": 0.00013,
@@ -58,6 +59,7 @@ class LiveTrader:
         self.outputs = self.hs.hist_shaped.shape[0]
         self.make_shapes()
         self.leaf_names = []
+        self.db = tinydb.database("live_hist/memories.json")
         for l in range(len(self.in_shapes[0])):
             self.leaf_names.append('leaf_one_'+str(l))
             self.leaf_names.append('leaf_two_'+str(l))
@@ -211,13 +213,13 @@ class LiveTrader:
         self.poloTrader()
 
 class PaperTrader:
-    params = {"initial_depth": 2,
+    params = {"initial_depth": 3,
             "max_depth": 4,
             "variance_threshold": 0.00013,
             "band_threshold": 0.00013,
             "iteration_level": 3,
             "division_threshold": 0.00013,
-            "max_weight": 5.0,
+            "max_weight": 3.0,
             "activation": "tanh"}
     in_shapes = []
     out_shapes = []
@@ -280,7 +282,7 @@ class PaperTrader:
 
     def load_net(self):
         #file = open("./champ_gens/thot-checkpoint-13",'rb')
-        g = neat.Checkpointer.restore_checkpoint("./binance_champs_2/tradegod-checkpoint-32")
+        g = neat.Checkpointer.restore_checkpoint("./binance_champs_2/tradegod-checkpoint-10")
         '''
         best_fit = 0.0
         for gx in g.population:
@@ -290,7 +292,7 @@ class PaperTrader:
         g = bestg
         '''
         #file.close()
-        g = g.population[4029]
+        g = g.population[1488]
         [the_cppn] = create_cppn(g, self.config, self.leaf_names, ['cppn_out'])
         self.cppn = the_cppn
 
@@ -374,12 +376,10 @@ class PaperTrader:
         self.trade_hist["portfoliovalue"] = self.folio.get_total_btc_value_no_sell(end_prices)[0] 
         #self.trade_hist["portfolio"] = self.folio.ledger
         self.trade_hist["percentchange"] = ((self.trade_hist["portfoliovalue"] - self.folio.start)/self.folio.start)*100
-        newDf = pd.DataFrame.from_dict(self.trade_hist, orient='index')
+        db = TinyDB('./live_hist/memories.json')
         print(self.trade_hist)
+        db.insert(self.trade_hist)
         self.trade_hist = {}
-        trade_df = trade_df.append(newDf)
-        with open('./live_hist/json_hist.json', 'w') as f:
-            f.write(trade_df.to_json(orient="index"))
         '''
         if(self.trade_hist["portfoliovalue"] > self.folio.start *1.1):
             self.folio.start = self.folio.get_total_btc_value(end_prices)[0]
