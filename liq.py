@@ -13,3 +13,5 @@ def hello_world():
 def get_paper_hist():
     return jsonify(db.all())
 
+app.run()
+
