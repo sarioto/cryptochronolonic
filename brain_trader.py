@@ -223,7 +223,7 @@ class PaperTrader:
             "activation": "tanh"}
     in_shapes = []
     out_shapes = []
-
+    db = TinyDB('./live_hist/memories.json')
     # Config for CPPN.
     config = neat.config.Config(neat.genome.DefaultGenome, neat.reproduction.DefaultReproduction,
                                 neat.species.DefaultSpeciesSet, neat.stagnation.DefaultStagnation,
@@ -355,6 +355,7 @@ class PaperTrader:
         rng = len(out)
         #rng = iter(shuffle(rng))
         self.reset_tickers()
+        sym = ""
         for x in np.random.permutation(rng):
             sym = self.hs.coin_dict[x]
             #print(out[x])
@@ -372,13 +373,13 @@ class PaperTrader:
             #skip the hold case because we just dont buy or sell hehe
             end_prices[sym] = self.hs.currentHists[sym]["close"].iloc[-1]
         
-        self.trade_hist["date"] = datetime.now()
+        #self.trade_hist["date"] = self.hs.currentHists[sym]["date"].iloc[-1]
+        self.trade_hist["date"] = time.time()
         self.trade_hist["portfoliovalue"] = self.folio.get_total_btc_value_no_sell(end_prices)[0] 
         #self.trade_hist["portfolio"] = self.folio.ledger
         self.trade_hist["percentchange"] = ((self.trade_hist["portfoliovalue"] - self.folio.start)/self.folio.start)*100
-        db = TinyDB('./live_hist/memories.json')
         print(self.trade_hist)
-        db.insert(self.trade_hist)
+        self.db.insert(self.trade_hist)
         self.trade_hist = {}
         '''
         if(self.trade_hist["portfoliovalue"] > self.folio.start *1.1):
