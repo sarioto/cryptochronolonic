@@ -112,7 +112,7 @@ class PurpleTrader:
         rand_start = self.rand_start
         [cppn] = create_cppn(g, config, self.leaf_names, ['cppn_out'])
         net = ESNetwork(self.subStrate, cppn, self.params)
-        network = net.create_phenotype_network_nd("training_net.png")
+        network = net.create_phenotype_network_nd()
         portfolio_start = 1.0
         key_list = list(self.hs.currentHists.keys())
         portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict)
