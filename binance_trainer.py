@@ -109,6 +109,8 @@ class PurpleTrader:
         return master_active
 
     def evaluate(self, g, config):
+        # k so here we create a random start index
+        # then we make our nets, and start fitness evaluation
         rand_start = self.rand_start
         [cppn] = create_cppn(g, config, self.leaf_names, ['cppn_out'])
         net = ESNetwork(self.subStrate, cppn, self.params)
@@ -119,7 +121,7 @@ class PurpleTrader:
         end_prices = {}
         buys = 0
         sells = 0
-        if(len(g.connections) > 0.0):
+        if(len(network.node_evals) > 0):
             for z in range(rand_start, rand_start+self.epoch_len):
                 active = self.get_one_epoch_input(z)
                 signals = []

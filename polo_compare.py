@@ -142,7 +142,7 @@ class PurpleTrader:
             pickle.dump(best_ix, output)
 
     def run_champ(self):
-        genome = neat.Checkpointer.restore_checkpoint("./binance_champs_2/tradegod-checkpoint-").population[4040]
+        genome = neat.Checkpointer.restore_checkpoint("./binance_champs_2/tradegod-checkpoint-15").population[2039]
         self.load_net_easy(genome)
         start = self.hs.hist_full_size - self.epoch_len
         network = ESNetwork(self.subStrate, self.cppn, self.params)
@@ -171,6 +171,7 @@ class PurpleTrader:
                 sorted_shit = np.argsort(signals)[::-1]
                 rebalance = portfolio_start
                 #rng = iter(shuffle(rng))
+                sym = ""
                 for x in sorted_shit:
                     sym = list(self.hs.currentHists.keys())[x]
                     #print(out[x])
@@ -178,6 +179,7 @@ class PurpleTrader:
                     if(out[x] < -.5):
                         #print("selling")
                         did_sell = portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
+                        '''
                         if did_sell:
                             ft.write(str(self.hs.currentHists[sym]['date'][z]) + ",")
                             ft.write(sym +",")
@@ -185,9 +187,11 @@ class PurpleTrader:
                             ft.write(str(portfolio.ledger[sym])+",")
                             ft.write(str(self.hs.currentHists[sym]['close'][z])+",")
                             ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[0])+ " \n")
+                        '''
                         #print("bought ", sym)
                     elif(out[x] > .5):
                         did_buy = portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
+                        '''
                         if did_buy:
                             portfolio.target_amount = .1 + (out[x] * .1)
                             ft.write(str(self.hs.currentHists[sym]['date'][z]) + ",")
@@ -196,13 +200,14 @@ class PurpleTrader:
                             ft.write(str(portfolio.target_amount)+",")
                             ft.write(str(self.hs.currentHists[sym]['close'][z])+",")
                             ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[0])+ " \n")
-                    else:
-                        ft.write(str(self.hs.currentHists[sym]['date'][z]) + ",")
-                        ft.write(sym +",")
-                        ft.write('none,')
-                        ft.write("0.0,")
-                        ft.write(str(self.hs.currentHists[sym]['close'][z])+",")
-                        ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[0])+ " \n")
+                        '''
+                    #else:
+                ft.write(str(self.hs.currentHists[sym]['date'][z]) + ",")
+                ft.write(sym +",")
+                ft.write('none,')
+                ft.write("0.0,")
+                ft.write(str(self.hs.currentHists[sym]['close'][z])+",")
+                ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[0])+ " \n")
                         #print("sold ", sym)
                 new_ref = portfolio.get_total_btc_value_no_sell(end_prices)[0]
                 '''
@@ -251,4 +256,4 @@ class PurpleTrader:
 
 
 pt = PurpleTrader(8)
-pt.run_champs()
+pt.run_champ()
