@@ -249,6 +249,7 @@ class PaperTrader:
         self.epoch_len = histdepth
         self.load_net()
         print(self.hs.coin_dict)
+        db.purge()
         self.poloTrader()
         
 

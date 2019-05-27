@@ -183,7 +183,7 @@ class HistWorker:
             #print(df.head())
             file_lens.append(df_len)
         mode_len = mode(file_lens)
-        print(mode_len)
+        #print(mode_len)
         vollist = []
         prefixes = []
         for x in range(0, len(fileNames)):
@@ -199,14 +199,14 @@ class HistWorker:
             vollist = np.argsort(vollist)[-restrict_val:][::-1]
         vollist = np.argsort(vollist)[::-1]
         for ix in vollist:
-            df = self.currentHists[prefixes[ix]].copy()
+            df = self.currentHists[prefixes[ix]][['avg_vol_3', 'avg_vol_34','avg_vol_13','avg_close_3', 'avg_close_13', 'avg_close_34']].copy()
             norm_df = (df - df.mean()) / (df.max() - df.min())
             as_array=np.array(norm_df)
             self.hist_shaped[coin_and_hist_index] = as_array
             self.coin_dict[coin_and_hist_index] = prefixes[ix]
             coin_and_hist_index += 1
         self.hist_shaped = pd.Series(self.hist_shaped)
-        print(self.currentHists.keys(), self.coin_dict)
+        #print(self.currentHists.keys(), self.coin_dict)
 
     def combine_binance_frames(self):
         fileNames = self.get_binance_hist_files()
