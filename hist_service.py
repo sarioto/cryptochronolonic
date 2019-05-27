@@ -97,7 +97,8 @@ class HistWorker:
         return moon.join(df, on="date")
 
     #BEGIN BINANCE METHODS
-
+    #AIR DOOM BY CARIBOU ON REPEAT WHILE READING THE FOLLOWING 
+    #METHODS
     def pull_binance_symbols(self):
         sym_list = []
         for x in self.binance_client.get_products()["data"]:
@@ -105,7 +106,7 @@ class HistWorker:
         return sym_list
 
     def get_binance_hist_frame(self, symbol):
-        frame = hs.binance_client.get_historical_klines(symbol, Client.KLINE_INTERVAL_30MINUTE, "1 May, 2018", "1 Jan, 2019")
+        frame = hs.binance_client.get_historical_klines(symbol, Client.KLINE_INTERVAL_30MINUTE, "1 Aug, 2018", "1 May, 2019")
         for x in range(len(frame)):
             frame[x] = frame[x][:6]
         frame = pd.DataFrame(frame, columns=["date", "open", "high", "low", "close", "volume"])
@@ -361,5 +362,3 @@ class HistWorker:
         return main
         '''
 
-hs = HistWorker()
-hs.combine_binance_frames_vol_sorted()
