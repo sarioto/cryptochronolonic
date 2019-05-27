@@ -49,7 +49,7 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.combine_polo_frames_vol_sorted()
+        self.hs.combine_binance_frames_vol_sorted(21)
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
@@ -167,7 +167,7 @@ class PurpleTrader:
                 for x in range(len(out)):
                     signals.append(out[x])
                     sym2 = list(self.hs.currentHists.keys())[x]
-                    end_prices[sym2] = self.hs.currentHists[sym2]['close'][self.hs.hist_full_size-1]
+                    end_prices[sym2] = self.hs.currentHists[sym2]['close'][x]
                 sorted_shit = np.argsort(signals)[::-1]
                 rebalance = portfolio_start
                 #rng = iter(shuffle(rng))
@@ -256,4 +256,4 @@ class PurpleTrader:
 
 
 pt = PurpleTrader(8)
-pt.run_champ()
+pt.run_champs()

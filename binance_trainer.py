@@ -130,10 +130,7 @@ class PurpleTrader:
                     out = network.activate(active[self.hd-n])
                 for x in range(len(out)):
                     signals.append(out[x])
-                #rng = iter(shuffle(rng))
                 sorted_shit = np.argsort(signals)[::-1]
-                #print(sorted_shit, len(sorted_shit))
-                #print(len(sorted_shit), len(key_list))
                 for x in sorted_shit:
                     sym = self.hs.coin_dict[x]
                     #print(out[x])
@@ -159,9 +156,11 @@ class PurpleTrader:
 
 
     def eval_fitness(self, genomes, config):
-        min_batch_size = (self.hs.hist_full_size-self.hd) // 13
+        #generate random batch size between 1/8 and 1/5 our whole data set length
+        min_batch_size = (self.hs.hist_full_size-self.hd) // 8
         max_batch_size = (self.hs.hist_full_size-self.hd) // 5
         self.epoch_len = randint(min_batch_size, max_batch_size)
+        #generate random start here too ?
         self.rand_start = randint(self.hd, self.hs.hist_full_size - self.epoch_len)
         runner = neat.ParallelEvaluator(8, self.evaluate)
         runner.evaluate(genomes, config)
