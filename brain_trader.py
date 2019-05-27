@@ -282,7 +282,7 @@ class PaperTrader:
 
     def load_net(self):
         #file = open("./champ_gens/thot-checkpoint-13",'rb')
-        g = neat.Checkpointer.restore_checkpoint("./binance_champs_2/tradegod-checkpoint-10")
+        g = neat.Checkpointer.restore_checkpoint("./binance_champs_2/tradegod-checkpoint-15")
         '''
         best_fit = 0.0
         for gx in g.population:
@@ -292,7 +292,7 @@ class PaperTrader:
         g = bestg
         '''
         #file.close()
-        g = g.population[1488]
+        g = g.population[2039]
         [the_cppn] = create_cppn(g, self.config, self.leaf_names, ['cppn_out'])
         self.cppn = the_cppn
 
@@ -347,16 +347,19 @@ class PaperTrader:
         self.load_net()
         sub = Substrate(self.in_shapes, self.out_shapes)
         network = ESNetwork(sub, self.cppn, self.params)
-        net = network.create_phenotype_network_nd('paper_net.png')
+        net = network.create_phenotype_network_nd()
+        net.reset()
+        signals = []
         net.reset()
         for n in range(1, self.hist_depth+1):
             out = net.activate(active[self.hist_depth-n])
-        #print(len(out))
-        rng = len(out)
+        for x in range(len(out)):
+            signals.append(out[x])
         #rng = iter(shuffle(rng))
+        sorted_shit = np.argsort(signals)[::-1]
         self.reset_tickers()
         sym = ""
-        for x in np.random.permutation(rng):
+        for x in sorted_shit:
             sym = self.hs.coin_dict[x]
             #print(out[x])
             try:
@@ -376,9 +379,10 @@ class PaperTrader:
         #self.trade_hist["date"] = self.hs.currentHists[sym]["date"].iloc[-1]
         self.trade_hist["date"] = time.time()
         self.trade_hist["portfoliovalue"] = self.folio.get_total_btc_value_no_sell(end_prices)[0] 
-        #self.trade_hist["portfolio"] = self.folio.ledger
+        self.trade_hist["portfolio"] = self.folio.ledger
         self.trade_hist["percentchange"] = ((self.trade_hist["portfoliovalue"] - self.folio.start)/self.folio.start)*100
         print(self.trade_hist)
+        print(self.folio.ledger)
         self.db.insert(self.trade_hist)
         self.trade_hist = {}
         '''
@@ -393,11 +397,9 @@ class PaperTrader:
         else:
             print(self.get_current_balance())
             for t in range(2):
-                self.refresh_data
-                p_vals = self.get_current_balance()
-                print("current value: ", p_vals[0], "current btc holdings: ", p_vals[1])
                 time.sleep(self.ticker_len/2)
                 #print(self.folio.ledger)
+        self.refresh_data
         self.poloTrader()
 
 
