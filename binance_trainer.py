@@ -49,7 +49,11 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.combine_binance_frames_vol_sorted(8)
+        self.exchange = sys.argv[0]
+        if (self.exchange == "binance" or self.exchange == ""):
+            self.hs.combine_binance_frames_vol_sorted(16)
+        else if (self.exchange == "poloniex"):
+            self.hs.combine_polo_frames_vol_sorted()
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
