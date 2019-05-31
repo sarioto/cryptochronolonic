@@ -282,7 +282,7 @@ class PaperTrader:
 
     def load_net(self):
         #file = open("./champ_gens/thot-checkpoint-13",'rb')
-        g = neat.Checkpointer.restore_checkpoint("./binance_champs_2/tradegod-checkpoint-15")
+        g = neat.Checkpointer.restore_checkpoint("./champ_gens/tradegod-checkpoint-15")
         '''
         best_fit = 0.0
         for gx in g.population:

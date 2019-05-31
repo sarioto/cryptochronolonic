@@ -17,7 +17,7 @@ import _pickle as pickle
 from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
 from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork
-from NTree import nDimensionTree
+from NTree import nDimensionTree, nDimensionGoldenTree
 # Local
 class PurpleTrader:
 
@@ -58,7 +58,7 @@ class PurpleTrader:
         self.outputs = self.hs.hist_shaped.shape[0]
         self.leaf_names = []
         #num_leafs = 2**(len(self.node_names)-1)//2
-        self.tree = nDimensionTree((0.0, 0.0, 0.0), 1.0, 1)
+        self.tree = nDimensionGoldenTree((0.0, 0.0, 0.0), 1.0, 1)
         self.tree.divide_childrens()
         self.set_substrate()
         self.set_leaf_names()
@@ -123,7 +123,7 @@ class PurpleTrader:
         self.cppn = the_cppn
         
     def run_champs(self):
-        genomes = neat.Checkpointer.restore_checkpoint("./binance_champs_2/tradegod-checkpoint-15").population
+        genomes = neat.Checkpointer.restore_checkpoint("./binance_champs_2/tradegod-checkpoint-10").population
         fitness_data = {}
         best_fitness = 0.0
         best_ix = ""
@@ -167,7 +167,7 @@ class PurpleTrader:
                 for x in range(len(out)):
                     signals.append(out[x])
                     sym2 = list(self.hs.currentHists.keys())[x]
-                    end_prices[sym2] = self.hs.currentHists[sym2]['close'][x]
+                    end_prices[sym2] = self.hs.currentHists[sym2]['close'][z]
                 sorted_shit = np.argsort(signals)[::-1]
                 rebalance = portfolio_start
                 #rng = iter(shuffle(rng))
@@ -215,8 +215,7 @@ class PurpleTrader:
                     port_ref = portfolio.get_total_btc_value_no_sell(end_prices)[0]
                     portfolio.start = port_ref
                     #skip the hold case because we just dont buy or sell heh
-                 '''
-
+                '''
         result_val = portfolio.get_total_btc_value(end_prices)
         print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2], p_name)
         ft = result_val[0]
