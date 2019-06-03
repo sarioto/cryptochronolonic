@@ -199,7 +199,8 @@ class HistWorker:
             vollist = np.argsort(vollist)[-restrict_val:][::-1]
         vollist = np.argsort(vollist)[::-1]
         for ix in vollist:
-            df = self.currentHists[prefixes[ix]].copy()
+            #df = self.currentHists[prefixes[ix]].copy()
+            df = self.currentHists[prefixes[ix]][['avg_vol_3', 'avg_vol_34','avg_vol_13','avg_close_3', 'avg_close_13', 'avg_close_34']].copy()
             norm_df = (df - df.mean()) / (df.max() - df.min())
             as_array=np.array(norm_df)
             self.hist_shaped[coin_and_hist_index] = as_array

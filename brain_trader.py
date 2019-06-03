@@ -282,7 +282,7 @@ class PaperTrader:
 
     def load_net(self):
         #file = open("./champ_gens/thot-checkpoint-13",'rb')
-        g = neat.Checkpointer.restore_checkpoint("./champ_gens/tradegod-checkpoint-15")
+        g = neat.Checkpointer.restore_checkpoint("./binance_champs_2/tradegod-checkpoint-10")
         '''
         best_fit = 0.0
         for gx in g.population:
@@ -292,7 +292,7 @@ class PaperTrader:
         g = bestg
         '''
         #file.close()
-        g = g.population[2039]
+        g = g.population[1368]
         [the_cppn] = create_cppn(g, self.config, self.leaf_names, ['cppn_out'])
         self.cppn = the_cppn
 
@@ -338,6 +338,7 @@ class PaperTrader:
         return master_active
 
     def poloTrader(self):
+        self.refresh_data
         try:
             trade_df = pd.read_json("./live_hist/json_hist.json")
         except:
@@ -399,7 +400,6 @@ class PaperTrader:
             for t in range(2):
                 time.sleep(self.ticker_len/2)
                 #print(self.folio.ledger)
-        self.refresh_data
         self.poloTrader()
 
 

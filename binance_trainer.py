@@ -51,16 +51,16 @@ class PurpleTrader:
         self.hs = HistWorker()
         self.exchange = "" #sys.argv[0]
         if (self.exchange == "binance" or self.exchange == ""):
-            self.hs.combine_binance_frames_vol_sorted(16)
+            self.hs.combine_binance_frames_vol_sorted(21)
         elif(self.exchange == "poloniex"):
             self.hs.combine_polo_frames_vol_sorted()
         self.hd = hist_depth
-        print(self.hs.currentHists.keys())
+        #print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
         self.but_target = .1
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = len(self.hs.coin_dict)
-        print(self.inputs, self.outputs)
+        #print(self.inputs, self.outputs)
         self.epoch_len = 144
         self.node_names = ['x1', 'y1', 'z1', 'x2', 'y2', 'z2', 'weight']
         self.leaf_names = []
