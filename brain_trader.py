@@ -283,7 +283,7 @@ class PaperTrader:
 
     def load_net(self):
         #file = open("./champ_gens/thot-checkpoint-13",'rb')
-        g = neat.Checkpointer.restore_checkpoint("./binance_champs_2/tradegod-checkpoint-15")
+        g = neat.Checkpointer.restore_checkpoint("./binance_champs_2/tradegod-checkpoint-48")
         '''
         best_fit = 0.0
         for gx in g.population:
@@ -293,7 +293,7 @@ class PaperTrader:
         g = bestg
         '''
         #file.close()
-        g = g.population[2039]
+        g = g.population[5808]
         [the_cppn] = create_cppn(g, self.config, self.leaf_names, ['cppn_out'])
         self.cppn = the_cppn
 
