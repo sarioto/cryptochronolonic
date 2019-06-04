@@ -167,7 +167,7 @@ class PurpleTrader:
                 for x in range(len(out)):
                     signals.append(out[x])
                     sym2 = list(self.hs.currentHists.keys())[x]
-                    end_prices[sym2] = self.hs.currentHists[sym2]['close'][x]
+                    end_prices[sym2] = self.hs.currentHists[sym2]['close'][z]
                 sorted_shit = np.argsort(signals)[::-1]
                 rebalance = portfolio_start
                 #rng = iter(shuffle(rng))
