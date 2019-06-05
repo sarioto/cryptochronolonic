@@ -142,13 +142,13 @@ class PurpleTrader:
             pickle.dump(best_ix, output)
 
     def run_champ(self):
-        genome = neat.Checkpointer.restore_checkpoint("./binance_champs_2/tradegod-checkpoint-15").population[2039]
+        genome = neat.Checkpointer.restore_checkpoint("./binance_champs_2/tradegod-checkpoint-48").population[5808]
         self.load_net_easy(genome)
         start = self.hs.hist_full_size - self.epoch_len
         network = ESNetwork(self.subStrate, self.cppn, self.params)
-        net = network.create_phenotype_network_nd('./champs_visualizedd3/genome_'+str(4040))
-        fitness = self.evaluate(net, network, start, genome, 4040)
-        with open('./binance_champs_2/perpetual_champion_'+str(4040)+'.pkl', 'wb') as output:
+        net = network.create_phenotype_network_nd('./champs_visualizedd3/genome_'+str(5808))
+        fitness = self.evaluate(net, network, start, genome, 5808)
+        with open('./binance_champs_2/perpetual_champion_'+str(5808)+'.pkl', 'wb') as output:
             pickle.dump(genome, output)
 
     def evaluate(self, network, es, rand_start, g, p_name):
@@ -156,71 +156,70 @@ class PurpleTrader:
         portfolio = CryptoFolio(portfolio_start, list(self.hs.currentHists.keys()))
         end_prices = {}
         port_ref = portfolio_start
-        with open('./champs_histd3/trade_hist'+ str(p_name) + '.txt', 'w') as ft:
-            ft.write('date,symbol,type,amnt,price,current_balance \n')
-            for z in range(34, self.hs.hist_full_size -1):
-                active = self.get_one_epoch_input(z)
-                signals = []
-                network.reset()
-                for n in range(1, self.hd+1):
-                    out = network.activate(active[self.hd-n])
-                for x in range(len(out)):
-                    signals.append(out[x])
-                    sym2 = list(self.hs.currentHists.keys())[x]
-                    end_prices[sym2] = self.hs.currentHists[sym2]['close'][z]
-                sorted_shit = np.argsort(signals)[::-1]
-                rebalance = portfolio_start
-                #rng = iter(shuffle(rng))
-                sym = ""
-                for x in sorted_shit:
-                    sym = list(self.hs.currentHists.keys())[x]
-                    #print(out[x])
-                    #try:
-                    if(out[x] < -.5):
-                        #print("selling")
-                        did_sell = portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
-                        '''
-                        if did_sell:
-                            ft.write(str(self.hs.currentHists[sym]['date'][z]) + ",")
-                            ft.write(sym +",")
-                            ft.write('sell,')
-                            ft.write(str(portfolio.ledger[sym])+",")
-                            ft.write(str(self.hs.currentHists[sym]['close'][z])+",")
-                            ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[0])+ " \n")
-                        '''
-                        #print("bought ", sym)
-                    elif(out[x] > .5):
-                        did_buy = portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
-                        '''
-                        if did_buy:
-                            portfolio.target_amount = .1 + (out[x] * .1)
-                            ft.write(str(self.hs.currentHists[sym]['date'][z]) + ",")
-                            ft.write(sym +",")
-                            ft.write('buy,')
-                            ft.write(str(portfolio.target_amount)+",")
-                            ft.write(str(self.hs.currentHists[sym]['close'][z])+",")
-                            ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[0])+ " \n")
-                        '''
-                    #else:
-                ft.write(str(self.hs.currentHists[sym]['date'][z]) + ",")
-                ft.write(sym +",")
-                ft.write('none,')
-                ft.write("0.0,")
-                ft.write(str(self.hs.currentHists[sym]['close'][z])+",")
-                ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[0])+ " \n")
-                        #print("sold ", sym)
-                new_ref = portfolio.get_total_btc_value_no_sell(end_prices)[0]
-                '''
-                if(new_ref > 1.10 * port_ref or new_ref < .9*port_ref):
-                    port_ref = portfolio.get_total_btc_value_no_sell(end_prices)[0]
-                    portfolio.start = port_ref
-                    #skip the hold case because we just dont buy or sell heh
-                 '''
+        with open('./champs_histd3/port_hist'+ str(p_name) + '.txt', 'w') as pt:
+            pt.write('date,current_balance \n')
+            with open('./champs_histd3/trade_hist'+ str(p_name) + '.txt', 'w') as ft:
+                ft.write('date,symbol,type,amnt,price,current_balance \n')
+                for z in range(34, self.hs.hist_full_size -1):
+                    active = self.get_one_epoch_input(z)
+                    signals = []
+                    network.reset()
+                    for n in range(1, self.hd+1):
+                        out = network.activate(active[self.hd-n])
+                    for x in range(len(out)):
+                        signals.append(out[x])
+                        sym2 = list(self.hs.currentHists.keys())[x]
+                        end_prices[sym2] = self.hs.currentHists[sym2]['close'][z]
+                    sorted_shit = np.argsort(signals)[::-1]
+                    rebalance = portfolio_start
+                    #rng = iter(shuffle(rng))
+                    sym = ""
+                    for x in sorted_shit:
+                        sym = list(self.hs.currentHists.keys())[x]
+                        #print(out[x])
+                        #try:
+                        if(out[x] < -.5):
+                            #print("selling")
+                            did_sell = portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
+                            
+                            if did_sell:
+                                ft.write(str(self.hs.currentHists[sym]['date'][z]) + ",")
+                                ft.write(sym +",")
+                                ft.write('sell,')
+                                ft.write(str(portfolio.ledger[sym])+",")
+                                ft.write(str(self.hs.currentHists[sym]['close'][z])+",")
+                                ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[0])+ " \n")
+                            
+                            #print("bought ", sym)
+                        elif(out[x] > .5):
+                            did_buy = portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
+                            
+                            if did_buy:
+                                portfolio.target_amount = .1 + (out[x] * .1)
+                                ft.write(str(self.hs.currentHists[sym]['date'][z]) + ",")
+                                ft.write(sym +",")
+                                ft.write('buy,')
+                                ft.write(str(portfolio.target_amount)+",")
+                                ft.write(str(self.hs.currentHists[sym]['close'][z])+",")
+                                ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[0])+ " \n")
+                            
+                        #else:
+                    pt.write(str(self.hs.currentHists[sym]['date'][z]) + ",")
+                    #pt.write(str(self.hs.currentHists[sym]['close'][z])+",")
+                    pt.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[0])+ " \n")
+                            #print("sold ", sym)
+                    new_ref = portfolio.get_total_btc_value_no_sell(end_prices)[0]
+                    '''
+                    if(new_ref > 1.10 * port_ref or new_ref < .9*port_ref):
+                        port_ref = portfolio.get_total_btc_value_no_sell(end_prices)[0]
+                        portfolio.start = port_ref
+                        #skip the hold case because we just dont buy or sell heh
+                    '''
 
         result_val = portfolio.get_total_btc_value(end_prices)
         print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2], p_name)
-        ft = result_val[0]
-        return ft
+        fit = result_val[0]
+        return fit
 
     def solve(self, network):
         return self.evaluate(network) >= self.highest_returns
@@ -256,4 +255,4 @@ class PurpleTrader:
 
 
 pt = PurpleTrader(8)
-pt.run_champs()
+pt.run_champ()
