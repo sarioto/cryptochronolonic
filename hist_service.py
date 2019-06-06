@@ -309,29 +309,38 @@ class HistWorker:
     def combine_live_frames(self, length):
         fileNames = self.get_live_files()
         coin_and_hist_index = 0
-        for x in range(0,len(fileNames)):
+        restric_val = 0
+        file_lens = []
+        for y in range(0,len(fileNames)):
+            df = self.get_live_data_frame(fileNames[y])
+            df_len = len(df)
+            #print(df.head())
+            file_lens.append(df_len)
+        mode_len = mode(file_lens)
+        print(mode_len)
+        vollist = []
+        prefixes = []
+        for x in range(0, len(fileNames)):
             df = self.get_live_data_frame(fileNames[x])
             col_prefix = self.get_file_symbol(fileNames[x])
-            #df.drop("Unnamed: 0", 1)
-            #df = self.read_in_moon_data(df)
-            df = df.drop("Unnamed: 0", 1)
-            #df.rename(columns = lambda x: col_prefix+'_'+x, inplace=True)
             as_array = np.array(df)
-            #print(len(as_array))
-            if(len(as_array) > length):
+            if(len(as_array) == mode_len):
+                #print(as_array)
+                prefixes.append(col_prefix)
                 self.currentHists[col_prefix] = df
-                df = (df - df.mean()) / (df.max() - df.min())
-                as_array = np.array(df)
-                self.hist_shaped[coin_and_hist_index] = as_array
-                self.coin_dict[coin_and_hist_index] = col_prefix
-                coin_and_hist_index += 1
+                vollist.append(df['volume'][0])
+        if restrict_val != 0:
+            vollist = np.argsort(vollist)[-restrict_val:][::-1]
+        vollist = np.argsort(vollist)[::-1]
+        for ix in vollist:
+            #print(self.currentHists[col_prefix].head())
+            df = self.currentHists[prefixes[ix]][['avg_vol_3', 'avg_vol_34','avg_vol_13','avg_close_3', 'avg_close_13', 'avg_close_34']].copy()
+            norm_df = (df - df.mean()) / (df.max() - df.min())
+            as_array=np.array(norm_df)
+            self.hist_shaped[coin_and_hist_index] = as_array
+            self.coin_dict[coin_and_hist_index] = col_prefix
+            coin_and_hist_index += 1
         self.hist_shaped = pd.Series(self.hist_shaped)
-        '''
-        main = df_list[0]
-        for i in range(1, len(df_list)):
-            main = main.join(df_list[i])
-        return main
-        '''
 
 
     def combine_live_usd_frames(self):
