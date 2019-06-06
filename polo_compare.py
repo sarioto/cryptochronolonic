@@ -17,7 +17,7 @@ import _pickle as pickle
 from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
 from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork
-from NTree import nDimensionTree
+from NTree import nDimensionTree, nDimensionGoldenTree
 # Local
 class PurpleTrader:
 
@@ -49,7 +49,7 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.combine_polo_frames_vol_sorted()
+        self.hs.combine_binance_frames_vol_sorted(21)
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
@@ -58,7 +58,7 @@ class PurpleTrader:
         self.outputs = self.hs.hist_shaped.shape[0]
         self.leaf_names = []
         #num_leafs = 2**(len(self.node_names)-1)//2
-        self.tree = nDimensionTree((0.0, 0.0, 0.0), 1.0, 1)
+        self.tree = nDimensionGoldenTree((0.0, 0.0, 0.0), 1.0, 1)
         self.tree.divide_childrens()
         self.set_substrate()
         self.set_leaf_names()

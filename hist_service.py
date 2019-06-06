@@ -135,17 +135,20 @@ class HistWorker:
             if coin[:3] == 'BTC':
                 #print(coin)
                 hist = requests.get('https://poloniex.com/public?command=returnChartData&currencyPair='+coin+'&start='+start+'&end=9999999999&period='+tickLen)
-                h_frame = pd.DataFrame(hist.json())
-                frame = h_frame.copy()
-                frame['avg_vol_3'] = frame['volume'].rolling(3).mean()
-                frame['avg_vol_13'] = frame['volume'].rolling(13).mean()
-                frame['avg_vol_34'] = frame['volume'].rolling(34).mean()
-                frame['avg_close_3'] = frame['close'].rolling(3).mean()
-                frame['avg_close_13'] = frame['close'].rolling(13).mean()
-                frame['avg_close_34'] = frame['close'].rolling(34).mean()
-                frame.fillna(value=-99999, inplace=True)
-                print(coin + " written")
-                frame.to_csv("./paper/"+coin+"_hist.txt", encoding="utf-8")
+                try:
+                    h_frame = pd.DataFrame(hist.json())
+                    frame = h_frame.copy()
+                    frame['avg_vol_3'] = frame['volume'].rolling(3).mean()
+                    frame['avg_vol_13'] = frame['volume'].rolling(13).mean()
+                    frame['avg_vol_34'] = frame['volume'].rolling(34).mean()
+                    frame['avg_close_3'] = frame['close'].rolling(3).mean()
+                    frame['avg_close_13'] = frame['close'].rolling(13).mean()
+                    frame['avg_close_34'] = frame['close'].rolling(34).mean()
+                    frame.fillna(value=-99999, inplace=True)
+                    print(coin + " written")
+                    frame.to_csv("./paper/"+coin+"_hist.txt", encoding="utf-8")
+                except:
+                    print("error reading json")
 
 
     def pull_polo(self):
@@ -301,31 +304,33 @@ class HistWorker:
             norm_df = (df - df.mean()) / (df.max() - df.min())
             as_array=np.array(norm_df)
             self.hist_shaped[coin_and_hist_index] = as_array
-            self.coin_dict[coin_and_hist_index] = col_prefix
+            self.coin_dict[coin_and_hist_index] = prefixes[ix]
             coin_and_hist_index += 1
         self.hist_shaped = pd.Series(self.hist_shaped)
 
 
     def combine_live_frames(self, length):
         fileNames = self.get_live_files()
+        #print(fileNames)
+        #print(self.coin_dict)
         coin_and_hist_index = 0
-        restric_val = 0
         file_lens = []
+        restrict_val = 0
         for y in range(0,len(fileNames)):
             df = self.get_live_data_frame(fileNames[y])
             df_len = len(df)
             #print(df.head())
             file_lens.append(df_len)
         mode_len = mode(file_lens)
-        print(mode_len)
         vollist = []
         prefixes = []
         for x in range(0, len(fileNames)):
             df = self.get_live_data_frame(fileNames[x])
             col_prefix = self.get_file_symbol(fileNames[x])
+            #print(col_prefix)
             as_array = np.array(df)
             if(len(as_array) == mode_len):
-                #print(as_array)
+                print(col_prefix)
                 prefixes.append(col_prefix)
                 self.currentHists[col_prefix] = df
                 vollist.append(df['volume'][0])
@@ -338,7 +343,8 @@ class HistWorker:
             norm_df = (df - df.mean()) / (df.max() - df.min())
             as_array=np.array(norm_df)
             self.hist_shaped[coin_and_hist_index] = as_array
-            self.coin_dict[coin_and_hist_index] = col_prefix
+            self.coin_dict[coin_and_hist_index] = prefixes[ix]
+            print(col_prefix)
             coin_and_hist_index += 1
         self.hist_shaped = pd.Series(self.hist_shaped)
 
