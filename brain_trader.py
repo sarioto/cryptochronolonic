@@ -293,7 +293,7 @@ class PaperTrader:
         g = bestg
         '''
         #file.close()
-        g = g.population[5808]
+        g = g.population[5910]
         [the_cppn] = create_cppn(g, self.config, self.leaf_names, ['cppn_out'])
         self.cppn = the_cppn
 

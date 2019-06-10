@@ -6,7 +6,7 @@ def pull_in_file(f_name):
 
 
 if __name__ == '__main__':
-    thist = pull_in_file('port_hist5808.txt')
+    thist = pull_in_file('port_hist870.txt')
     print(list(thist))
     print(thist.head())
 
