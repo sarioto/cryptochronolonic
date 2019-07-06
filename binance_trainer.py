@@ -17,15 +17,15 @@ import _pickle as pickle
 from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
 from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork
-from NTree import nDimensionTree, nDimensionGoldenTree
+from rand_utils.NTree import nDimensionTree, nDimensionGoldenTree
 # Local
 class PurpleTrader:
 
     #needs to be initialized so as to allow for 62 outputs that return a coordinate
 
     # ES-HyperNEAT specific parameters.
-    params = {"initial_depth": 3,
-            "max_depth": 4,
+    params = {"initial_depth": 4,
+            "max_depth": 5,
             "variance_threshold": 0.00013,
             "band_threshold": 0.00013,
             "iteration_level": 3,
@@ -37,7 +37,7 @@ class PurpleTrader:
     # Config for CPPN.
     config = neat.config.Config(neat.genome.DefaultGenome, neat.reproduction.DefaultReproduction,
                                 neat.species.DefaultSpeciesSet, neat.stagnation.DefaultStagnation,
-                                'config_trader')
+                                './configs/config_trader')
 
     start_idx = 0
     highest_returns = 0
@@ -49,7 +49,7 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.combine_polo_frames_vol_sorted()
+        self.hs.combine_polo_frames_vol_sorted(3)
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
