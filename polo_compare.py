@@ -17,7 +17,7 @@ import _pickle as pickle
 from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
 from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork
-from NTree import nDimensionTree, nDimensionGoldenTree
+from rand_utils.NTree import nDimensionTree, nDimensionGoldenTree
 # Local
 class PurpleTrader:
 
@@ -37,7 +37,7 @@ class PurpleTrader:
     # Config for CPPN.
     config = neat.config.Config(neat.genome.DefaultGenome, neat.reproduction.DefaultReproduction,
                                 neat.species.DefaultSpeciesSet, neat.stagnation.DefaultStagnation,
-                                'config_trader')
+                                './configs/config_trader')
 
     start_idx = 0
     highest_returns = 0
@@ -70,19 +70,15 @@ class PurpleTrader:
             self.leaf_names.append('leaf_one_'+str(l))
             self.leaf_names.append('leaf_two_'+str(l))
         #self.leaf_names.append('bias')
+
     def set_substrate(self):
         sign = 1
         x_increment = 1.0 / self.outputs
         y_increment = 1.0 / len(self.hs.hist_shaped[0][0])
         for ix in range(self.outputs):
-            self.out_shapes.append((1.0-(ix*x_increment), 0.0, -1.0))
-            for ix2 in range(self.inputs//self.outputs):
-                if(ix2 >= len(self.tree.cs)-1):
-                    treex = ix2 - len(self.tree.cs)-1
-                else:
-                    treex = ix2
-                center = self.tree.cs[treex]
-                self.in_shapes.append((center.coord[0]+(ix*x_increment), center.coord[1] - (ix2*y_increment), center.coord[2]+.5))
+            self.out_shapes.append((1.0-(ix*x_increment), -1.0, 0.0))
+            for ix2 in range(len(self.hs.hist_shaped[0][0])):
+                self.in_shapes.append((-1.0+(ix*x_increment), 1.0 - (ix2*y_increment), 1.0))
         self.subStrate = Substrate(self.in_shapes, self.out_shapes)
 
     def set_portfolio_keys(self, folio):
