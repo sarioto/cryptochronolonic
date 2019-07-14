@@ -41,6 +41,7 @@ class nDimensionGoldenTree:
         self.subbed_dimen_count = 0
         self.lvl = level
         self.signs = self.set_signs()
+        self.depth = 0
 
     def set_signs(self):
         return list(itertools.product([1,-1], repeat=len(self.coord)))
@@ -61,6 +62,12 @@ class nDimensionGoldenTree:
                 # us new root position in this dimension as spot to offset from
                 child_root.append(new_center + (self.sub_width/(2*self.signs[i][y])))
             self.cs.append(nDimensionGoldenTree(child_root, self.sub_width/2, self.lvl+1))
+            self.depth += 1
+    
+    @staticmethod
+    def recursive_subdivide(tree, depth):
+        return 
+
 
 
 '''
