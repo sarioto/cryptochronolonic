@@ -76,7 +76,7 @@ class PurpleTrader:
         x_increment = 1.0 / self.outputs
         y_increment = 1.0 / len(self.hs.hist_shaped[0][0])
         for ix in range(self.outputs):
-            self.out_shapes.append((1.0-(ix*x_increment), -1.0, 0.0))
+            self.out_shapes.append((1.0-(ix*x_increment), 0.0, -1.0))
             for ix2 in range(len(self.hs.hist_shaped[0][0])):
                 self.in_shapes.append((-1.0+(ix*x_increment), 1.0 - (ix2*y_increment), 1.0))
         self.subStrate = Substrate(self.in_shapes, self.out_shapes)
