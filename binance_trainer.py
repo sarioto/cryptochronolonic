@@ -30,7 +30,7 @@ class PurpleTrader:
             "band_threshold": 0.00013,
             "iteration_level": 3,
             "division_threshold": 0.00013,
-            "max_weight": 3.0,
+            "max_weight": 8.0,
             "activation": "tanh"}
 
 
