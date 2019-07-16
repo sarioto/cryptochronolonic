@@ -58,8 +58,8 @@ class PurpleTrader:
         self.outputs = self.hs.hist_shaped.shape[0]
         self.leaf_names = []
         #num_leafs = 2**(len(self.node_names)-1)//2
-        self.tree = nDimensionGoldenTree((0.0, 0.0, 0.0), 1.0, 1)
-        self.tree.divide_childrens()
+        #self.tree = nDimensionGoldenTree((0.0, 0.0, 0.0), 1.0, 1)
+        #self.tree.divide_childrens()
         self.set_substrate()
         self.set_leaf_names()
         self.epoch_len = hist_depth
