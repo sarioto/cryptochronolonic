@@ -29,13 +29,13 @@ key = ""
 secret = ""
 
 class LiveTrader:
-    params = {"initial_depth": 3,
+    params = {"initial_depth": 4,
             "max_depth": 4,
             "variance_threshold": 0.00013,
             "band_threshold": 0.00013,
             "iteration_level": 3,
             "division_threshold": 0.00013,
-            "max_weight": 5.0,
+            "max_weight": 8.0,
             "activation": "tanh"}
 
 

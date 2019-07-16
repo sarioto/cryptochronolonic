@@ -30,7 +30,7 @@ class PurpleTrader:
             "band_threshold": 0.00013,
             "iteration_level": 3,
             "division_threshold": 0.00013,
-            "max_weight": 3.0,
+            "max_weight": 8.0,
             "activation": "tanh"}
 
 
@@ -58,8 +58,8 @@ class PurpleTrader:
         self.outputs = self.hs.hist_shaped.shape[0]
         self.leaf_names = []
         #num_leafs = 2**(len(self.node_names)-1)//2
-        self.tree = nDimensionGoldenTree((0.0, 0.0, 0.0), 1.0, 1)
-        self.tree.divide_childrens()
+        #self.tree = nDimensionGoldenTree((0.0, 0.0, 0.0), 1.0, 1)
+        #self.tree.divide_childrens()
         self.set_substrate()
         self.set_leaf_names()
         self.epoch_len = hist_depth
@@ -119,7 +119,7 @@ class PurpleTrader:
         self.cppn = the_cppn
         
     def run_champs(self):
-        genomes = neat.Checkpointer.restore_checkpoint("./binance_champs_2/tradegod-checkpoint-35").population
+        genomes = neat.Checkpointer.restore_checkpoint("./binance_champs_2/tradegod-checkpoint-88").population
         fitness_data = {}
         best_fitness = 0.0
         best_ix = ""
