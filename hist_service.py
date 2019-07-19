@@ -289,7 +289,7 @@ class HistWorker:
         for x in range(0, len(fileNames)):
             df = self.get_data_frame(fileNames[x])
             df = df.iloc[::-1]
-            print(df["date"])
+            print(df.head())
             col_prefix = self.get_file_symbol(fileNames[x])
             as_array = np.array(df)
             if(len(as_array) == mode_len):
@@ -378,3 +378,5 @@ class HistWorker:
             main = main.join(df_list[i])
         return main
         '''
+hs = HistWorker()
+hs.combine_polo_frames_vol_sorted(3)
