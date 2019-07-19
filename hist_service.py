@@ -281,7 +281,6 @@ class HistWorker:
         for y in range(0,len(fileNames)):
             df = self.get_data_frame(fileNames[y])
             df_len = len(df)
-            #print(df.head())
             file_lens.append(df_len)
         mode_len = mode(file_lens)
         print(mode_len)
@@ -289,6 +288,8 @@ class HistWorker:
         prefixes = []
         for x in range(0, len(fileNames)):
             df = self.get_data_frame(fileNames[x])
+            df = df.iloc[::-1]
+            print(df["date"])
             col_prefix = self.get_file_symbol(fileNames[x])
             as_array = np.array(df)
             if(len(as_array) == mode_len):
@@ -377,5 +378,3 @@ class HistWorker:
             main = main.join(df_list[i])
         return main
         '''
-
-
