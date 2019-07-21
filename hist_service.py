@@ -299,7 +299,7 @@ class HistWorker:
                 vollist.append(df['volume'][0])
         if restrict_val != 0:
             vollist = np.argsort(vollist)[-restrict_val:][::-1]
-        #vollist = np.argsort(vollist)[::-1]
+        vollist = np.argsort(vollist)[::-1]
         for ix in vollist:
             #print(self.currentHists[col_prefix].head())
             df = self.currentHists[prefixes[ix]][['avg_vol_3', 'avg_vol_34','avg_vol_13','avg_close_3', 'avg_close_13', 'avg_close_34']].copy()
