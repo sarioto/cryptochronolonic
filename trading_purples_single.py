@@ -50,7 +50,8 @@ class PurpleTrader:
         self.hs.combine_frames()
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
-        self.end_idx = len(self.hs.currentHists["ZEC"])
+        # set our ending idx, the length of our training data set
+        self.end_idx = len(self.hs.currentHists[self.hs.currentHists.keys()[0]])
         self.but_target = .1
         self.inputs = self.hs.hist_shaped[0].shape[1]
         self.outputs = 1
