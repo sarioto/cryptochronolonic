@@ -16,16 +16,16 @@ import neat
 import _pickle as pickle
 from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
-from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork
-from rand_utils.NTree import nDimensionTree, nDimensionGoldenTree
+from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork, nDimensionTree
+
 # Local
 class PurpleTrader:
 
     #needs to be initialized so as to allow for 62 outputs that return a coordinate
 
     # ES-HyperNEAT specific parameters.
-    params = {"initial_depth": 3,
-            "max_depth": 4,
+    params = {"initial_depth": 2,
+            "max_depth": 3,
             "variance_threshold": 0.00013,
             "band_threshold": 0.00013,
             "iteration_level": 3,
@@ -64,6 +64,9 @@ class PurpleTrader:
         num_leafs = 2**(len(self.node_names)-1)//2
         self.set_substrate()
         self.set_leaf_names()
+        self.initial_depth_tree = nDimensionTree([0.0,0.0,0.0], 1.0, 0)
+        nDimensionTree.divide_to_depth(self.initial_depth_tree, self.initial_depth_tree.lvl, self.params["initial_depth"])
+
         
 
     def set_leaf_names(self):
@@ -122,10 +125,12 @@ class PurpleTrader:
                 network.reset()
                 for n in range(1, self.hd+1):
                     out = network.activate(active[self.hd-n])
+                '''
                 for x in range(len(out)):
                     signals.append(out[x])
                 sorted_shit = np.argsort(signals)[::-1]
-                for x in sorted_shit:
+                '''
+                for x in range(len(out)):
                     sym = self.hs.coin_dict[x]
                     #print(out[x])
                     #try:

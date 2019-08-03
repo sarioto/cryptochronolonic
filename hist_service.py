@@ -151,12 +151,15 @@ class HistWorker:
                 #print(hist.json())
                 try:
                     h_frame = pd.DataFrame(hist.json())
-                    print(h_frame.head())
                     frame = h_frame.copy()
-                    frame['avg_vol_3'] = frame['volume'].rolling(3).mean()
+                    h = frame.high
+                    l = frame.low
+                    v = frame.volume
+                    frame['vwap'] = np.cumsum(v*(h+l)/2) / np.cumsum(v)
+                    #frame['avg_vol_3'] = frame['volume'].rolling(3).mean()
                     frame['avg_vol_13'] = frame['volume'].rolling(13).mean()
                     frame['avg_vol_34'] = frame['volume'].rolling(34).mean()
-                    frame['avg_close_3'] = frame['close'].rolling(3).mean()
+                    #frame['avg_close_3'] = frame['close'].rolling(3).mean()
                     frame['avg_close_13'] = frame['close'].rolling(13).mean()
                     frame['avg_close_34'] = frame['close'].rolling(34).mean()
                     frame.fillna(value=-99999, inplace=True)
@@ -253,13 +256,15 @@ class HistWorker:
             as_array = np.array(df)
 
             #print(len(as_array))
-            if(len(as_array) == length):
+            if(len(as_array) == mode_len):
                 self.currentHists[col_prefix] = df
+                df = self.currentHists[col_prefix][['avg_vol_34','avg_vol_13', 'avg_close_13', 'avg_close_34', 'vwap']].copy()
                 df = (df - df.mean()) / (df.max() - df.min())
                 as_array=np.array(df)
                 self.hist_shaped[coin_and_hist_index] = as_array
                 self.coin_dict[coin_and_hist_index] = col_prefix
                 coin_and_hist_index += 1
+        print(self.coin_dict)
         self.hist_shaped = pd.Series(self.hist_shaped)
 
 
@@ -304,9 +309,10 @@ class HistWorker:
             norm_df = (df - df.mean()) / (df.max() - df.min())
             as_array=np.array(norm_df)
             self.hist_shaped[coin_and_hist_index] = as_array
-            self.coin_dict[coin_and_hist_index] = prefixes[ix]
+            self.coin_dict[vollist[ix]] = prefixes[ix]
             coin_and_hist_index += 1
         #print(self.coin_dict, self.hist_shaped)
+        print(self.coin_dict)
         self.hist_shaped = pd.Series(self.hist_shaped)
 
 
@@ -377,5 +383,6 @@ class HistWorker:
             main = main.join(df_list[i])
         return main
         '''
-hs = HistWorker()
-hs.combine_polo_frames_vol_sorted(3)
+#hs = HistWorker()
+
+#hs.combine_frames()
