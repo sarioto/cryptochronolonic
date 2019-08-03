@@ -275,6 +275,12 @@ class HistWorker:
         print(mode_len)
         vollist = []
         prefixes = []
+        #loop through the filenames
+        #get the file as dataframe, parse out the symbol
+        #check that its a full length df
+        #if it is, add the symbol to prefixs, add the df to our symbol -> df dictionary
+        #add the volume to a list so we can sort and use that to restrict to top n
+        #symbols by volume
         for x in range(0, len(fileNames)):
             df = self.get_data_frame(fileNames[x])
             #df = df.iloc[::-1]
@@ -289,7 +295,7 @@ class HistWorker:
         if restrict_val != 0:
             vollist = np.argsort(vollist)[-restrict_val:][::-1]
         vollist = np.argsort(vollist)[::-1]
-        # the following loop will build out an np array with and our coin_dict
+        # the following loop will grap our ta signals, normalize them, and build out an np array with and our coin_dict
         # the code for pulling input data from this array is in the fitness functions 
         # as it stands right now but a TODO is definetely to get that living in here
         for ix in vollist:
