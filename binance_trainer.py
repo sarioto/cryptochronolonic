@@ -53,6 +53,7 @@ class PurpleTrader:
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
+        print(self.end_idx)
         self.but_target = .1
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = len(self.hs.coin_dict)
@@ -61,8 +62,6 @@ class PurpleTrader:
         self.node_names = ['x1', 'y1', 'z1', 'x2', 'y2', 'z2', 'weight']
         self.leaf_names = []
         num_leafs = 2**(len(self.node_names)-1)//2
-        #self.tree = nDimensionGoldenTree((0.0, 0.0, 0.0), 1.0, 1)
-        #self.tree.divide_childrens()
         self.set_substrate()
         self.set_leaf_names()
         

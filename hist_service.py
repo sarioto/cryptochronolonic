@@ -72,23 +72,7 @@ class HistWorker:
     def get_binance_symbol(self, f):
         f = f.split("_", 2)
         return f[0]
-    '''
-    def get_data_for_astro(self):
-        data = {}
-        dates = []
-        md = []
-        l_of_frame = len(self.currentHists['DASH']['date'])
-        for snoz in range(0, l_of_frame):
-            new_date = datetime.utcfromtimestamp((self.currentHists['DASH']['date'][snoz])).strftime('%Y-%m-%d  %H:%M:%S')
-            dates.append(self.currentHists['DASH']['date'][snoz])
-            md.append(gbaby.planet_dist(new_date, 'moon'))
 
-        data = {'date': dates, 'moon_dist': md}
-        data = pd.DataFrame.from_dict(data)
-        data.to_csv("moon_dists.txt", encoding="utf-8")
-        #data = data.join(self.currentHists['DASH'].set_index('date'), on='date', how="left").drop('Unnamed: 0', 1)
-        return data.head()
-    '''
     def read_in_moon_data(self, df):
         moon = pd.read_csv('./moon_dists.txt')
         moon.set_index("date")
@@ -138,10 +122,14 @@ class HistWorker:
                 try:
                     h_frame = pd.DataFrame(hist.json())
                     frame = h_frame.copy()
-                    frame['avg_vol_3'] = frame['volume'].rolling(3).mean()
+                    h = frame.high
+                    l = frame.low
+                    v = frame.volume
+                    frame['vwap'] = np.cumsum(v*(h+l)/2) / np.cumsum(v)
+                    #frame['avg_vol_3'] = frame['volume'].rolling(3).mean()
                     frame['avg_vol_13'] = frame['volume'].rolling(13).mean()
                     frame['avg_vol_34'] = frame['volume'].rolling(34).mean()
-                    frame['avg_close_3'] = frame['close'].rolling(3).mean()
+                    #frame['avg_close_3'] = frame['close'].rolling(3).mean()
                     frame['avg_close_13'] = frame['close'].rolling(13).mean()
                     frame['avg_close_34'] = frame['close'].rolling(34).mean()
                     frame.fillna(value=-99999, inplace=True)
@@ -273,12 +261,8 @@ class HistWorker:
                 self.coin_dict[coin_and_hist_index] = col_prefix
                 coin_and_hist_index += 1
         self.hist_shaped = pd.Series(self.hist_shaped)
-        '''
-        main = df_list[0]
-        for i in range(1, len(df_list)):
-            main = main.join(df_list[i])
-        return main
-        '''
+
+
     def combine_polo_frames_vol_sorted(self, restrict_val=0):
         fileNames = self.get_hist_files()
         coin_and_hist_index = 0
@@ -305,9 +289,12 @@ class HistWorker:
         if restrict_val != 0:
             vollist = np.argsort(vollist)[-restrict_val:][::-1]
         vollist = np.argsort(vollist)[::-1]
+        # the following loop will build out an np array with and our coin_dict
+        # the code for pulling input data from this array is in the fitness functions 
+        # as it stands right now but a TODO is definetely to get that living in here
         for ix in vollist:
             #print(self.currentHists[col_prefix].head())
-            df = self.currentHists[prefixes[ix]][['avg_vol_3', 'avg_vol_34','avg_vol_13','avg_close_3', 'avg_close_13', 'avg_close_34']].copy()
+            df = self.currentHists[prefixes[ix]][['avg_vol_34','avg_vol_13', 'avg_close_13', 'avg_close_34', 'vwap']].copy()
             norm_df = (df - df.mean()) / (df.max() - df.min())
             as_array=np.array(norm_df)
             self.hist_shaped[coin_and_hist_index] = as_array
