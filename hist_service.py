@@ -248,6 +248,12 @@ class HistWorker:
         length = 7992
         fileNames = self.get_hist_files()
         coin_and_hist_index = 0
+        file_lens = []
+        for y in range(0,len(fileNames)):
+            df = self.get_data_frame(fileNames[y])
+            df_len = len(df)
+            file_lens.append(df_len)
+        mode_len = mode(file_lens)
         for x in range(0,len(fileNames)):
             df = self.get_data_frame(fileNames[x])
             col_prefix = self.get_file_symbol(fileNames[x])
@@ -274,7 +280,6 @@ class HistWorker:
         return main
         '''
     def combine_polo_frames_vol_sorted(self, restrict_val=0):
-        length = 7992
         fileNames = self.get_hist_files()
         coin_and_hist_index = 0
         file_lens = []
