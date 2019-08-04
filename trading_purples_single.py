@@ -15,7 +15,7 @@ import neat.nn
 import _pickle as pickle
 from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
-from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork
+from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork, nDimensionTree
 # Local
 class PurpleTrader:
 
@@ -28,14 +28,14 @@ class PurpleTrader:
             "band_threshold": 0.00013,
             "iteration_level": 3,
             "division_threshold": 0.00013,
-            "max_weight": 5.0,
+            "max_weight": 8.0,
             "activation": "tanh"}
 
 
     # Config for CPPN.
     config = neat.config.Config(neat.genome.DefaultGenome, neat.reproduction.DefaultReproduction,
                                 neat.species.DefaultSpeciesSet, neat.stagnation.DefaultStagnation,
-                                'config_trader')
+                                './configs/config_trader')
 
     start_idx = 0
     highest_returns = 0
@@ -51,7 +51,7 @@ class PurpleTrader:
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         # set our ending idx, the length of our training data set
-        self.end_idx = len(self.hs.currentHists[self.hs.currentHists.keys()[0]])
+        self.end_idx = len(self.hs.hist_shaped[0])
         self.but_target = .1
         self.inputs = self.hs.hist_shaped[0].shape[1]
         self.outputs = 1
@@ -64,7 +64,8 @@ class PurpleTrader:
         self.epoch_len = 255
         #self.node_names = ['x1', 'y1', 'z1', 'x2', 'y2', 'z2', 'weight']
         self.leaf_names = []
-        #num_leafs = 2**(len(self.node_names)-1)//2
+        self.initial_depth_tree = nDimensionTree([0.0,0.0,0.0], 1.0, 0)
+        nDimensionTree.divide_to_depth(self.initial_depth_tree, self.initial_depth_tree.lvl, self.params["initial_depth"])
         for l in range(len(self.in_shapes[0])):
             self.leaf_names.append('leaf_one_'+str(l))
             self.leaf_names.append('leaf_two_'+str(l))
@@ -91,13 +92,12 @@ class PurpleTrader:
 
     def get_single_symbol_epoch(self, end_idx, symbol_idx):
         master_active = []
-        for x in range(0, self.hd):
-            try:
-                sym_data = self.hs.hist_shaped[symbol_idx][end_idx-x]
-                #print(len(sym_data))
-                master_active.append(sym_data.tolist())
-            except:
-                print('error')
+        try:
+            sym_data = self.hs.hist_shaped[symbol_idx][end_idx]
+            #print(len(sym_data))
+            master_active = sym_data.tolist()
+        except:
+            print('error')
         return master_active
 
     def evaluate(self, network, es, rand_start, g, verbose=False):
@@ -112,8 +112,8 @@ class PurpleTrader:
                     sym = self.hs.coin_dict[x]
                     active = self.get_single_symbol_epoch(z, x)
                     network.reset()
-                    for n in range(1, self.hd+1):
-                        out = network.activate(active[self.hd-n])
+                    #for n in range(1, self.hd+1):
+                    out = network.activate(active)
                     #print(len(out))
 
                     #print(out[x])
@@ -143,7 +143,7 @@ class PurpleTrader:
         file = open("es_trade_god_cppn_3d.pkl",'rb')
         [cppn] = pickle.load(file)
         network = ESNetwork(self.subStrate, cppn, self.params)
-        net = network.create_phenotype_network_nd()
+        net = network.create_phenotype_network_nd(self.initial_depth_tree)
         fitness = self.evaluate(net, network, r_start)
         return fitness
 
@@ -154,7 +154,7 @@ class PurpleTrader:
         for idx, g in genomes:
             [cppn] = create_cppn(g, config, self.leaf_names, ['cppn_out'])
             network = ESNetwork(self.subStrate, cppn, self.params)
-            net = network.create_phenotype_network_nd()
+            net = network.create_phenotype_network_nd(self.initial_depth_tree)
             g.fitness = self.evaluate(net, network, r_start, g)
             if(g.fitness > fitter_val):
                 fitter = g

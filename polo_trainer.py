@@ -16,7 +16,7 @@ import neat
 import _pickle as pickle
 from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
-from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork
+from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork, nDimensionTree
 # Local
 class PurpleTrader:
 
