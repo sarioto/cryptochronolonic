@@ -101,7 +101,7 @@ class PurpleTrader:
         return master_active
 
     def evaluate(self, network, es, rand_start, g, verbose=False):
-        portfolio_start = .05
+        portfolio_start = 1.0
         portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict)
         end_prices = {}
         buys = 0
