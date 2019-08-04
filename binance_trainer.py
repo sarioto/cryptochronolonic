@@ -110,7 +110,7 @@ class PurpleTrader:
         # then we make our nets, and start fitness evaluation
         rand_start = self.rand_start
         [cppn] = create_cppn(g, config, self.leaf_names, ['cppn_out'])
-        net = ESNetwork(self.subStrate, cppn, self.params)
+        net = ESNetwork(self.subStrate, cppn, self.params, self.initial_depth_tree)
         network = net.create_phenotype_network_nd()
         portfolio_start = 1.0
         key_list = list(self.hs.currentHists.keys())
