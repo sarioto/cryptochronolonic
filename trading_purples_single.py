@@ -25,7 +25,7 @@ class PurpleTrader:
     params = {"initial_depth": 3,
             "max_depth": 4,
             "variance_threshold": 0.00013,
-            "band_threshold": 0.00013,
+            "band_threshold": 0.0000013,
             "iteration_level": 3,
             "division_threshold": 0.00013,
             "max_weight": 8.0,
@@ -100,6 +100,18 @@ class PurpleTrader:
             print('error')
         return master_active
 
+
+    def get_single_symbol_epoch_recurrent(self, end_idx, symbol_idx):
+        master_active = []
+        for x in range(0, self.hd):
+            try:
+                sym_data = self.hs.hist_shaped[symbol_idx][end_idx-x]
+                #print(len(sym_data))
+                master_active.append(sym_data.tolist())
+            except:
+                print('error')
+        return master_active
+
     def evaluate(self, network, es, rand_start, g, verbose=False):
         portfolio_start = 1.0
         portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict)
@@ -110,14 +122,10 @@ class PurpleTrader:
             for z in range(rand_start, rand_start+self.epoch_len):
                 for x in np.random.permutation(self.outputs):
                     sym = self.hs.coin_dict[x]
-                    active = self.get_single_symbol_epoch(z, x)
+                    active = self.get_single_symbol_epoch_recurrent(z, x)
                     network.reset()
-                    #for n in range(1, self.hd+1):
-                    out = network.activate(active)
-                    #print(len(out))
-
-                    #print(out[x])
-                    #try:
+                    for n in range(1, self.hd+1):
+                        out = network.activate(active[self.hd-n])
                     if(out[0] < -.5):
                         #print("selling")
                         portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
@@ -154,7 +162,7 @@ class PurpleTrader:
         for idx, g in genomes:
             [cppn] = create_cppn(g, config, self.leaf_names, ['cppn_out'])
             network = ESNetwork(self.subStrate, cppn, self.params)
-            net = network.create_phenotype_network_nd()
+            net = network.create_phenotype_network_nd(self.initial_depth_tree)
             g.fitness = self.evaluate(net, network, r_start, g)
             if(g.fitness > fitter_val):
                 fitter = g
@@ -178,7 +186,7 @@ def run_pop(task, gens):
 if __name__ == '__main__':
     task = PurpleTrader(55)
     #print(task.trial_run())
-    winner = run_pop(task, 34)[0]
+    winner = run_pop(task, 89)[0]
     print('\nBest genome:\n{!s}'.format(winner))
 
     # Verify network output against training data.
