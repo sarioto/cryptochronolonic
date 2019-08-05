@@ -35,7 +35,7 @@ class PurpleTrader:
     # Config for CPPN.
     config = neat.config.Config(neat.genome.DefaultGenome, neat.reproduction.DefaultReproduction,
                                 neat.species.DefaultSpeciesSet, neat.stagnation.DefaultStagnation,
-                                './configs/config_trader')
+                                './configs/config_old')
 
     start_idx = 0
     highest_returns = 0
