@@ -37,13 +37,13 @@ conn_delete_prob        = 0.34
 
 # connection enable options
 enabled_default         = True
-enabled_mutate_rate     = 0.13
+enabled_mutate_rate     = 0.34
 
 feed_forward            = True
 initial_connection      = full_direct
 
 # node add/remove rates
-node_add_prob           = 0.21
+node_add_prob           = 0.34
 node_delete_prob        = 0.13
 
 # network parameters
@@ -78,5 +78,5 @@ max_stagnation       = 1
 species_elitism      = 2
 
 [DefaultReproduction]
-elitism            = 13
-survival_threshold = .051
+elitism            = 34
+survival_threshold = 1.001
