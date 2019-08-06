@@ -65,7 +65,7 @@ class PurpleTrader:
         self.set_substrate()
         self.set_leaf_names()
         self.initial_depth_tree = nDimensionTree([0.0,0.0,0.0], 1.0, 0)
-        nDimensionTree.divide_to_depth(self.initial_depth_tree, self.initial_depth_tree.lvl, self.params["initial_depth"])
+        #nDimensionTree.divide_to_depth(self.initial_depth_tree, self.initial_depth_tree.lvl, self.params["initial_depth"])
 
         
 
@@ -111,7 +111,7 @@ class PurpleTrader:
         rand_start = self.rand_start
         [cppn] = create_cppn(g, config, self.leaf_names, ['cppn_out'])
         net = ESNetwork(self.subStrate, cppn, self.params)
-        network = net.create_phenotype_network_nd(self.initial_depth_tree)
+        network = net.create_phenotype_network_nd()
         portfolio_start = 1.0
         key_list = list(self.hs.currentHists.keys())
         portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict)

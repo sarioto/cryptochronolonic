@@ -65,7 +65,7 @@ class PurpleTrader:
         #self.node_names = ['x1', 'y1', 'z1', 'x2', 'y2', 'z2', 'weight']
         self.leaf_names = []
         self.initial_depth_tree = nDimensionTree([0.0,0.0,0.0], 1.0, 0)
-        nDimensionTree.divide_to_depth(self.initial_depth_tree, self.initial_depth_tree.lvl, self.params["initial_depth"])
+        #nDimensionTree.divide_to_depth(self.initial_depth_tree, self.initial_depth_tree.lvl, self.params["initial_depth"])
         for l in range(len(self.in_shapes[0])):
             self.leaf_names.append('leaf_one_'+str(l))
             self.leaf_names.append('leaf_two_'+str(l))
@@ -162,7 +162,7 @@ class PurpleTrader:
         for idx, g in genomes:
             [cppn] = create_cppn(g, config, self.leaf_names, ['cppn_out'])
             network = ESNetwork(self.subStrate, cppn, self.params)
-            net = network.create_phenotype_network_nd(self.initial_depth_tree)
+            net = network.create_phenotype_network_nd()
             g.fitness = self.evaluate(net, network, r_start, g)
             if(g.fitness > fitter_val):
                 fitter = g
