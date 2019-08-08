@@ -35,7 +35,7 @@ class PurpleTrader:
     # Config for CPPN.
     config = neat.config.Config(neat.genome.DefaultGenome, neat.reproduction.DefaultReproduction,
                                 neat.species.DefaultSpeciesSet, neat.stagnation.DefaultStagnation,
-                                './configs/config_old')
+                                './configs/config_trader')
 
     start_idx = 0
     highest_returns = 0
@@ -64,7 +64,7 @@ class PurpleTrader:
         self.epoch_len = 255
         #self.node_names = ['x1', 'y1', 'z1', 'x2', 'y2', 'z2', 'weight']
         self.leaf_names = []
-        self.initial_depth_tree = nDimensionTree([0.0,0.0,0.0], 1.0, 0)
+        #self.initial_depth_tree = nDimensionTree([0.0,0.0,0.0], 1.0, 0)
         #nDimensionTree.divide_to_depth(self.initial_depth_tree, self.initial_depth_tree.lvl, self.params["initial_depth"])
         for l in range(len(self.in_shapes[0])):
             self.leaf_names.append('leaf_one_'+str(l))
@@ -151,7 +151,7 @@ class PurpleTrader:
         file = open("es_trade_god_cppn_3d.pkl",'rb')
         [cppn] = pickle.load(file)
         network = ESNetwork(self.subStrate, cppn, self.params)
-        net = network.create_phenotype_network_nd(self.initial_depth_tree)
+        net = network.create_phenotype_network_nd()
         fitness = self.evaluate(net, network, r_start)
         return fitness
 
@@ -159,7 +159,7 @@ class PurpleTrader:
         r_start = randint(0+self.hd, self.hs.hist_full_size - self.epoch_len)
         fitter = genomes[0]
         fitter_val = 0.0 
-        for idx, g in genomes:
+        for g in genomes:
             [cppn] = create_cppn(g, config, self.leaf_names, ['cppn_out'])
             network = ESNetwork(self.subStrate, cppn, self.params)
             net = network.create_phenotype_network_nd()
@@ -184,7 +184,7 @@ def run_pop(task, gens):
 
 # If run as script.
 if __name__ == '__main__':
-    task = PurpleTrader(55)
+    task = PurpleTrader(13)
     #print(task.trial_run())
     winner = run_pop(task, 89)[0]
     print('\nBest genome:\n{!s}'.format(winner))
