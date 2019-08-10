@@ -16,7 +16,7 @@ import neat
 import _pickle as pickle
 from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
-from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork, nDimensionTree
+from pureples.es_hyperneat.es_hyperneat import ESNetwork, nDimensionTree
 
 # Local
 class PurpleTrader:
@@ -109,7 +109,7 @@ class PurpleTrader:
         # k so here we create a random start index
         # then we make our nets, and start fitness evaluation
         rand_start = self.rand_start
-        [cppn] = create_cppn(g, config, self.leaf_names, ['cppn_out'])
+        cppn = neat.nn.FeedForwardNetwork.create(g, config)
         net = ESNetwork(self.subStrate, cppn, self.params)
         network = net.create_phenotype_network_nd()
         portfolio_start = 1.0
