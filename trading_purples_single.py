@@ -4,7 +4,6 @@ import random
 import sys, os
 from functools import partial
 from itertools import product
-from pytorch_neat.cppn import create_cppn
 # Libs
 import numpy as np
 from hist_service import HistWorker
@@ -35,7 +34,7 @@ class PurpleTrader:
     # Config for CPPN.
     config = neat.config.Config(neat.genome.DefaultGenome, neat.reproduction.DefaultReproduction,
                                 neat.species.DefaultSpeciesSet, neat.stagnation.DefaultStagnation,
-                                './configs/config_trader')
+                                './configs/config_trader_old')
 
     start_idx = 0
     highest_returns = 0
@@ -145,15 +144,6 @@ class PurpleTrader:
 
     def solve(self, network):
         return self.evaluate(network) >= self.highest_returns
-
-    def trial_run(self):
-        r_start = 0
-        file = open("es_trade_god_cppn_3d.pkl",'rb')
-        [cppn] = pickle.load(file)
-        network = ESNetwork(self.subStrate, cppn, self.params)
-        net = network.create_phenotype_network_nd()
-        fitness = self.evaluate(net, network, r_start)
-        return fitness
 
     def eval_fitness(self, genomes, config):
         r_start = randint(0+self.hd, self.hs.hist_full_size - self.epoch_len)
