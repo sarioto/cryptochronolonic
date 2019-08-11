@@ -16,7 +16,7 @@ import neat
 import _pickle as pickle
 from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
-from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork, nDimensionTree
+from pureples.es_hyperneat.es_hyperneat import ESNetwork, nDimensionTree
 # Local
 class PurpleTrader:
 
@@ -36,7 +36,7 @@ class PurpleTrader:
     # Config for CPPN.
     config = neat.config.Config(neat.genome.DefaultGenome, neat.reproduction.DefaultReproduction,
                                 neat.species.DefaultSpeciesSet, neat.stagnation.DefaultStagnation,
-                                'config_trader')
+                                './configs/config_trader')
 
     start_idx = 0
     highest_returns = 0
@@ -48,7 +48,7 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.combine_binance_frames()
+        self.hs.combine_frames()
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
@@ -102,11 +102,8 @@ class PurpleTrader:
                 network.reset()
                 for n in range(1, self.hd+1):
                     out = network.activate(active[self.hd-n])
-                for x in range(len(out)):
-                    signals.append(out[x])
                 #rng = iter(shuffle(rng))
-                sorted_shit = np.argsort(signals)[::-1]
-                for x in sorted_shit:
+                for x in range(len(out)):
                     sym = self.hs.coin_dict[x]
                     #print(out[x])
                     #try:
@@ -135,7 +132,8 @@ class PurpleTrader:
     def trial_run(self):
         r_start = 0
         file = open("es_trade_god_cppn_3d.pkl",'rb')
-        [cppn] = pickle.load(file)
+        #[cppn] = pickle.load(file)
+        cppn = neat.nn.FeedForwardNetwork.create(g, config)
         network = ESNetwork(self.subStrate, cppn, self.params)
         net = network.create_phenotype_network_nd()
         fitness = self.evaluate(net, network, r_start)
@@ -145,9 +143,10 @@ class PurpleTrader:
         self.epoch_len = randint(21, 255)
         r_start = randint(0+self.hd, self.hs.hist_full_size - self.epoch_len)
         for idx, g in genomes:
-            [cppn] = create_cppn(g, config, self.leaf_names, ['cppn_out'])
+            #[cppn] = create_cppn(g, config, self.leaf_names, ['cppn_out'])
+            cppn = neat.nn.FeedForwardNetwork.create(g, config)
             network = ESNetwork(self.subStrate, cppn, self.params)
-            net = network.create_phenotype_network_nd('training_net.png')
+            net = network.create_phenotype_network_nd()
             g.fitness = self.evaluate(net, network, r_start, g)
         return
 # Create the population and run the XOR task by providing the above fitness function.

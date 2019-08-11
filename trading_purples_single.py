@@ -34,7 +34,7 @@ class PurpleTrader:
     # Config for CPPN.
     config = neat.config.Config(neat.genome.DefaultGenome, neat.reproduction.DefaultReproduction,
                                 neat.species.DefaultSpeciesSet, neat.stagnation.DefaultStagnation,
-                                './configs/config_trader_old')
+                                './configs/config_old')
 
     start_idx = 0
     highest_returns = 0
@@ -111,7 +111,7 @@ class PurpleTrader:
                 print('error')
         return master_active
 
-    def evaluate(self, network, rand_start, verbose=False):
+    def evaluate(self, network, rand_start, g, verbose=False):
         portfolio_start = 1.0
         portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict)
         end_prices = {}
@@ -119,7 +119,7 @@ class PurpleTrader:
         sells = 0
         if(len(g.connections) > 0.0):
             for z in range(rand_start, rand_start+self.epoch_len):
-                for x in self.outputs:
+                for x in range(len(self.hs.coin_dict)):
                     sym = self.hs.coin_dict[x]
                     active = self.get_single_symbol_epoch_recurrent(z, x)
                     network.reset()
@@ -153,7 +153,7 @@ class PurpleTrader:
             cppn = neat.nn.FeedForwardNetwork.create(g, config)
             network = ESNetwork(self.subStrate, cppn, self.params)
             net = network.create_phenotype_network_nd()
-            g.fitness = self.evaluate(net, r_start)
+            g.fitness = self.evaluate(net, r_start, g)
             if(g.fitness > fitter_val):
                 fitter = g
                 fitter_val = g.fitness
