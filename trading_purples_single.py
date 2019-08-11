@@ -3,7 +3,7 @@
 import random
 import sys, os
 from functools import partial
-from itertools import product
+from itertools import product   
 # Libs
 import numpy as np
 from hist_service import HistWorker
@@ -111,7 +111,7 @@ class PurpleTrader:
                 print('error')
         return master_active
 
-    def evaluate(self, network, es, rand_start, g, verbose=False):
+    def evaluate(self, network, rand_start, verbose=False):
         portfolio_start = 1.0
         portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict)
         end_prices = {}
@@ -119,7 +119,7 @@ class PurpleTrader:
         sells = 0
         if(len(g.connections) > 0.0):
             for z in range(rand_start, rand_start+self.epoch_len):
-                for x in np.random.permutation(self.outputs):
+                for x in self.outputs:
                     sym = self.hs.coin_dict[x]
                     active = self.get_single_symbol_epoch_recurrent(z, x)
                     network.reset()
@@ -153,7 +153,7 @@ class PurpleTrader:
             cppn = neat.nn.FeedForwardNetwork.create(g, config)
             network = ESNetwork(self.subStrate, cppn, self.params)
             net = network.create_phenotype_network_nd()
-            g.fitness = self.evaluate(net, network, r_start, g)
+            g.fitness = self.evaluate(net, r_start)
             if(g.fitness > fitter_val):
                 fitter = g
                 fitter_val = g.fitness
@@ -181,7 +181,7 @@ if __name__ == '__main__':
 
     # Verify network output against training data.
     print('\nOutput:')
-    [cppn] = create_cppn(winner, task.config, task.leaf_names, ['cppn_out'])
+    cppn = neat.nn.FeedForwardNetwork.create(winner, task.config)
     network = ESNetwork(task.subStrate, cppn, task.params)
     with open('es_trade_god_cppn_3d.pkl', 'wb') as output:
         pickle.dump(winner, output)
