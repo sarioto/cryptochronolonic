@@ -39,7 +39,7 @@ class nDimensionGoldenTree:
             self.bounds.append(width)
     
     def set_signs(self):
-        return list(itertools.product[1,-1], repeat=len(self.coord]))
+        return list(itertools.product[1,-1], repeat=len(self.coord))
 
     def sub_divide(self):
         child = []
