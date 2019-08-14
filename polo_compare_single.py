@@ -15,7 +15,7 @@ import neat.nn
 import _pickle as pickle
 from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
-from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork
+from pureples.es_hyperneat.es_hyperneat import ESNetwork
 # Local
 class PurpleTrader:
 
@@ -25,10 +25,10 @@ class PurpleTrader:
     params = {"initial_depth": 3,
             "max_depth": 4,
             "variance_threshold": 0.00013,
-            "band_threshold": 0.00013,
+            "band_threshold": 0.0000013,
             "iteration_level": 3,
             "division_threshold": 0.00013,
-            "max_weight": 5.0,
+            "max_weight": 8.0,
             "activation": "tanh"}
 
 
@@ -172,11 +172,12 @@ class PurpleTrader:
         
     def trial_run(self):
         r_start = 0
-        file = open("es_trade_god_cppn_3d.pkl",'rb')
-        [cppn] = pickle.load(file)
+        file = open("./champs/perpetual_champion_11384.pkl",'rb')
+        g = pickle.load(file)
+        cppn = neat.nn.FeedForwardNetwork.create(g, self.config)
         network = ESNetwork(self.subStrate, cppn, self.params)
         net = network.create_phenotype_network_nd()
-        fitness = self.evaluate(net, network, r_start)
+        fitness = self.evaluate(net, network, r_start, g, "winner")
         return fitness
 
     def eval_fitness(self, genomes, config):
@@ -198,4 +199,4 @@ class PurpleTrader:
 
 
 pt = PurpleTrader(144)
-pt.run_champs()
+pt.trial_run()
