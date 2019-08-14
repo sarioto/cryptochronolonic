@@ -158,10 +158,12 @@ class PurpleTrader:
                             ft.write(str(self.hs.currentHists[sym]['close'][z])+",")
                             ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[0])+ " \n")
                         #print("sold ", sym)
-                    #skip the hold case because we just dont buy or sell heh
         result_val = portfolio.get_total_btc_value(end_prices)
         print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2], p_name)
-        ft = result_val[0]
+        if(buys == 0):
+            ft = .5
+        else:
+            ft = result_val[0]
         return ft
 
     def solve(self, network):
