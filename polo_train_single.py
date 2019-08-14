@@ -166,6 +166,8 @@ def run_pop(task, gens):
     pop.add_reporter(neat.reporting.StdOutReporter(True))
 
     winner = pop.run(task.eval_fitness, gens)
+    with open('./champs/champ_pop.pkl', 'wb') as output:
+        pickle.dump(pop, output)
     print("es trade god summoned")
     return winner, stats
 
