@@ -141,7 +141,7 @@ class HistWorker:
                 frame['avg_vol_34'] = frame['volume'].rolling(34).mean()
                 frame['avg_close_3'] = frame['close'].rolling(3).mean()
                 frame['avg_close_13'] = frame['close'].rolling(13).mean()
-                frame['avg_close_34'] = frame['close'].rolling(34).mean()
+                frame['avg_close_89'] = frame['close'].rolling(34).mean()
                 frame.fillna(value=-99999, inplace=True)
                 print(coin + " written")
                 frame.to_csv("./paper/"+coin+"_hist.txt", encoding="utf-8")
@@ -162,9 +162,11 @@ class HistWorker:
                     frame['avg_vol_3'] = frame['volume'].rolling(3).mean()
                     frame['avg_vol_13'] = frame['volume'].rolling(13).mean()
                     frame['avg_vol_34'] = frame['volume'].rolling(34).mean()
+                    frame['avg_vol_89'] = frame['volume'].rolling(89).mean()
                     frame['avg_close_3'] = frame['close'].rolling(3).mean()
                     frame['avg_close_13'] = frame['close'].rolling(13).mean()
                     frame['avg_close_34'] = frame['close'].rolling(34).mean()
+                    frame['avg_close_89'] = frame['close'].rolling(89).mean()
                     frame = frame.fillna(value=-99999, inplace=True)
                     print(frame.head())
                     frame.to_csv("./histories/"+coin+"_hist.txt", encoding="utf-8")
@@ -256,6 +258,7 @@ class HistWorker:
             #print(len(as_array))
             if(len(as_array) == length):
                 self.currentHists[col_prefix] = df
+                df = df[['avg_vol_34','avg_vol_13', 'avg_close_13', 'avg_close_34']].copy()
                 df = (df - df.mean()) / (df.max() - df.min())
                 as_array=np.array(df)
                 self.hist_shaped[coin_and_hist_index] = as_array
@@ -294,9 +297,11 @@ class HistWorker:
         if restrict_val != 0:
             vollist = np.argsort(vollist)[-restrict_val:][::-1]
         vollist = np.argsort(vollist)[::-1]
+        print(vollist)
+        print(prefixes)
         for ix in vollist:
             #print(self.currentHists[col_prefix].head())
-            df = self.currentHists[prefixes[ix]].copy()
+            df = df = self.currentHists[prefixes[ix]][['avg_vol_34','avg_vol_13', 'avg_close_13', 'avg_close_34']].copy()
             norm_df = (df - df.mean()) / (df.max() - df.min())
             as_array=np.array(norm_df)
             self.hist_shaped[coin_and_hist_index] = as_array
