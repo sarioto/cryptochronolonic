@@ -315,7 +315,7 @@ class HistWorker:
             #print(len(df))
             file_lens.append(df_len)
         mode_len = mode(file_lens)
-        self.hist_full_size = mod_len
+        self.hist_full_size = mode_len
         for x in range(0,len(fileNames)):
             df = self.get_live_data_frame(fileNames[x])
             col_prefix = self.get_file_symbol(fileNames[x])

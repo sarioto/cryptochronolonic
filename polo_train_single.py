@@ -44,7 +44,7 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.combine_frames()
+        self.hs.combine_live_frames(4321)
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         # set our ending idx, the length of our training data set
