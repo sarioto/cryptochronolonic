@@ -47,10 +47,10 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.combine_frames()
+        self.hs.combine_live_frames(4321)
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
-        self.end_idx = len(self.hs.currentHists["ETH"])
+        self.end_idx = len(self.hs.hist_shaped[0])
         self.but_target = .1
         self.inputs = self.hs.hist_shaped[0].shape[1]
         self.outputs = 1
@@ -174,7 +174,7 @@ class PurpleTrader:
         
     def trial_run(self):
         r_start = 0
-        file = open("./champs/perpetual_champion_11384.pkl",'rb')
+        file = open("./champs/perpetual_champion_11013.pkl",'rb')
         g = pickle.load(file)
         cppn = neat.nn.FeedForwardNetwork.create(g, self.config)
         network = ESNetwork(self.subStrate, cppn, self.params)
@@ -200,5 +200,5 @@ class PurpleTrader:
 # Create the population and run the XOR task by providing the above fitness function.
 
 
-pt = PurpleTrader(144)
+pt = PurpleTrader(13)
 pt.trial_run()

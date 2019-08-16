@@ -27,14 +27,15 @@ key = ""
 secret = ""
 
 class LiveTrader:
-    params = {"initial_depth": 2,
+    params = {"initial_depth": 3,
             "max_depth": 4,
             "variance_threshold": 0.00013,
-            "band_threshold": 0.00013,
+            "band_threshold": 0.0000013,
             "iteration_level": 3,
             "division_threshold": 0.00013,
-            "max_weight": 5.0,
+            "max_weight": 8.0,
             "activation": "tanh"}
+
 
 
     # Config for CPPN.
@@ -210,20 +211,23 @@ class LiveTrader:
         self.poloTrader()
 
 class PaperTrader:
-    params = {"initial_depth": 2,
+    params = {"initial_depth": 3,
             "max_depth": 4,
             "variance_threshold": 0.00013,
-            "band_threshold": 0.00013,
+            "band_threshold": 0.0000013,
             "iteration_level": 3,
             "division_threshold": 0.00013,
-            "max_weight": 5.0,
+            "max_weight": 8.0,
             "activation": "tanh"}
+
 
     # Config for CPPN.
     config = neat.config.Config(neat.genome.DefaultGenome, neat.reproduction.DefaultReproduction,
                                 neat.species.DefaultSpeciesSet, neat.stagnation.DefaultStagnation,
                                 'config_trader')
     def __init__(self, ticker_len, start_amount, histdepth):
+        self.in_shapes = []
+        self.out_shapes = []
         self.trade_hist = {}
         self.polo = Poloniex()
         self.hist_depth = histdepth
@@ -234,9 +238,14 @@ class PaperTrader:
         self.refresh_data()
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = self.hs.hist_shaped.shape[0]
-        self.make_shapes()
+        #self.make_shapes()
         self.folio = CryptoFolio(start_amount, list(self.hs.currentHists.keys()))
         self.leaf_names = []
+        for ix in range(1,self.inputs+1):
+            sign = sign *-1
+            self.in_shapes.append((0.0-(sign*.005*ix), -1.0, 0.0+(sign*.005*ix)))
+        self.out_shapes.append((0.0, 1.0, 0.0))
+        self.subStrate = Substrate(self.in_shapes, self.out_shapes)
         for l in range(len(self.in_shapes[0])):
             self.leaf_names.append('leaf_one_'+str(l))
             self.leaf_names.append('leaf_two_'+str(l))
@@ -245,8 +254,8 @@ class PaperTrader:
         self.poloTrader()
 
     def refresh_data(self):
-        self.hs.pull_polo_live(21)
-        self.hs.combine_live_frames(89)
+        self.hs.pull_polo_live(12*30)
+        self.hs.combine_live_frames(12*30)
 
     def load_net(self):
         #file = open("./champ_gens/thot-checkpoint-13",'rb')
@@ -367,4 +376,4 @@ class PaperTrader:
 
 
 #LiveTrader(7200, .34, 34)
-PaperTrader(7200, 1.0 , 34)
+PaperTrader(7200, 1.0 , 13)
