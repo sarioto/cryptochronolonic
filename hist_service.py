@@ -32,7 +32,7 @@ class HistWorker:
         #self.combine_frames()
         self.look_back = 2160
         self.hist_full_size = 666*12
-        self.binance_client = Client("", "")
+        #self.binance_client = Client("", "")
         return
 
     def get_hist_files(self):
@@ -69,6 +69,11 @@ class HistWorker:
     def get_file_symbol(self, f):
         f = f.split("_", 2)
         return f[1]
+    
+    def get_usdt_file_symbol(self, f):
+        f = f.split("_", 2)
+        return f[1]
+
     def get_binance_symbol(self, f):
         f = f.split("_", 2)
         return f[0]
@@ -132,6 +137,29 @@ class HistWorker:
         start = str(int(start.timestamp()))
         for coin in coins:
             if coin[:3] == 'BTC':
+                #print(coin)
+                hist = requests.get('https://poloniex.com/public?command=returnChartData&currencyPair='+coin+'&start='+start+'&end=9999999999&period='+tickLen)
+                h_frame = pd.DataFrame(hist.json())
+                frame = h_frame.copy()
+                frame['avg_vol_3'] = frame['volume'].rolling(3).mean()
+                frame['avg_vol_13'] = frame['volume'].rolling(13).mean()
+                frame['avg_vol_34'] = frame['volume'].rolling(34).mean()
+                frame['avg_close_3'] = frame['close'].rolling(3).mean()
+                frame['avg_close_13'] = frame['close'].rolling(13).mean()
+                frame['avg_close_34'] = frame['close'].rolling(34).mean()
+                frame.fillna(value=-99999, inplace=True)
+                print(coin + " written")
+                frame.to_csv("./paper/"+coin+"_hist.txt", encoding="utf-8")
+
+
+    def pull_polo_live_usd(self, lb):
+        polo = Poloniex()
+        coins = polo.returnTicker()
+        tickLen = '7200'
+        start = datetime.today() - timedelta(lb)
+        start = str(int(start.timestamp()))
+        for coin in coins:
+            if coin[:3] == 'USDT':
                 #print(coin)
                 hist = requests.get('https://poloniex.com/public?command=returnChartData&currencyPair='+coin+'&start='+start+'&end=9999999999&period='+tickLen)
                 h_frame = pd.DataFrame(hist.json())
