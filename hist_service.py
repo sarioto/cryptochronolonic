@@ -166,7 +166,7 @@ class HistWorker:
         start = datetime.today() - timedelta(lb)
         start = str(int(start.timestamp()))
         for coin in coins:
-            if coin[:3] == 'USDT':
+            if coin[:4] == 'USDT':
                 #print(coin)
                 hist = requests.get('https://poloniex.com/public?command=returnChartData&currencyPair='+coin+'&start='+start+'&end=9999999999&period='+tickLen)
                 h_frame = pd.DataFrame(hist.json())
@@ -340,12 +340,15 @@ class HistWorker:
         self.hist_shaped = pd.Series(self.hist_shaped)
 
 
-    def combine_live_frames(self, length, base_sym):
+    def combine_live_frames(self, length, base_sym=""):
         fileNames = self.get_live_files()
         coin_and_hist_index = 0
         file_lens = []
         for y in range(0,len(fileNames)):
-            df = self.get_live_data_frame(fileNames[y])
+            if base_sym = "USDT":
+                df = self.get_polo_usd_frame(fileNames[y])
+            else:
+                df = self.get_live_data_frame(fileNames[y])
             df_len = len(df)
             #print(len(df))
             file_lens.append(df_len)
@@ -406,3 +409,5 @@ class HistWorker:
             main = main.join(df_list[i])
         return main
         '''
+hs = HistWorker()
+hs.pull_polo_usd(55)
