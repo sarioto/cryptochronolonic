@@ -47,7 +47,8 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.combine_live_frames(4321)
+        #self.hs.combine_live_frames(4321)
+        self.hs.combine_polo_usd_frames()
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
@@ -118,8 +119,8 @@ class PurpleTrader:
                 best_genome = genome
 
     def evaluate(self, network, es, rand_start, g, p_name):
-        portfolio_start = 1.0
-        portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict)
+        portfolio_start = 500
+        portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USDT")
         end_prices = {}
         buys = 0
         sells = 0
@@ -174,7 +175,7 @@ class PurpleTrader:
         
     def trial_run(self):
         r_start = 0
-        file = open("./champs/perpetual_champion_6132.pkl",'rb')
+        file = open("./champs/perpetual_champion_1088.pkl",'rb')
         g = pickle.load(file)
         cppn = neat.nn.FeedForwardNetwork.create(g, self.config)
         network = ESNetwork(self.subStrate, cppn, self.params)
