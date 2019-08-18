@@ -71,7 +71,7 @@ class HistWorker:
         return frame
     
     def get_polo_usd_frame(self, fname):
-        return pd.read_csv("./histories/"+fname)
+        return pd.read_csv("./usd_histories/"+fname)
 
     def get_file_symbol(self, f):
         f = f.split("_", 2)
@@ -345,10 +345,7 @@ class HistWorker:
         coin_and_hist_index = 0
         file_lens = []
         for y in range(0,len(fileNames)):
-            if base_sym = "USDT":
-                df = self.get_polo_usd_frame(fileNames[y])
-            else:
-                df = self.get_live_data_frame(fileNames[y])
+            df = self.get_live_data_frame(fileNames[y])
             df_len = len(df)
             #print(len(df))
             file_lens.append(df_len)
@@ -380,7 +377,37 @@ class HistWorker:
             main = main.join(df_list[i])
         return main
         '''
-
+    def combine_polo_usd_frames(self):
+        fileNames = self.get_usd_files()
+        coin_and_hist_index = 0
+        file_lens = []
+        for y in range(0,len(fileNames)):
+            df = self.get_polo_usd_frame(fileNames[y])
+            df_len = len(df)
+            #print(len(df))
+            file_lens.append(df_len)
+        mode_len = mode(file_lens)
+        self.hist_full_size = mode_len
+        for x in range(0,len(fileNames)):
+            df = self.get_polo_usd_frame(fileNames[x])
+            col_prefix = self.get_file_symbol(fileNames[x])
+            #df.drop("Unnamed: 0", 1)
+            #df = self.read_in_moon_data(df)
+            #df = df.drop("Unnamed: 0", 1)
+            #df.rename(columns = lambda x: col_prefix+'_'+x, inplace=True)
+            as_array = np.array(df)
+            #print(len(as_array))
+            #print(len(as_array))
+            if(len(as_array) == mode_len):
+                #print("adding df")
+                self.currentHists[col_prefix] = df
+                df = (df - df.mean()) / (df.max() - df.min())
+                as_array = np.array(df)
+                self.hist_shaped[coin_and_hist_index] = as_array
+                self.coin_dict[coin_and_hist_index] = col_prefix
+                coin_and_hist_index += 1
+        #print(self.hist_shaped)
+        self.hist_shaped = pd.Series(self.hist_shaped)
 
     def combine_live_usd_frames(self):
         fileNames = self.get_gdax_training_files()
@@ -409,5 +436,3 @@ class HistWorker:
             main = main.join(df_list[i])
         return main
         '''
-hs = HistWorker()
-hs.pull_polo_usd(55)

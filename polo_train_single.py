@@ -44,7 +44,7 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.combine_live_frames(4321)
+        self.hs.combine_polo_usd_frames()
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         # set our ending idx, the length of our training data set
@@ -110,8 +110,8 @@ class PurpleTrader:
         return master_active
 
     def evaluate(self, network, rand_start, g, verbose=False):
-        portfolio_start = 1.0
-        portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict)
+        portfolio_start = 500
+        portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USDT")
         end_prices = {}
         buys = 0
         sells = 0
