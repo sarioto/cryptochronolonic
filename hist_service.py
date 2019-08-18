@@ -47,6 +47,10 @@ class HistWorker:
         histFiles = os.listdir(os.path.join(os.path.dirname(__file__), 'paper'))
         return histFiles
 
+    def get_usd_files(self):
+        histfiles = os.listdir(os.path.join(os.path.dirname(__file__), 'usd_histories'))
+        return histfiles
+
     def get_gdax_training_files(self):
         histFiles = os.listdir(os.path.join(os.path.dirname(__file__), '../gdax'))
         return histFiles
@@ -65,6 +69,9 @@ class HistWorker:
     def get_file_as_frame(self, fname):
         frame = pd.read_csv('../gdax/'+fname)
         return frame
+    
+    def get_polo_usd_frame(self, fname):
+        return pd.read_csv("./histories/"+fname)
 
     def get_file_symbol(self, f):
         f = f.split("_", 2)
@@ -152,7 +159,7 @@ class HistWorker:
                 frame.to_csv("./paper/"+coin+"_hist.txt", encoding="utf-8")
 
 
-    def pull_polo_live_usd(self, lb):
+    def pull_polo_usd(self, lb):
         polo = Poloniex()
         coins = polo.returnTicker()
         tickLen = '7200'
@@ -172,7 +179,7 @@ class HistWorker:
                 frame['avg_close_34'] = frame['close'].rolling(34).mean()
                 frame.fillna(value=-99999, inplace=True)
                 print(coin + " written")
-                frame.to_csv("./paper/"+coin+"_hist.txt", encoding="utf-8")
+                frame.to_csv("./usd_histories/"+coin+"_hist.txt", encoding="utf-8")
 
 
     def pull_polo(self):
@@ -333,7 +340,7 @@ class HistWorker:
         self.hist_shaped = pd.Series(self.hist_shaped)
 
 
-    def combine_live_frames(self, length):
+    def combine_live_frames(self, length, base_sym):
         fileNames = self.get_live_files()
         coin_and_hist_index = 0
         file_lens = []
