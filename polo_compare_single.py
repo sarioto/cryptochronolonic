@@ -161,7 +161,7 @@ class PurpleTrader:
         result_val = portfolio.get_total_btc_value(end_prices)
         print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2], p_name)
         if(buys == 0):
-            ft = .5
+            ft = portfolio_start * .75
         else:
             ft = result_val[0]
         return ft
