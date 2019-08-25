@@ -48,7 +48,7 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.combine_binance_frames_vol_sorted(8)
+        self.hs.combine_polo_usd_frames()
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
@@ -61,9 +61,18 @@ class PurpleTrader:
         self.leaf_names = []
         #num_leafs = 2**(len(self.node_names)-1)//2
         self.initial_depth_tree = nDimensionTree([0.0,0.0,0.0], 1.0, 0)
-        nDimensionTree.divide_to_depth(self.initial_depth_tree, self.initial_depth_tree.lvl, self.params["initial_depth"])
+        self.divide_to_depth(self.initial_depth_tree, self.initial_depth_tree.lvl, self.params["initial_depth"])
         self.set_substrate()
         self.set_leaf_names()
+
+    def divide_to_depth(self, tree, current_level, desired_depth):
+        if current_level == desired_depth:
+            return
+        else:
+            tree.divide_childrens()
+            current_level += 1
+            for i in tree.cs:
+                self.divide_to_depth(i, current_level, desired_depth)
 
     def set_leaf_names(self):
         for l in range(len(self.in_shapes[0])):
@@ -110,7 +119,7 @@ class PurpleTrader:
         rand_start = self.rand_start
         [cppn] = create_cppn(g, config, self.leaf_names, ['cppn_out'])
         net = ESNetwork(self.subStrate, cppn, self.params)
-        network = net.create_phenotype_network_nd(self.initial_depth_tree)
+        network = net.create_phenotype_network_nd()
         portfolio_start = 1.0
         key_list = list(self.hs.currentHists.keys())
         portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict)

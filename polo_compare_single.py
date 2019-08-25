@@ -175,7 +175,7 @@ class PurpleTrader:
         
     def trial_run(self):
         r_start = 0
-        file = open("./champs/perpetual_champion_1088.pkl",'rb')
+        file = open("./champs/perpetual_champion_11395.pkl",'rb')
         g = pickle.load(file)
         cppn = neat.nn.FeedForwardNetwork.create(g, self.config)
         network = ESNetwork(self.subStrate, cppn, self.params)
