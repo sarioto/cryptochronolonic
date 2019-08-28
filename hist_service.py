@@ -329,7 +329,9 @@ class HistWorker:
         if restrict_val != 0:
             vollist = np.argsort(vollist)[-restrict_val:][::-1]
         vollist = np.argsort(vollist)[::-1]
+        #print(vollist)
         for ix in vollist:
+            print(ix)
             #print(self.currentHists[col_prefix].head())
             df = self.currentHists[prefixes[ix]].copy()
             norm_df = (df - df.mean()) / (df.max() - df.min())
@@ -436,3 +438,6 @@ class HistWorker:
             main = main.join(df_list[i])
         return main
         '''
+hs = HistWorker()
+
+hs.combine_polo_frames_vol_sorted()
