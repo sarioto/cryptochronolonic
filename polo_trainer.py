@@ -23,7 +23,7 @@ class PurpleTrader:
     #needs to be initialized so as to allow for 62 outputs that return a coordinate
 
     # ES-HyperNEAT specific parameters.
-    params = {"initial_depth": 2,
+    params = {"initial_depth": 3,
             "max_depth": 4,
             "variance_threshold": 0.00013,
             "band_threshold": 0.00013,
@@ -91,7 +91,7 @@ class PurpleTrader:
         return master_active
 
     def evaluate(self, network, es, rand_start, g, verbose=False):
-        portfolio_start = 500
+        portfolio_start = 1.0
         portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USDT")
         end_prices = {}
         buys = 0
@@ -118,7 +118,7 @@ class PurpleTrader:
                         portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
                         #print("sold ", sym)
                     #skip the hold case because we just dont buy or sell hehe
-                    if(z == self.epoch_len+rand_start):
+                    if(z > (self.epoch_len+rand_start)-2):
                         end_prices[sym] = self.hs.currentHists[sym]['close'][self.epoch_len+rand_start]
             result_val = portfolio.get_total_btc_value(end_prices)
             print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
@@ -166,7 +166,7 @@ def run_pop(task, gens):
 if __name__ == '__main__':
     task = PurpleTrader(5)
     #print(task.trial_run())
-    winner = run_pop(task, 34)[0]
+    winner = run_pop(task, 89)[0]
     print('\nBest genome:\n{!s}'.format(winner))
 
     # Verify network output against training data.

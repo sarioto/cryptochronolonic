@@ -16,7 +16,7 @@ import neat
 import _pickle as pickle
 from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
-from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork
+from pureples.es_hyperneat.es_hyperneat import ESNetwork
 from NTree import nDimensionTree
 import json
 # Local
@@ -25,7 +25,7 @@ class PurpleTrader:
     #needs to be initialized so as to allow for 62 outputs that return a coordinate
 
     # ES-HyperNEAT specific parameters.
-    params = {"initial_depth": 2,
+    params = {"initial_depth": 3,
             "max_depth": 4,
             "variance_threshold": 0.00013,
             "band_threshold": 0.00013,
@@ -50,7 +50,7 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.get_polo_usd_frame()
+        self.hs.combine_polo_frames_vol_sorted()
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
@@ -59,9 +59,16 @@ class PurpleTrader:
         self.outputs = self.hs.hist_shaped.shape[0]
         self.leaf_names = []
         #num_leafs = 2**(len(self.node_names)-1)//2
-        self.tree = nDimensionTree((0.0, 0.0, 0.0), 1.0, 1)
-        self.tree.divide_childrens()
-        self.set_substrate()
+        #self.tree = nDimensionTree((0.0, 0.0, 0.0), 1.0, 1)
+        #self.tree.divide_childrens()
+        #self.set_substrate()
+        sign = -1
+        for ix in range(1,self.outputs+1):
+            sign = sign *-1
+            self.out_shapes.append((0.0-(sign*.005*ix), -1.0, -1.0))
+            for ix2 in range(1,(self.inputs//self.outputs)+1):
+                self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0))
+        self.subStrate = Substrate(self.in_shapes, self.out_shapes)
         self.set_leaf_names()
         self.epoch_len = hist_depth
 
@@ -115,15 +122,15 @@ class PurpleTrader:
                     bestg = g.population[gx]
         g = bestg
         f.close()
-        [the_cppn] = create_cppn(g, self.config, self.leaf_names, ['cppn_out'])
+        the_cppn = neat.nn.FeedForwardNetwork.create(g, self.config)
         self.cppn = the_cppn
 
     def load_net_easy(self, g):
-        [the_cppn] = create_cppn(g, self.config, self.leaf_names, ['cppn_out'])
+        the_cppn = neat.nn.FeedForwardNetwork.create(g, self.config)
         self.cppn = the_cppn
 
     def run_champs(self):
-        genomes = neat.Checkpointer.restore_checkpoint("./binance_champs/tradegod-checkpoint-33").population
+        genomes = neat.Checkpointer.restore_checkpoint("./thot-checkpoint-55").population
         
         fitness_data = {}
         best_fitness = 0.0
