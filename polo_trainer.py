@@ -48,11 +48,10 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.combine_polo_frames_vol_sorted()
+        self.hs.combine_polo_usd_sorted()
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
-        print(self.end_idx, len(self.hs.currentHists["ZEC"]))
         self.but_target = .1
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = self.hs.hist_shaped.shape[0]
@@ -81,12 +80,10 @@ class PurpleTrader:
             active = []
             #print(self.outputs)
             for y in range(0, self.outputs):
-                try:
-                    sym_data = self.hs.hist_shaped[y][end_idx-x]
-                    #print(len(sym_data))
-                    active += sym_data.tolist()
-                except:
-                    print('error')
+                #try:
+                sym_data = self.hs.hist_shaped[y][end_idx-x]
+                #print(len(sym_data))
+                active += sym_data.tolist()
             master_active.append(active)
         #print(active)
         return master_active
@@ -142,7 +139,7 @@ class PurpleTrader:
 
     def eval_fitness(self, genomes, config):
         self.epoch_len = randint(21, 255)
-        r_start = randint(0+self.hd, self.hs.hist_full_size - self.epoch_len)
+        r_start = randint(0+self.hd, self.end_idx - self.epoch_len)
         for idx, g in genomes:
             cppn = neat.nn.FeedForwardNetwork.create(g, config)
             network = ESNetwork(self.subStrate, cppn, self.params)
@@ -165,7 +162,7 @@ def run_pop(task, gens):
 
 # If run as script.
 if __name__ == '__main__':
-    task = PurpleTrader(5)
+    task = PurpleTrader(8)
     #print(task.trial_run())
     winner = run_pop(task, 89)[0]
     print('\nBest genome:\n{!s}'.format(winner))
