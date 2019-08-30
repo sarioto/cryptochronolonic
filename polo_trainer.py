@@ -23,7 +23,7 @@ class PurpleTrader:
     #needs to be initialized so as to allow for 62 outputs that return a coordinate
 
     # ES-HyperNEAT specific parameters.
-    params = {"initial_depth": 3,
+    params = {"initial_depth": 2,
             "max_depth": 4,
             "variance_threshold": 0.00013,
             "band_threshold": 0.00013,
@@ -51,16 +51,17 @@ class PurpleTrader:
         self.hs.combine_polo_frames_vol_sorted()
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
-        self.end_idx = len(self.hs.currentHists["ZEC"])
+        self.end_idx = len(self.hs.hist_shaped[0])
+        print(self.end_idx, len(self.hs.currentHists["ZEC"]))
         self.but_target = .1
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = self.hs.hist_shaped.shape[0]
         sign = 1
         for ix in range(1,self.outputs+1):
             sign = sign *-1
-            self.out_shapes.append((0.0-(sign*.005*ix), -1.0, -1.0))
+            self.out_shapes.append((-1.0, 0.0-(sign*.005*ix), -1.0, -1.0))
             for ix2 in range(1,(self.inputs//self.outputs)+1):
-                self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0))
+                self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0+(sign*(self.hd/self.hd+ix+ix2)), 0.0))
         self.subStrate = Substrate(self.in_shapes, self.out_shapes)
         self.epoch_len = 144
         #self.node_names = ['x1', 'y1', 'z1', 'x2', 'y2', 'z2', 'weight']

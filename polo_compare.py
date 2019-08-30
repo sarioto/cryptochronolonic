@@ -50,10 +50,11 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.combine_polo_frames_vol_sorted()
+        self.hs.combine_polo_usd_sorted()
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
+        print(self.end_idx)
         self.but_target = .1
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = self.hs.hist_shaped.shape[0]
@@ -152,7 +153,7 @@ class PurpleTrader:
 
     def evaluate(self, network, es, rand_start, g, p_name):
         portfolio_start = 1.0
-        portfolio = CryptoFolio(portfolio_start, list(self.hs.currentHists.keys()))
+        portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USDT")
         end_prices = {}
         port_ref = portfolio_start
         with open('./champs_histd3/trade_hist'+ str(p_name) + '.txt', 'w') as ft:
