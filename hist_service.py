@@ -30,7 +30,7 @@ class HistWorker:
         self.hist_shaped = {}
         self.coin_dict = {}
         #self.combine_frames()
-        self.look_back = 2160
+        self.look_back = 1080
         self.hist_full_size = 666*12
         #self.binance_client = Client("", "")
         return
@@ -186,25 +186,23 @@ class HistWorker:
         polo = Poloniex()
         coins = polo.returnTicker()
         tickLen = '7200'
-        start = datetime.today() - timedelta(self.look_back)
+        start = datetime.today() - timedelta(90)
+        #print(start)
         start = str(int(start.timestamp()))
         for coin in coins:
             if coin[:3] == 'BTC':
                 hist = requests.get('https://poloniex.com/public?command=returnChartData&currencyPair='+coin+'&start='+start+'&end=9999999999&period='+tickLen)
-                try:
-                    h_frame = pd.DataFrame(hist.json())
-                    frame = h_frame.copy()
-                    frame['avg_vol_3'] = frame['volume'].rolling(3).mean()
-                    frame['avg_vol_13'] = frame['volume'].rolling(13).mean()
-                    frame['avg_vol_34'] = frame['volume'].rolling(34).mean()
-                    frame['avg_close_3'] = frame['close'].rolling(3).mean()
-                    frame['avg_close_13'] = frame['close'].rolling(13).mean()
-                    frame['avg_close_34'] = frame['close'].rolling(34).mean()
-                    frame = frame.fillna(value=-99999, inplace=True)
-                    print(frame.head())
-                    frame.to_csv("./histories/"+coin+"_hist.txt", encoding="utf-8")
-                except:
-                    print("error reading json")
+                h_frame = pd.DataFrame(hist.json())
+                print(h_frame)
+                frame = h_frame.copy()
+                frame['avg_vol_3'] = frame['volume'].rolling(3).mean()
+                frame['avg_vol_13'] = frame['volume'].rolling(13).mean()
+                frame['avg_vol_34'] = frame['volume'].rolling(34).mean()
+                frame['avg_close_3'] = frame['close'].rolling(3).mean()
+                frame['avg_close_13'] = frame['close'].rolling(13).mean()
+                frame['avg_close_34'] = frame['close'].rolling(34).mean()
+                #print(len(frame))
+                frame.to_csv("./histories/"+coin+"_hist.txt", encoding="utf-8")
         #self.get_data_for_astro()
 
     def combine_binance_frames_vol_sorted(self, restrict_val=0):
@@ -410,6 +408,7 @@ class HistWorker:
                 coin_and_hist_index += 1
         #print(self.hist_shaped)
         self.hist_shaped = pd.Series(self.hist_shaped)
+
     def combine_polo_usd_sorted(self, restrict_val=0):
         fileNames = self.get_usd_files()
         coin_and_hist_index = 0
@@ -420,9 +419,11 @@ class HistWorker:
             #print(df.head())
             file_lens.append(df_len)
         mode_len = mode(file_lens)
-        print(mode_len)
+        
         vollist = []
+        
         prefixes = []
+        
         for x in range(0, len(fileNames)):
             df = self.get_polo_usd_frame(fileNames[x])
             col_prefix = self.get_file_symbol(fileNames[x])

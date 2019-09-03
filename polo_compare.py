@@ -50,7 +50,7 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.combine_polo_usd_sorted()
+        self.hs.combine_polo_frames_vol_sorted()
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
@@ -59,10 +59,6 @@ class PurpleTrader:
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = self.hs.hist_shaped.shape[0]
         self.leaf_names = []
-        #num_leafs = 2**(len(self.node_names)-1)//2
-        #self.tree = nDimensionTree((0.0, 0.0, 0.0), 1.0, 1)
-        #self.tree.divide_childrens()
-        #self.set_substrate()
         sign = -1
         for ix in range(1,self.outputs+1):
             sign = sign *-1
@@ -103,12 +99,9 @@ class PurpleTrader:
             active = []
             #print(self.outputs)
             for y in range(0, self.outputs):
-                try:
-                    sym_data = self.hs.hist_shaped[y][end_idx-x]
-                    #print(len(sym_data))
-                    active += sym_data.tolist()
-                except:
-                    print('error')
+                sym_data = self.hs.hist_shaped[y][end_idx-x]
+                #print(len(sym_data))
+                active += sym_data.tolist()
             master_active.append(active)
         #print(active)
         return master_active
@@ -153,12 +146,12 @@ class PurpleTrader:
 
     def evaluate(self, network, es, rand_start, g, p_name):
         portfolio_start = 1.0
-        portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USDT")
+        portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict)
         end_prices = {}
         port_ref = portfolio_start
         with open('./champs_histd3/trade_hist'+ str(p_name) + '.txt', 'w') as ft:
             ft.write('date,symbol,type,amnt,price,current_balance \n')
-            for z in range(self.hd, self.hs.hist_full_size -1):
+            for z in range(self.hd, self.end_idx -1):
                 active = self.get_one_epoch_input(z)
                 signals = []
                 network.reset()
