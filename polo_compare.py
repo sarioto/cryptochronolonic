@@ -25,7 +25,7 @@ class PurpleTrader:
     #needs to be initialized so as to allow for 62 outputs that return a coordinate
 
     # ES-HyperNEAT specific parameters.
-    params = {"initial_depth": 3,
+    params = {"initial_depth": 2,
             "max_depth": 4,
             "variance_threshold": 0.00013,
             "band_threshold": 0.00013,
@@ -62,9 +62,9 @@ class PurpleTrader:
         sign = -1
         for ix in range(1,self.outputs+1):
             sign = sign *-1
-            self.out_shapes.append((0.0-(sign*.005*ix), -1.0, -1.0))
+            self.out_shapes.append((-1.0, 0.0-(sign*.005*ix), -1.0, -1.0))
             for ix2 in range(1,(self.inputs//self.outputs)+1):
-                self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0))
+                self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0+(sign*(self.hd/self.hd+ix+ix2)), 0.0))
         self.subStrate = Substrate(self.in_shapes, self.out_shapes)
         self.set_leaf_names()
         self.epoch_len = hist_depth
@@ -243,5 +243,5 @@ class PurpleTrader:
 # Create the population and run the XOR task by providing the above fitness function.
 
 
-pt = PurpleTrader(8)
+pt = PurpleTrader(21)
 pt.run_champs()
