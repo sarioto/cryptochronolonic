@@ -31,7 +31,7 @@ class PurpleTrader:
             "band_threshold": 0.00013,
             "iteration_level": 3,
             "division_threshold": 0.00013,
-            "max_weight": 3.0,
+            "max_weight": 5.0,
             "activation": "tanh"}
 
 
@@ -50,7 +50,7 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.combine_polo_frames_vol_sorted()
+        self.hs.combine_polo_frames_vol_sorted(3)
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
@@ -124,7 +124,7 @@ class PurpleTrader:
         self.cppn = the_cppn
 
     def run_champs(self):
-        genomes = neat.Checkpointer.restore_checkpoint("./thot-checkpoint-55").population
+        genomes = neat.Checkpointer.restore_checkpoint("./pkl_gens/thot-checkpoint-143").population
         
         fitness_data = {}
         best_fitness = 0.0
