@@ -48,7 +48,7 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.combine_polo_usd_sorted()
+        self.hs.combine_polo_usd_sorted(3)
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
@@ -149,7 +149,7 @@ class PurpleTrader:
 # Create the population and run the XOR task by providing the above fitness function.
 def run_pop(task, gens):
     pop = neat.population.Population(task.config)
-    checkpoints = neat.Checkpointer(generation_interval=2, time_interval_seconds=None, filename_prefix='thot-checkpoint-')
+    checkpoints = neat.Checkpointer(generation_interval=2, time_interval_seconds=None, filename_prefix='./pkl_gens/thot-checkpoint-')
     stats = neat.statistics.StatisticsReporter()
     pop.add_reporter(stats)
     pop.add_reporter(checkpoints)
@@ -162,9 +162,9 @@ def run_pop(task, gens):
 
 # If run as script.
 if __name__ == '__main__':
-    task = PurpleTrader(8)
+    task = PurpleTrader(21)
     #print(task.trial_run())
-    winner = run_pop(task, 89)[0]
+    winner = run_pop(task, 144)[0]
     print('\nBest genome:\n{!s}'.format(winner))
 
     # Verify network output against training data.
