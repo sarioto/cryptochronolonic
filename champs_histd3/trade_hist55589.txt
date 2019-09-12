@@ -1,0 +1,2 @@
+date,symbol,type,amnt,price,current_balance 
+1563832800,BAT,none,0.0,0.2452185,0.0 
