@@ -171,13 +171,16 @@ class HistWorker:
                 hist = requests.get('https://poloniex.com/public?command=returnChartData&currencyPair='+coin+'&start='+start+'&end=9999999999&period='+tickLen)
                 h_frame = pd.DataFrame(hist.json())
                 frame = h_frame.copy()
-                frame['avg_vol_3'] = frame['volume'].rolling(3).mean()
-                frame['avg_vol_13'] = frame['volume'].rolling(13).mean()
-                frame['avg_vol_34'] = frame['volume'].rolling(34).mean()
-                frame['avg_close_3'] = frame['close'].rolling(3).mean()
-                frame['avg_close_13'] = frame['close'].rolling(13).mean()
-                frame['avg_close_34'] = frame['close'].rolling(34).mean()
-                frame.fillna(value=-99999, inplace=True)
+                #frame['avg_vol_3'] = frame['volume'].rolling(3).mean()
+                #frame['avg_vol_13'] = frame['volume'].rolling(13).mean()
+                #frame['avg_vol_34'] = frame['volume'].rolling(34).mean()
+                #frame['avg_close_3'] = frame['close'].rolling(3).mean()
+                #frame['avg_close_13'] = frame['close'].rolling(13).mean()
+                #frame['avg_close_34'] = frame['close'].rolling(34).mean()
+                frame['std_close'] = frame['close']/frame['open']
+                frame['std_high'] = frame['high']/frame['open']
+                frame['std_low'] = frame['low']/frame['open']
+                frame.fillna(value=0, inplace=True)
                 print(coin + " written")
                 frame.to_csv("./usd_histories/"+coin+"_hist.txt", encoding="utf-8")
 
@@ -401,7 +404,8 @@ class HistWorker:
             if(len(as_array) == mode_len):
                 #print("adding df")
                 self.currentHists[col_prefix] = df
-                df = (df - df.mean()) / (df.max() - df.min())
+                df = self.currentHists[col_prefix][['std_high', 'std_close', 'std_open']].copy()
+                #df = (df - df.mean()) / (df.max() - df.min())
                 as_array = np.array(df)
                 self.hist_shaped[coin_and_hist_index] = as_array
                 self.coin_dict[coin_and_hist_index] = col_prefix
