@@ -1,2 +1,0 @@
-date,symbol,type,amnt,price,current_balance 
-1563926400,BAT,none,0.0,0.22280248,0.0 

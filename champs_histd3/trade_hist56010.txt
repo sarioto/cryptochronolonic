@@ -1,4 +1,0 @@
-date,symbol,type,amnt,price,current_balance 
-1563249600,BTC,none,0.0,10756.288312,0.0 
-1563249600,ATOM,none,0.0,4.09042882,0.0 
-1563249600,BAT,none,0.0,0.23195518,0.0 

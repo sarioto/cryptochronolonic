@@ -48,7 +48,7 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.combine_polo_usd_sorted(3)
+        self.hs.combine_polo_usd_sorted(10)
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
@@ -120,7 +120,10 @@ class PurpleTrader:
                         end_prices[sym] = self.hs.currentHists[sym]['close'][self.epoch_len+rand_start]
             result_val = portfolio.get_total_btc_value(end_prices)
             print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
-            ft = result_val[0]
+            if(result_val[1] == 0):
+                ft = result_val[0]/2.0
+            else:    
+                ft = result_val[0]
         else:
             ft = 0.0
         return ft
