@@ -155,17 +155,19 @@ class PurpleTrader:
                 active = self.get_one_epoch_input(z)
                 signals = []
                 network.reset()
-                for n in range(self.hd):
-                    out = network.activate(active[n])
+                for n in range(1, self.hd+1):
+                    out = network.activate(active[self.hd-n])
+                '''
                 for x in range(len(out)):
                     signals.append(out[x])
                     sym2 = list(self.hs.currentHists.keys())[x]
                     end_prices[sym2] = self.hs.currentHists[sym2]['close'][z]
                 sorted_shit = np.argsort(signals)[::-1]
+                '''
                 rebalance = portfolio_start
                 #rng = iter(shuffle(rng))
-                for x in sorted_shit:
-                    sym = list(self.hs.currentHists.keys())[x]
+                for x in range(len(out)):
+                    sym = self.hs.coin_dict[x]
                     #print(out[x])
                     #try:
                     if(out[x] < -.5):
