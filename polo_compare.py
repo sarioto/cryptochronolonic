@@ -130,6 +130,7 @@ class PurpleTrader:
         best_fitness = 0.0
         for g_ix in genomes:
             self.load_net_easy(genomes[g_ix])
+            print(genomes[g_ix].connections)
             start = self.hs.hist_full_size - self.epoch_len
             network = ESNetwork(self.subStrate, self.cppn, self.params)
             net = network.create_phenotype_network_nd('./champs_visualizedd3/genome_'+str(g_ix))
@@ -141,9 +142,17 @@ class PurpleTrader:
         self.load_net_easy(genomes[g_ix])
         start = self.hs.hist_full_size - self.epoch_len
         network = ESNetwork(self.subStrate, self.cppn, self.params)
-        net = network.create_phenotype_network_nd('./pkl_champs/best_genome.pkl')
+        net = network.create_phenotype_network_nd('./champs_visualizedd3/genome_latest')
         fitness = self.evaluate(net, network, start, genomes[g_ix], g_ix)
 
+    def run_pkl_champ(self):
+        with open('./pkl_champs/best_genome.pkl', 'rb') as f:
+            genome = pickle.load(f)
+            self.load_net_easy(genome)
+            network = ESNetwork(self.subStrate, self.cppn, self.params)
+            net = network.create_phenotype_network_nd('./champs_visualizedd3/genome_'+str(g_ix))
+            fitness = self.evaluate(net, network, start, genomes[g_ix], g_ix)
+    
     def evaluate(self, network, es, rand_start, g, p_name):
         portfolio_start = 1.0
         portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict)
