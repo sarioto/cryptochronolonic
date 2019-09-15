@@ -143,7 +143,7 @@ class PurpleTrader:
     def eval_fitness(self, genomes, config):
         self.epoch_len = randint(21, 255)
         r_start = randint(0+self.hd, self.end_idx - self.epoch_len)
-        best_genome_ix = 0
+        best_genome = genomes[0]
         best_fitness = 0.0
         for idx, g in genomes:
             cppn = neat.nn.FeedForwardNetwork.create(g, config)
@@ -151,9 +151,9 @@ class PurpleTrader:
             net = network.create_phenotype_network_nd()
             g.fitness = self.evaluate(net, network, r_start, g)
             if(g.fitness > best_fitness):
-                best_genome_ix = idx
-        with open('./pkl_champs/best_genome', 'wb') as saved:
-            pickle.dump(genomes[best_genome_ix], saved)
+                best_genome_ix = g
+        with open('./pkl_champs/best_genome.pkl', 'wb') as saved:
+            pickle.dump(g, saved)
         return
 # Create the population and run the XOR task by providing the above fitness function.
 def run_pop(task, gens):
