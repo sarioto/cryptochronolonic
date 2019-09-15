@@ -142,7 +142,7 @@ class PurpleTrader:
         self.load_net_easy(genomes[g_ix])
         start = self.hs.hist_full_size - self.epoch_len
         network = ESNetwork(self.subStrate, self.cppn, self.params)
-        net = network.create_phenotype_network_nd('./champs_visualizedd3/genome_'+str(g_ix))
+        net = network.create_phenotype_network_nd('./champs_visualizedd3/genome_latest')
         fitness = self.evaluate(net, network, start, genomes[g_ix], g_ix)
 
     def run_pkl_champ(self):
