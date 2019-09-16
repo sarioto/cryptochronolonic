@@ -157,8 +157,8 @@ class PurpleTrader:
         return
 # Create the population and run the XOR task by providing the above fitness function.
 def run_pop(task, gens):
-    pop = neat.population.Population(task.config)
-    #pop = neat.Checkpointer.restore_checkpoint("./pkl_gens/thot-checkpoint-143")
+    #pop = neat.population.Population(task.config)
+    pop = neat.Checkpointer.restore_checkpoint("./pkl_gens/thot-checkpoint-143")
     checkpoints = neat.Checkpointer(generation_interval=1, time_interval_seconds=None, filename_prefix='./pkl_gens/thot-checkpoint-')
     stats = neat.statistics.StatisticsReporter()
     pop.add_reporter(stats)

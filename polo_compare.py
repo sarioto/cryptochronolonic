@@ -50,7 +50,7 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.combine_polo_usd_sorted(3)
+        self.hs.combine_polo_usd_sorted(10)
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
@@ -67,7 +67,7 @@ class PurpleTrader:
                 self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0+(sign*(self.hd/self.hd+ix+ix2)), 0.0))
         self.subStrate = Substrate(self.in_shapes, self.out_shapes)
         self.set_leaf_names()
-        self.epoch_len = hist_depth
+        self.epoch_len = self.end_idx - hist_depth
 
     def set_leaf_names(self):
         for l in range(len(self.in_shapes[0])):
@@ -124,13 +124,13 @@ class PurpleTrader:
         self.cppn = the_cppn
 
     def run_champs(self):
-        genomes = neat.Checkpointer.restore_checkpoint("./pkl_gens/thot-checkpoint-143").population
+        genomes = neat.Checkpointer.restore_checkpoint("./pkl_gens/thot-checkpoint-79").population
         
         fitness_data = {}
         best_fitness = 0.0
         for g_ix in genomes:
             self.load_net_easy(genomes[g_ix])
-            print(genomes[g_ix].connections)
+            #print(genomes[g_ix].connections)
             start = self.hs.hist_full_size - self.epoch_len
             network = ESNetwork(self.subStrate, self.cppn, self.params)
             net = network.create_phenotype_network_nd('./champs_visualizedd3/genome_'+str(g_ix))
@@ -150,8 +150,9 @@ class PurpleTrader:
             genome = pickle.load(f)
             self.load_net_easy(genome)
             network = ESNetwork(self.subStrate, self.cppn, self.params)
-            net = network.create_phenotype_network_nd('./champs_visualizedd3/genome_'+str(g_ix))
-            fitness = self.evaluate(net, network, start, genomes[g_ix], g_ix)
+            net = network.create_phenotype_network_nd('./champs_visualizedd3/genome_champ')
+            start = self.hs.hist_full_size - self.epoch_len
+            fitness = self.evaluate(net, network, start, genome, 0)
     
     def evaluate(self, network, es, rand_start, g, p_name):
         portfolio_start = 1.0
@@ -255,4 +256,4 @@ class PurpleTrader:
 
 
 pt = PurpleTrader(21)
-pt.run_champ()
+pt.run_champs()
