@@ -16,14 +16,14 @@ import neat
 import _pickle as pickle
 from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
-from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork
+from pureples.es_hyperneat.es_hyperneat import ESNetwork
 # Local
 class PurpleTrader:
 
     #needs to be initialized so as to allow for 62 outputs that return a coordinate
 
     # ES-HyperNEAT specific parameters.
-    params = {"initial_depth": 2,
+    params = {"initial_depth": 3,
             "max_depth": 4,
             "variance_threshold": 0.00013,
             "band_threshold": 0.00013,
@@ -48,7 +48,7 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.combine_binance_frames()
+        self.hs.combine_polo_frames_vol_sorted()
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.currentHists["ZEC"])
@@ -60,7 +60,7 @@ class PurpleTrader:
             sign = sign *-1
             self.out_shapes.append((0.0-(sign*.005*ix), -1.0, -1.0))
             for ix2 in range(1,(self.inputs//self.outputs)+1):
-                self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 1.0))
+                self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0))
         self.subStrate = Substrate(self.in_shapes, self.out_shapes)
         self.epoch_len = 144
         #self.node_names = ['x1', 'y1', 'z1', 'x2', 'y2', 'z2', 'weight']
@@ -91,8 +91,8 @@ class PurpleTrader:
         return master_active
 
     def evaluate(self, network, es, rand_start, g, verbose=False):
-        portfolio_start = .05
-        portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict)
+        portfolio_start = 1.0
+        portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USDT")
         end_prices = {}
         buys = 0
         sells = 0
@@ -118,7 +118,7 @@ class PurpleTrader:
                         portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
                         #print("sold ", sym)
                     #skip the hold case because we just dont buy or sell hehe
-                    if(z == self.epoch_len+rand_start):
+                    if(z > (self.epoch_len+rand_start)-2):
                         end_prices[sym] = self.hs.currentHists[sym]['close'][self.epoch_len+rand_start]
             result_val = portfolio.get_total_btc_value(end_prices)
             print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
@@ -143,7 +143,7 @@ class PurpleTrader:
         self.epoch_len = randint(21, 255)
         r_start = randint(0+self.hd, self.hs.hist_full_size - self.epoch_len)
         for idx, g in genomes:
-            [cppn] = create_cppn(g, config, self.leaf_names, ['cppn_out'])
+            cppn = neat.nn.FeedForwardNetwork.create(g, config)
             network = ESNetwork(self.subStrate, cppn, self.params)
             net = network.create_phenotype_network_nd()
             g.fitness = self.evaluate(net, network, r_start, g)
@@ -166,7 +166,7 @@ def run_pop(task, gens):
 if __name__ == '__main__':
     task = PurpleTrader(5)
     #print(task.trial_run())
-    winner = run_pop(task, 34)[0]
+    winner = run_pop(task, 89)[0]
     print('\nBest genome:\n{!s}'.format(winner))
 
     # Verify network output against training data.

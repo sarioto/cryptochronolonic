@@ -337,7 +337,7 @@ class HistWorker:
             norm_df = (df - df.mean()) / (df.max() - df.min())
             as_array=np.array(norm_df)
             self.hist_shaped[coin_and_hist_index] = as_array
-            self.coin_dict[coin_and_hist_index] = col_prefix
+            self.coin_dict[coin_and_hist_index] = prefixes[ix]
             coin_and_hist_index += 1
         self.hist_shaped = pd.Series(self.hist_shaped)
 
