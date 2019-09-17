@@ -50,7 +50,7 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.combine_polo_frames_vol_sorted()
+        self.hs.combine_polo_frames_vol_sorted(8)
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
@@ -204,17 +204,16 @@ class PurpleTrader:
                         ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[0])+ " \n")
                         #print("sold ", sym)
                 new_ref = portfolio.get_total_btc_value_no_sell(end_prices)[0]
-                '''
                 if(new_ref > 1.10 * port_ref):
                     port_ref = portfolio.get_total_btc_value_no_sell(end_prices)[0]
                     portfolio.start = port_ref
                     #skip the hold case because we just dont buy or sell heh
-                '''
-
+        '''
         result_val = portfolio.get_total_btc_value(end_prices)
         print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2], p_name)
         ft = result_val[0]
         return ft
+        '''
 
     def solve(self, network):
         return self.evaluate(network) >= self.highest_returns

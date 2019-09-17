@@ -30,7 +30,7 @@ class HistWorker:
         self.hist_shaped = {}
         self.coin_dict = {}
         #self.combine_frames()
-        self.look_back = 2160
+        self.look_back = 455
         self.hist_full_size = 666*12
         #self.binance_client = Client("", "")
         return
@@ -154,7 +154,7 @@ class HistWorker:
                 frame['avg_close_3'] = frame['close'].rolling(3).mean()
                 frame['avg_close_13'] = frame['close'].rolling(13).mean()
                 frame['avg_close_34'] = frame['close'].rolling(34).mean()
-                frame.fillna(value=-99999, inplace=True)
+                frame.fillna(value=0.0, inplace=True)
                 print(coin + " written")
                 frame.to_csv("./paper/"+coin+"_hist.txt", encoding="utf-8")
 
@@ -191,20 +191,22 @@ class HistWorker:
         for coin in coins:
             if coin[:3] == 'BTC':
                 hist = requests.get('https://poloniex.com/public?command=returnChartData&currencyPair='+coin+'&start='+start+'&end=9999999999&period='+tickLen)
-                try:
-                    h_frame = pd.DataFrame(hist.json())
-                    frame = h_frame.copy()
-                    frame['avg_vol_3'] = frame['volume'].rolling(3).mean()
-                    frame['avg_vol_13'] = frame['volume'].rolling(13).mean()
-                    frame['avg_vol_34'] = frame['volume'].rolling(34).mean()
-                    frame['avg_close_3'] = frame['close'].rolling(3).mean()
-                    frame['avg_close_13'] = frame['close'].rolling(13).mean()
-                    frame['avg_close_34'] = frame['close'].rolling(34).mean()
-                    frame = frame.fillna(value=-99999, inplace=True)
-                    print(frame.head())
-                    frame.to_csv("./histories/"+coin+"_hist.txt", encoding="utf-8")
-                except:
-                    print("error reading json")
+                h_frame = pd.DataFrame(hist.json())
+                frame = h_frame.copy()
+                frame['avg_vol_3'] = frame['volume'].rolling(3).mean()
+                frame['avg_vol_13'] = frame['volume'].rolling(13).mean()
+                frame['avg_vol_34'] = frame['volume'].rolling(34).mean()
+                frame['avg_close_3'] = frame['close'].rolling(3).mean()
+                frame['avg_close_13'] = frame['close'].rolling(13).mean()
+                frame['avg_close_34'] = frame['close'].rolling(34).mean()
+                frame['std_close'] = frame['close']/frame['high']
+                frame['std_high'] = frame['high']/frame['high']
+                frame['std_low'] = frame['low']/frame['high']
+                frame['std_open'] = frame['open']/frame['high']
+                frame.drop(frame.tail(34).index, inplace=True)
+                frame.fillna(value=0.0, inplace=True)
+                print(coin + " written")
+                frame.to_csv("./paper/"+coin+"_hist.txt", encoding="utf-8")
         #self.get_data_for_astro()
 
     def combine_binance_frames_vol_sorted(self, restrict_val=0):
@@ -439,5 +441,4 @@ class HistWorker:
         return main
         '''
 hs = HistWorker()
-
-hs.combine_polo_frames_vol_sorted()
+hs.pull_polo()
