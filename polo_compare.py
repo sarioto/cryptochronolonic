@@ -70,7 +70,7 @@ class PurpleTrader:
                 self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0))
         self.subStrate = Substrate(self.in_shapes, self.out_shapes)
         self.set_leaf_names()
-        self.epoch_len = hist_depth
+        self.epoch_len = self.end_idx - hist_depth
 
     def set_leaf_names(self):
         for l in range(len(self.in_shapes[0])):
