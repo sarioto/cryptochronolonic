@@ -140,7 +140,7 @@ class PurpleTrader:
         return fitness
 
     def eval_fitness(self, genomes, config):
-        self.epoch_len = randint(21, 255)
+        self.epoch_len = randint(255, 455)
         r_start = randint(0+self.hd, self.hs.hist_full_size - self.epoch_len)
         for idx, g in genomes:
             cppn = neat.nn.FeedForwardNetwork.create(g, config)
@@ -151,7 +151,7 @@ class PurpleTrader:
 # Create the population and run the XOR task by providing the above fitness function.
 def run_pop(task, gens):
     pop = neat.population.Population(task.config)
-    checkpoints = neat.Checkpointer(generation_interval=2, time_interval_seconds=None, filename_prefix='thot-checkpoint-')
+    checkpoints = neat.Checkpointer(generation_interval=2, time_interval_seconds=None, filename_prefix='./pkl_pops/pop-checkpoint-')
     stats = neat.statistics.StatisticsReporter()
     pop.add_reporter(stats)
     pop.add_reporter(checkpoints)
