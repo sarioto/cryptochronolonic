@@ -5,6 +5,7 @@ from functools import partial
 from itertools import product
 from pytorch_neat.cppn import create_cppn
 import pandas as pd
+from datetime import datetime
 # Libs
 import numpy as np
 from hist_service import HistWorker
@@ -50,10 +51,11 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth):
         self.hs = HistWorker()
-        self.hs.combine_polo_frames_vol_sorted(8)
+        self.hs.combine_polo_frames_vol_sorted()
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
+        print(self.end_idx)
         self.but_target = .1
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = self.hs.hist_shaped.shape[0]
@@ -102,12 +104,9 @@ class PurpleTrader:
             active = []
             #print(self.outputs)
             for y in range(0, self.outputs):
-                try:
-                    sym_data = self.hs.hist_shaped[y][end_idx-x]
-                    #print(len(sym_data))
-                    active += sym_data.tolist()
-                except:
-                    print('error')
+                sym_data = self.hs.hist_shaped[y][end_idx-x]
+                #print(len(sym_data))
+                active += sym_data.tolist()
             master_active.append(active)
         #print(active)
         return master_active
@@ -136,7 +135,8 @@ class PurpleTrader:
         best_fitness = 0.0
         for g_ix in genomes:
             self.load_net_easy(genomes[g_ix])
-            start = (12*30)
+            start = (12*60)
+            #print(datetime.utcfromtimestamp(self.hs.currentHists['LTC']['date'][start]).strftime('%Y-%m-%d %H:%M:%S'))
             network = ESNetwork(self.subStrate, self.cppn, self.params)
             net = network.create_phenotype_network_nd('./champs_visualizedd3/genome_'+str(g_ix))
             fitness = self.evaluate(net, network, start, genomes[g_ix], g_ix)
@@ -157,7 +157,7 @@ class PurpleTrader:
         port_ref = portfolio_start
         with open('./champs_histd3/trade_hist'+ str(p_name) + '.txt', 'w') as ft:
             ft.write('date,symbol,type,amnt,price,current_balance \n')
-            for z in range(self.hd, self.hs.hist_full_size -1):
+            for z in range(self.hs.hist_full_size - rand_start, self.hs.hist_full_size -1):
                 active = self.get_one_epoch_input(z)
                 signals = []
                 network.reset()
