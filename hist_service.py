@@ -30,8 +30,8 @@ class HistWorker:
         self.hist_shaped = {}
         self.coin_dict = {}
         #self.combine_frames()
-        self.look_back = 455
-        self.hist_full_size = 666*12
+        self.look_back = 90
+        self.hist_full_size = self.look_back * 12
         #self.binance_client = Client("", "")
         return
 
@@ -140,7 +140,7 @@ class HistWorker:
         polo = Poloniex()
         coins = polo.returnTicker()
         tickLen = '7200'
-        start = datetime.today() - timedelta(lb)
+        start = datetime.today() - timedelta()
         start = str(int(start.timestamp()))
         for coin in coins:
             if coin[:3] == 'BTC':
@@ -186,12 +186,13 @@ class HistWorker:
         polo = Poloniex()
         coins = polo.returnTicker()
         tickLen = '7200'
-        start = datetime.today() - timedelta(self.look_back)
+        start = datetime.today() - timedelta()
         start = str(int(start.timestamp()))
         for coin in coins:
             if coin[:3] == 'BTC':
-                hist = requests.get('https://poloniex.com/public?command=returnChartData&currencyPair='+coin+'&start='+start+'&end=9999999999&period='+tickLen)
+                hist = requests.get('https://poloniex.com/public?command=returnChartData&currencyPair='+coin+'&start='+start+'&end='+str(time.time())+'&period='+tickLen)
                 h_frame = pd.DataFrame(hist.json())
+                print(h_frame.tail())
                 frame = h_frame.copy()
                 frame['avg_vol_3'] = pd.Series(np.where(frame.volume.rolling(3).mean() > frame.volume, 1, 0),frame.index)
                 frame['avg_close_3'] = pd.Series(np.where(frame.close.rolling(3).mean() > frame.close, 1, 0),frame.index)
@@ -204,7 +205,7 @@ class HistWorker:
                 frame.drop(frame.tail(34).index, inplace=True)
                 frame.fillna(value=0.0, inplace=True)
                 print(coin + " written")
-                frame.to_csv("./paper/"+coin+"_hist.txt", encoding="utf-8")
+                frame.to_csv("./histories/"+coin+"_hist.txt", encoding="utf-8")
         #self.get_data_for_astro()
 
     def combine_binance_frames_vol_sorted(self, restrict_val=0):
@@ -315,6 +316,7 @@ class HistWorker:
             file_lens.append(df_len)
         mode_len = mode(file_lens)
         print(mode_len)
+        self.hist_full_size = mode_len
         vollist = []
         prefixes = []
         for x in range(0, len(fileNames)):
@@ -331,7 +333,7 @@ class HistWorker:
         vollist = np.argsort(vollist)[::-1]
         #print(vollist)
         for ix in vollist:
-            print(ix)
+            print(prefixes[ix])
             #print(self.currentHists[col_prefix].head())
             df = self.currentHists[prefixes[ix]].copy()
             norm_df = (df - df.mean()) / (df.max() - df.min())
@@ -439,4 +441,16 @@ class HistWorker:
         return main
         '''
 #hs = HistWorker()
+
 #hs.pull_polo()
+'''
+hs.combine_polo_frames_vol_sorted()
+
+frame_len = len(hs.currentHists["LTC"])
+
+end_date = datetime.utcfromtimestamp(hs.currentHists["XMR"]['date'][frame_len-1]).strftime('%Y-%m-%d %H:%M:%S')
+daytoday = datetime.utcfromtimestamp(1568887200).strftime('%Y-%m-%d %H:%M:%S')
+
+print(end_date)
+print(daytoday)
+'''
