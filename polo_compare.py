@@ -129,8 +129,7 @@ class PurpleTrader:
         self.cppn = the_cppn
 
     def run_champs(self):
-        genomes = neat.Checkpointer.restore_checkpoint("./thot-checkpoint-9").population
-        
+        genomes = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-5").population
         fitness_data = {}
         best_fitness = 0.0
         for g_ix in genomes:
@@ -248,5 +247,5 @@ class PurpleTrader:
 # Create the population and run the XOR task by providing the above fitness function.
 
 
-pt = PurpleTrader(8)
+pt = PurpleTrader(5)
 pt.run_champs()

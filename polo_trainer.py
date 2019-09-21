@@ -167,7 +167,7 @@ def run_pop(task, gens):
 
 # If run as script.
 if __name__ == '__main__':
-    task = PurpleTrader(5)
+    task = PurpleTrader(21)
     #print(task.trial_run())
     winner = run_pop(task, 89)[0]
     print('\nBest genome:\n{!s}'.format(winner))
