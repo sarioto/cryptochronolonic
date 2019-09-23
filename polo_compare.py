@@ -32,7 +32,7 @@ class PurpleTrader:
             "band_threshold": 0.00013,
             "iteration_level": 3,
             "division_threshold": 0.00013,
-            "max_weight": 3.0,
+            "max_weight": 5.0,
             "activation": "tanh"}
 
 
@@ -129,7 +129,7 @@ class PurpleTrader:
         self.cppn = the_cppn
 
     def run_champs(self):
-        genomes = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-5").population
+        genomes = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-59").population
         fitness_data = {}
         best_fitness = 0.0
         for g_ix in genomes:

@@ -27,7 +27,7 @@ key = ""
 secret = ""
 
 class LiveTrader:
-    params = {"initial_depth": 2,
+    params = {"initial_depth": 3,
             "max_depth": 4,
             "variance_threshold": 0.00013,
             "band_threshold": 0.00013,
