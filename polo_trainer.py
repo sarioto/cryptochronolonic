@@ -29,7 +29,7 @@ class PurpleTrader:
             "band_threshold": 0.00013,
             "iteration_level": 3,
             "division_threshold": 0.00013,
-            "max_weight": 5.0,
+            "max_weight": 8.0,
             "activation": "tanh"}
 
 
@@ -51,7 +51,7 @@ class PurpleTrader:
         self.hs.combine_polo_frames_vol_sorted()
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
-        self.end_idx = len(self.hs.currentHists["ZEC"])
+        self.end_idx = len(self.hs.hist_shaped[0])
         self.but_target = .1
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = self.hs.hist_shaped.shape[0]
@@ -99,12 +99,17 @@ class PurpleTrader:
         if(len(g.connections) > 0.0):
             for z in range(rand_start, rand_start+self.epoch_len):
                 active = self.get_one_epoch_input(z)
+                signals = []
                 network.reset()
                 for n in range(1, self.hd+1):
                     out = network.activate(active[self.hd-n])
+                for x in range(len(out)):
+                    signals.append(out[x])
+                #rng = iter(shuffle(rng))
+                sorted_shit = np.argsort(signals)[::-1]
                 #print(sorted_shit, len(sorted_shit))
                 #print(len(sorted_shit), len(key_list))
-                for x in range(len(out)):
+                for x in sorted_shit:
                     sym = self.hs.coin_dict[x]
                     #print(out[x])
                     #try:

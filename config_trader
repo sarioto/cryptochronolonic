@@ -33,7 +33,7 @@ compatibility_weight_coefficient   = 0.5
 
 # connection add/remove rates
 conn_add_prob           = 0.55
-conn_delete_prob        = 0.34
+conn_delete_prob        = 0.21
 
 # connection enable options
 enabled_default         = True
@@ -43,7 +43,7 @@ feed_forward            = True
 initial_connection      = full_direct
 
 # node add/remove rates
-node_add_prob           = 0.21
+node_add_prob           = 0.55
 node_delete_prob        = 0.13
 
 # network parameters
