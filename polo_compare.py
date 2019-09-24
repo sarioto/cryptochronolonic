@@ -129,7 +129,7 @@ class PurpleTrader:
         self.cppn = the_cppn
 
     def run_champs(self):
-        genomes = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-59").population
+        genomes = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-31").population
         fitness_data = {}
         best_fitness = 0.0
         for g_ix in genomes:
@@ -170,7 +170,7 @@ class PurpleTrader:
                 rebalance = portfolio_start
                 #rng = iter(shuffle(rng))
                 for x in sorted_shit:
-                    sym = list(self.hs.currentHists.keys())[x]
+                    sym = self.hs.coin_dict[self.hs.coin_dict[out.index(sorted_shit)]]
                     #print(out[x])
                     #try:
                     if(out[x] < -.5):

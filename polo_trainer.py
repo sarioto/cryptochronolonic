@@ -110,7 +110,7 @@ class PurpleTrader:
                 #print(sorted_shit, len(sorted_shit))
                 #print(len(sorted_shit), len(key_list))
                 for x in sorted_shit:
-                    sym = self.hs.coin_dict[x]
+                    sym = self.hs.coin_dict[self.hs.coin_dict[out.index(sorted_shit)]]
                     #print(out[x])
                     #try:
                     if(out[x] < -.5):
