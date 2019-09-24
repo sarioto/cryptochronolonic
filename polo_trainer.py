@@ -58,7 +58,7 @@ class PurpleTrader:
         sign = 1
         for ix in range(1,self.outputs+1):
             sign = sign *-1
-            self.out_shapes.append((0.0-(sign*.005*ix), -1.0, -1.0))
+            self.out_shapes.append((0.0-(sign*.005*ix), 0.0, -1.0))
             for ix2 in range(1,(self.inputs//self.outputs)+1):
                 self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0))
         self.subStrate = Substrate(self.in_shapes, self.out_shapes)
