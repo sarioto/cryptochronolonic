@@ -29,7 +29,7 @@ class PurpleTrader:
             "band_threshold": 0.00013,
             "iteration_level": 3,
             "division_threshold": 0.00013,
-            "max_weight": 5.0,
+            "max_weight": 8.0,
             "activation": "tanh"}
 
 
@@ -51,14 +51,14 @@ class PurpleTrader:
         self.hs.combine_polo_frames_vol_sorted()
         self.hd = hist_depth
         print(self.hs.currentHists.keys())
-        self.end_idx = len(self.hs.currentHists["ZEC"])
+        self.end_idx = len(self.hs.hist_shaped[0])
         self.but_target = .1
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = self.hs.hist_shaped.shape[0]
         sign = 1
         for ix in range(1,self.outputs+1):
             sign = sign *-1
-            self.out_shapes.append((0.0-(sign*.005*ix), -1.0, -1.0))
+            self.out_shapes.append((0.0-(sign*.005*ix), 0.0, -1.0))
             for ix2 in range(1,(self.inputs//self.outputs)+1):
                 self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0))
         self.subStrate = Substrate(self.in_shapes, self.out_shapes)
