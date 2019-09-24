@@ -101,16 +101,16 @@ class PurpleTrader:
                 active = self.get_one_epoch_input(z)
                 signals = []
                 network.reset()
-                for n in range(1, self.hd+1):
-                    out = network.activate(active[self.hd-n])
+                for n in range(1, self.hd):
+                    network.activate(active[self.hd-n])
+                out = network.activate(active[0])
                 for x in range(len(out)):
                     signals.append(out[x])
                 #rng = iter(shuffle(rng))
                 sorted_shit = np.argsort(signals)[::-1]
-                #print(sorted_shit, len(sorted_shit))
                 #print(len(sorted_shit), len(key_list))
                 for x in sorted_shit:
-                    sym = self.hs.coin_dict[self.hs.coin_dict[out.index(sorted_shit)]]
+                    sym = self.hs.coin_dict[x]
                     #print(out[x])
                     #try:
                     if(out[x] < -.5):
