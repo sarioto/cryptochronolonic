@@ -381,6 +381,7 @@ class HistWorker:
             main = main.join(df_list[i])
         return main
         '''
+    #TODO implement the same logic as is used in the polo_frames_sorted combination
     def combine_polo_usd_frames(self):
         fileNames = self.get_usd_files()
         coin_and_hist_index = 0

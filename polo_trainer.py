@@ -98,18 +98,29 @@ class PurpleTrader:
         sells = 0
         if(len(g.connections) > 0.0):
             for z in range(rand_start, rand_start+self.epoch_len):
+                #TODO add comments to clarify all the 
+                #shit im doing here
                 active = self.get_one_epoch_input(z)
-                signals = []
+                buy_signals = []
+                buy_syms = []
+                sell_syms = []
+                sell_signals = []
                 network.reset()
                 for n in range(1, self.hd):
                     network.activate(active[self.hd-n])
                 out = network.activate(active[0])
                 for x in range(len(out)):
-                    signals.append(out[x])
+                    if(out[x] > .5):
+                        buy_signals.append(out[x])
+                        buy_syms.append(self.hs.coin_dict[x])
+                    if(out[x] < -.5):
+                        sell_signals.append(out[x])
+                        sell_syms.append(self.hs.coin_dict[x])
                 #rng = iter(shuffle(rng))
-                sorted_shit = np.argsort(signals)[::-1]
+                sorted_buys = np.argsort(buy_signals)[::-1]
+                sorted_sells = np.
                 #print(len(sorted_shit), len(key_list))
-                for x in sorted_shit:
+                for x in sorted_buys:
                     sym = self.hs.coin_dict[x]
                     #print(out[x])
                     #try:
