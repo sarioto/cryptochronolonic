@@ -336,8 +336,8 @@ class HistWorker:
             print(prefixes[ix])
             #print(self.currentHists[col_prefix].head())
             df = self.currentHists[prefixes[ix]][['std_high', 'std_close', 'std_open', 'avg_vol_3', 'avg_close_3', 'avg_close_13', 'avg_close_34']].copy()
-            norm_df = (df - df.mean()) / (df.max() - df.min())
-            as_array=np.array(norm_df)
+            #norm_df = (df - df.mean()) / (df.max() - df.min())
+            as_array=np.array(df)
             self.hist_shaped[coin_and_hist_index] = as_array
             self.coin_dict[coin_and_hist_index] = prefixes[ix]
             coin_and_hist_index += 1
@@ -389,29 +389,35 @@ class HistWorker:
         for y in range(0,len(fileNames)):
             df = self.get_polo_usd_frame(fileNames[y])
             df_len = len(df)
-            #print(len(df))
+            #print(df.head())
             file_lens.append(df_len)
         mode_len = mode(file_lens)
+        print(mode_len)
         self.hist_full_size = mode_len
-        for x in range(0,len(fileNames)):
+        vollist = []
+        prefixes = []
+        for x in range(0, len(fileNames)):
             df = self.get_polo_usd_frame(fileNames[x])
             col_prefix = self.get_file_symbol(fileNames[x])
-            #df.drop("Unnamed: 0", 1)
-            #df = self.read_in_moon_data(df)
-            #df = df.drop("Unnamed: 0", 1)
-            #df.rename(columns = lambda x: col_prefix+'_'+x, inplace=True)
             as_array = np.array(df)
-            #print(len(as_array))
-            #print(len(as_array))
             if(len(as_array) == mode_len):
-                #print("adding df")
+                #print(as_array)
+                prefixes.append(col_prefix)
                 self.currentHists[col_prefix] = df
-                df = (df - df.mean()) / (df.max() - df.min())
-                as_array = np.array(df)
-                self.hist_shaped[coin_and_hist_index] = as_array
-                self.coin_dict[coin_and_hist_index] = col_prefix
-                coin_and_hist_index += 1
-        #print(self.hist_shaped)
+                vollist.append(df['volume'][0])
+        if restrict_val != 0:
+            vollist = np.argsort(vollist)[-restrict_val:][::-1]
+        vollist = np.argsort(vollist)[::-1]
+        #print(vollist)
+        for ix in vollist:
+            print(prefixes[ix])
+            #print(self.currentHists[col_prefix].head())
+            df = self.currentHists[prefixes[ix]][['std_high', 'std_close', 'std_open', 'avg_vol_3', 'avg_close_3', 'avg_close_13', 'avg_close_34']].copy()
+            #norm_df = (df - df.mean()) / (df.max() - df.min())
+            as_array=np.array(df)
+            self.hist_shaped[coin_and_hist_index] = as_array
+            self.coin_dict[coin_and_hist_index] = prefixes[ix]
+            coin_and_hist_index += 1
         self.hist_shaped = pd.Series(self.hist_shaped)
 
     def combine_live_usd_frames(self):
