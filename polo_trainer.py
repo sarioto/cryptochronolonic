@@ -110,6 +110,9 @@ class PurpleTrader:
                     network.activate(active[self.hd-n])
                 out = network.activate(active[0])
                 for x in range(len(out)):
+                    if(z > (self.epoch_len+rand_start)-2):
+                        sym = self.hs.coin_dict[x]
+                        end_prices[sym] = self.hs.currentHists[sym]['close'][self.epoch_len+rand_start]
                     if(out[x] > .5):
                         buy_signals.append(out[x])
                         buy_syms.append(self.hs.coin_dict[x])
@@ -118,24 +121,15 @@ class PurpleTrader:
                         sell_syms.append(self.hs.coin_dict[x])
                 #rng = iter(shuffle(rng))
                 sorted_buys = np.argsort(buy_signals)[::-1]
-                sorted_sells = np.
+                sorted_sells = np.argsort(sell_signals)
                 #print(len(sorted_shit), len(key_list))
+                for x in sorted_sells:
+                    sym = sell_syms[x]
+                    portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
                 for x in sorted_buys:
-                    sym = self.hs.coin_dict[x]
-                    #print(out[x])
-                    #try:
-                    if(out[x] < -.5):
-                        #print("selling")
-                        portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
-                        #print("bought ", sym)
-                    if(out[x] > .5):
-                        #print("buying")
-                        portfolio.target_amount = .1 + (out[x] * .1)
-                        portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
-                        #print("sold ", sym)
-                    #skip the hold case because we just dont buy or sell hehe
-                    if(z > (self.epoch_len+rand_start)-2):
-                        end_prices[sym] = self.hs.currentHists[sym]['close'][self.epoch_len+rand_start]
+                    sym = buy_syms[x]
+                    portfolio.target_amount = .1 + (out[x] * .1)
+                    portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
             result_val = portfolio.get_total_btc_value(end_prices)
             print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
             if(result_val[1] == 0):
