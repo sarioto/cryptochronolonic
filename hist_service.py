@@ -171,12 +171,22 @@ class HistWorker:
                 hist = requests.get('https://poloniex.com/public?command=returnChartData&currencyPair='+coin+'&start='+start+'&end=9999999999&period='+tickLen)
                 h_frame = pd.DataFrame(hist.json())
                 frame = h_frame.copy()
+                '''
                 frame['avg_vol_3'] = frame['volume'].rolling(3).mean()
                 frame['avg_vol_13'] = frame['volume'].rolling(13).mean()
                 frame['avg_vol_34'] = frame['volume'].rolling(34).mean()
                 frame['avg_close_3'] = frame['close'].rolling(3).mean()
                 frame['avg_close_13'] = frame['close'].rolling(13).mean()
                 frame['avg_close_34'] = frame['close'].rolling(34).mean()
+                '''
+                frame['avg_vol_3'] = pd.Series(np.where(frame.volume.rolling(3).mean() > frame.volume, 1, 0),frame.index)
+                frame['avg_close_3'] = pd.Series(np.where(frame.close.rolling(3).mean() > frame.close, 1, 0),frame.index)
+                frame['avg_close_13'] = pd.Series(np.where(frame.close.rolling(13).mean() > frame.close, 1, 0),frame.index)
+                frame['avg_close_34'] = pd.Series(np.where(frame.volume.rolling(34).mean() > frame.close, 1, 0),frame.index)
+                frame['std_close'] = frame['close']/frame['high']
+                frame['std_high'] = frame['high']/frame['high']
+                frame['std_low'] = frame['low']/frame['high']
+                frame['std_open'] = frame['open']/frame['high']
                 frame.fillna(value=-99999, inplace=True)
                 print(coin + " written")
                 frame.to_csv("./usd_histories/"+coin+"_hist.txt", encoding="utf-8")
@@ -382,7 +392,7 @@ class HistWorker:
         return main
         '''
     #TODO implement the same logic as is used in the polo_frames_sorted combination
-    def combine_polo_usd_frames(self):
+    def combine_polo_usd_frames(self, restrict_val = 0):
         fileNames = self.get_usd_files()
         coin_and_hist_index = 0
         file_lens = []
@@ -449,7 +459,7 @@ class HistWorker:
         '''
 #hs = HistWorker()
 
-#hs.pull_polo()
+#hs.pull_polo_usd(144)
 '''
 hs.combine_polo_frames_vol_sorted()
 
