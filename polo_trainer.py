@@ -62,13 +62,6 @@ class PurpleTrader:
             for ix2 in range(1,(self.inputs//self.outputs)+1):
                 self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0))
         self.subStrate = Substrate(self.in_shapes, self.out_shapes)
-        self.epoch_len = 144
-        #self.node_names = ['x1', 'y1', 'z1', 'x2', 'y2', 'z2', 'weight']
-        self.leaf_names = []
-        #num_leafs = 2**(len(self.node_names)-1)//2
-        for l in range(len(self.in_shapes[0])):
-            self.leaf_names.append('leaf_one_'+str(l))
-            self.leaf_names.append('leaf_two_'+str(l))
         #self.leaf_names.append('bias')
     def set_portfolio_keys(self, folio):
         for k in self.hs.currentHists.keys():
@@ -153,18 +146,42 @@ class PurpleTrader:
         return fitness
 
     def eval_fitness(self, genomes, config):
-        self.epoch_len = randint(255, 455)
+        self.epoch_len = randint(377, 610)
         r_start = randint(0+self.hd, self.hs.hist_full_size - self.epoch_len)
+        best_g_fit = 0.0
         for idx, g in genomes:
             cppn = neat.nn.FeedForwardNetwork.create(g, config)
             network = ESNetwork(self.subStrate, cppn, self.params)
             net = network.create_phenotype_network_nd()
             g.fitness = self.evaluate(net, network, r_start, g)
+            if(g.fitness > best_g_fit):
+                best_g_fit = g.fitness
+                with open('./champ_data/latest_greatest.pkl', 'wb') as output:
+                    pickle.dump(g, output)
         return
+
+    def validate_fitness(self):
+        config = self.config
+        genomes = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-49").population
+        self.epoch_len = 377
+        r_start = self.hs.hist_full_size - self.epoch_len-1
+        best_g_fit = 0.0
+        for idx in genomes:
+            g = genomes[idx]
+            cppn = neat.nn.FeedForwardNetwork.create(g, config)
+            network = ESNetwork(self.subStrate, cppn, self.params)
+            net = network.create_phenotype_network_nd()
+            g.fitness = self.evaluate(net, network, r_start, g)
+            if(g.fitness > best_g_fit):
+                best_g_fit = g.fitness
+                with open('./champ_data/latest_greatest.pkl', 'wb') as output:
+                    pickle.dump(g, output)
+        return
+
 # Create the population and run the XOR task by providing the above fitness function.
 def run_pop(task, gens):
     #pop = neat.population.Population(task.config)
-    pop = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-33")
+    pop = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-49")
     checkpoints = neat.Checkpointer(generation_interval=2, time_interval_seconds=None, filename_prefix='./pkl_pops/pop-checkpoint-')
     stats = neat.statistics.StatisticsReporter()
     pop.add_reporter(stats)
@@ -177,7 +194,8 @@ def run_pop(task, gens):
 
 
 # If run as script.
-if __name__ == '__main__':
+
+def run_training():
     task = PurpleTrader(21)
     #print(task.trial_run())
     winner = run_pop(task, 144)[0]
@@ -192,11 +210,11 @@ if __name__ == '__main__':
     #draw_net(cppn, filename="es_trade_god")
     winner_net = network.create_phenotype_network_nd('dabestest.png')  # This will also draw winner_net.
 
-    # Save CPPN if wished reused and draw it to file.
-    draw_net(cppn, filename="es_trade_god")
 
+def run_validation():
+    task = PurpleTrader(21)
 
-    '''
-    for x in range(len(task.hs.hist_shaped[0])):
-        print(task.hs.hist_shaped[1][x][3],task.hs.hist_shaped[0][x][3])
-    '''
+    task.validate_fitness()
+
+run_training()
+#run_validation()

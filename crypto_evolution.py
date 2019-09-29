@@ -84,37 +84,4 @@ class CryptoFolio:
             self.sell_coin(price,coin)
 
 
-class EvoSim:
-    count = 0
-    starting_btc = 1000
-    bestNets = []
-    lastGen = []
-    numNets = 0
-    coins = []
-    market = {}
-    nextGens = []
-    def __init__(self, numberOfNets, coins, gens):
-        self.count += 1
-        self.numNets = numberOfNets
-        self.coins = coins
-        self.lastGen = gens
-        
-    def read_hist(self, coin):
-        try:
-            df = pd.DataFrame.read_csv(coin+'_hist.txt')
-            self.market[coin] = df
-            return
-        except:
-            print("no history file found")
-            return
-    
-    def read_all_hists(self):
-        for c in self.coins:
-            self.read_hist(c)
-            return
-        
-        
-    def feedNet(self, nextGens):
-        for ix in range(0, len(nextGens)):
-            print(ix)
             

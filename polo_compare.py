@@ -28,11 +28,11 @@ class PurpleTrader:
     # ES-HyperNEAT specific parameters.
     params = {"initial_depth": 3,
             "max_depth": 4,
-            "variance_threshold": 0.000013,
-            "band_threshold": 0.000013,
+            "variance_threshold": 0.00013,
+            "band_threshold": 0.00013,
             "iteration_level": 3,
-            "division_threshold": 0.000013,
-            "max_weight": 5.0,
+            "division_threshold": 0.00013,
+            "max_weight": 8.0,
             "activation": "tanh"}
 
 
@@ -64,15 +64,14 @@ class PurpleTrader:
         #self.tree = nDimensionTree((0.0, 0.0, 0.0), 1.0, 1)
         #self.tree.divide_childrens()
         #self.set_substrate()
-        sign = -1
+        sign = 1
         for ix in range(1,self.outputs+1):
             sign = sign *-1
             self.out_shapes.append((0.0-(sign*.005*ix), 0.0, -1.0))
             for ix2 in range(1,(self.inputs//self.outputs)+1):
                 self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0))
         self.subStrate = Substrate(self.in_shapes, self.out_shapes)
-        self.set_leaf_names()
-        self.epoch_len = self.end_idx - hist_depth
+        self.epoch_len = self.end_idx - 377
 
     def set_leaf_names(self):
         for l in range(len(self.in_shapes[0])):
@@ -129,15 +128,14 @@ class PurpleTrader:
         self.cppn = the_cppn
 
     def run_champs(self):
-        genomes = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-33").population
+        genomes = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-39").population
         fitness_data = {}
         best_fitness = 0.0
         for g_ix in genomes:
             self.load_net_easy(genomes[g_ix])
-            start = (12*60)
-            #print(datetime.utcfromtimestamp(self.hs.currentHists['LTC']['date'][start]).strftime('%Y-%m-%d %H:%M:%S'))
+            start = self.epoch_len
             network = ESNetwork(self.subStrate, self.cppn, self.params)
-            net = network.create_phenotype_network_nd('./champs_visualizedd3/genome_'+str(g_ix))
+            net = network.create_phenotype_network_nd('current_net.png')
             fitness = self.evaluate(net, network, start, genomes[g_ix], g_ix)
 
     def run_champ(self, g_ix):
@@ -163,7 +161,7 @@ class PurpleTrader:
                 buy_symbols = []
                 sell_symbols = []
                 network.reset()
-                for n in range(self.hd):
+                for n in range(1, self.hd):
                     out = network.activate(active[n])
                 for x in range(len(out)):
                     sym2 = self.hs.coin_dict[x]
@@ -234,5 +232,5 @@ class PurpleTrader:
 # Create the population and run the XOR task by providing the above fitness function.
 
 
-pt = PurpleTrader(5)
+pt = PurpleTrader(21)
 pt.run_champs()

@@ -33,7 +33,7 @@ class LiveTrader:
             "band_threshold": 0.00013,
             "iteration_level": 3,
             "division_threshold": 0.00013,
-            "max_weight": 5.0,
+            "max_weight": 8.0,
             "activation": "tanh"}
 
 
@@ -41,6 +41,7 @@ class LiveTrader:
     config = neat.config.Config(neat.genome.DefaultGenome, neat.reproduction.DefaultReproduction,
                                 neat.species.DefaultSpeciesSet, neat.stagnation.DefaultStagnation,
                                 'config_trader')
+
     def __init__(self, ticker_len, target_percent, hd):
         self.polo = Poloniex(key, secret)
         self.hist_depth = hd
@@ -210,14 +211,15 @@ class LiveTrader:
         self.poloTrader()
 
 class PaperTrader:
-    params = {"initial_depth": 2,
+    params = {"initial_depth": 3,
             "max_depth": 4,
             "variance_threshold": 0.00013,
             "band_threshold": 0.00013,
             "iteration_level": 3,
             "division_threshold": 0.00013,
-            "max_weight": 5.0,
+            "max_weight": 8.0,
             "activation": "tanh"}
+
 
     # Config for CPPN.
     config = neat.config.Config(neat.genome.DefaultGenome, neat.reproduction.DefaultReproduction,
