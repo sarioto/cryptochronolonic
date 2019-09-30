@@ -73,6 +73,9 @@ class HistWorker:
     def get_polo_usd_frame(self, fname):
         return pd.read_csv("./usd_histories/"+fname)
 
+    def get_polo_usd_live_frame(self, fname):
+        return pd.read_csv("./usd_live/"+fname)
+
     def get_file_symbol(self, f):
         f = f.split("_", 2)
         return f[1]
@@ -187,9 +190,42 @@ class HistWorker:
                 frame['std_high'] = frame['high']/frame['high']
                 frame['std_low'] = frame['low']/frame['high']
                 frame['std_open'] = frame['open']/frame['high']
-                frame.fillna(value=-99999, inplace=True)
+                frame.fillna(value=0.0, inplace=True)
                 print(coin + " written")
                 frame.to_csv("./usd_histories/"+coin+"_hist.txt", encoding="utf-8")
+
+
+    def pull_polo_usd_live(self, lb):
+        polo = Poloniex()
+        coins = polo.returnTicker()
+        tickLen = '7200'
+        start = datetime.today() - timedelta(lb)
+        start = str(int(start.timestamp()))
+        for coin in coins:
+            if coin[:4] == 'USDT':
+                #print(coin)
+                hist = requests.get('https://poloniex.com/public?command=returnChartData&currencyPair='+coin+'&start='+start+'&end=9999999999&period='+tickLen)
+                h_frame = pd.DataFrame(hist.json())
+                frame = h_frame.copy()
+                '''
+                frame['avg_vol_3'] = frame['volume'].rolling(3).mean()
+                frame['avg_vol_13'] = frame['volume'].rolling(13).mean()
+                frame['avg_vol_34'] = frame['volume'].rolling(34).mean()
+                frame['avg_close_3'] = frame['close'].rolling(3).mean()
+                frame['avg_close_13'] = frame['close'].rolling(13).mean()
+                frame['avg_close_34'] = frame['close'].rolling(34).mean()
+                '''
+                frame['avg_vol_3'] = pd.Series(np.where(frame.volume.rolling(3).mean() > frame.volume, 1, 0),frame.index)
+                frame['avg_close_3'] = pd.Series(np.where(frame.close.rolling(3).mean() > frame.close, 1, 0),frame.index)
+                frame['avg_close_13'] = pd.Series(np.where(frame.close.rolling(13).mean() > frame.close, 1, 0),frame.index)
+                frame['avg_close_34'] = pd.Series(np.where(frame.volume.rolling(34).mean() > frame.close, 1, 0),frame.index)
+                frame['std_close'] = frame['close']/frame['high']
+                frame['std_high'] = frame['high']/frame['high']
+                frame['std_low'] = frame['low']/frame['high']
+                frame['std_open'] = frame['open']/frame['high']
+                frame.fillna(value=0.0, inplace=True)
+                print(coin + " written")
+                frame.to_csv("./usd_live/"+coin+"_hist.txt", encoding="utf-8")
 
 
     def pull_polo(self):
@@ -431,32 +467,42 @@ class HistWorker:
         self.hist_shaped = pd.Series(self.hist_shaped)
 
     def combine_live_usd_frames(self):
-        fileNames = self.get_gdax_training_files()
+        fileNames = self.get_usd_files()
         coin_and_hist_index = 0
-        for x in range(0,len(fileNames)):
-            df = self.get_file_as_frame(fileNames[x])
+        file_lens = []
+        for y in range(0,len(fileNames)):
+            df = self.get_polo_usd_live_frame(fileNames[y])
+            df_len = len(df)
+            #print(df.head())
+            file_lens.append(df_len)
+        mode_len = mode(file_lens)
+        print(mode_len)
+        self.hist_full_size = mode_len
+        vollist = []
+        prefixes = []
+        for x in range(0, len(fileNames)):
+            df = self.get_polo_usd_live_frame(fileNames[x])
             col_prefix = self.get_file_symbol(fileNames[x])
-            #df.drop("Unnamed: 0", 1)
-            #df = self.read_in_moon_data(df)
-            #df = df[::-1]
-            df = df[::-1]
-            self.currentHists[col_prefix] = df
-            df = df.drop('Symbol', 1)
-            df = df.drop("Date", 1)
-            df = (df - df.mean()) / (df.max() - df.min())
-            #df.rename(columns = lambda x: col_prefix+'_'+x, inplace=True)
             as_array = np.array(df)
-            #print(len(as_array))
+            if(len(as_array) == mode_len):
+                #print(as_array)
+                prefixes.append(col_prefix)
+                self.currentHists[col_prefix] = df
+                vollist.append(df['volume'][0])
+        if restrict_val != 0:
+            vollist = np.argsort(vollist)[-restrict_val:][::-1]
+        vollist = np.argsort(vollist)[::-1]
+        #print(vollist)
+        for ix in vollist:
+            print(prefixes[ix])
+            #print(self.currentHists[col_prefix].head())
+            df = self.currentHists[prefixes[ix]][['std_high', 'std_close', 'std_open', 'avg_vol_3', 'avg_close_3', 'avg_close_13', 'avg_close_34']].copy()
+            #norm_df = (df - df.mean()) / (df.max() - df.min())
+            as_array=np.array(df)
             self.hist_shaped[coin_and_hist_index] = as_array
-            self.coin_dict[coin_and_hist_index] = col_prefix
+            self.coin_dict[coin_and_hist_index] = prefixes[ix]
             coin_and_hist_index += 1
         self.hist_shaped = pd.Series(self.hist_shaped)
-        '''
-        main = df_list[0]
-        for i in range(1, len(df_list)):
-            main = main.join(df_list[i])
-        return main
-        '''
 #hs = HistWorker()
 
 #hs.pull_polo_usd(144)
