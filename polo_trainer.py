@@ -89,7 +89,10 @@ class PurpleTrader:
         end_prices = {}
         buys = 0
         sells = 0
-        if(network.node_evals[0][-1] != []):
+        if(len(network.node_evals) == 0 or network.node_evals[0][-1] == []):
+            print("no hidden nodes, fitness is 0.0")
+            ft = 0.0
+        else:
             for z in range(rand_start, rand_start+self.epoch_len):
                 #TODO add comments to clarify all the 
                 #shit im doing here
@@ -126,9 +129,6 @@ class PurpleTrader:
             result_val = portfolio.get_total_btc_value(end_prices)
             print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
             ft = result_val[0]
-        else:
-            print("no hidden nodes, fitness is 0.0")
-            ft = 0.0
         return ft
 
     def solve(self, network):
@@ -161,7 +161,7 @@ class PurpleTrader:
     def validate_fitness(self):
         config = self.config
         genomes = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-55").population
-        self.epoch_len = 377
+        self.epoch_len = 233
         r_start = self.hs.hist_full_size - self.epoch_len-1
         best_g_fit = 0.0
         for idx in genomes:
