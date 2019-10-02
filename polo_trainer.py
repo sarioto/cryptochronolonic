@@ -174,7 +174,7 @@ class PurpleTrader:
             g.fitness = self.evaluate(net, network, r_start, g)
             if(g.fitness > best_g_fit):
                 best_g_fit = g.fitness
-                with open('./champ_data/latest_greatest.pkl', 'wb') as output:
+                with open('./champ_data/latest_greatest_2.pkl', 'wb') as output:
                     pickle.dump(g, output)
         return
 
