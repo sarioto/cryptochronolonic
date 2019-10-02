@@ -194,7 +194,7 @@ def run_pop(task, gens):
 # If run as script.
 
 def run_training():
-    task = PurpleTrader(21)
+    task = PurpleTrader(34)
     #print(task.trial_run())
     winner = run_pop(task, 144)[0]
     print('\nBest genome:\n{!s}'.format(winner))
@@ -210,7 +210,7 @@ def run_training():
 
 
 def run_validation():
-    task = PurpleTrader(21)
+    task = PurpleTrader(34)
 
     task.validate_fitness()
 
