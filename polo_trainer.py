@@ -89,7 +89,7 @@ class PurpleTrader:
         end_prices = {}
         buys = 0
         sells = 0
-        if(len(g.connections) > 0.0):
+        if(network.node_evals[0][-1] != []):
             for z in range(rand_start, rand_start+self.epoch_len):
                 #TODO add comments to clarify all the 
                 #shit im doing here
@@ -125,11 +125,9 @@ class PurpleTrader:
                     portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
             result_val = portfolio.get_total_btc_value(end_prices)
             print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
-            if(result_val[1] == 0):
-                ft = result_val[0]/2
-            else:
-                ft = result_val[0]
+            ft = result_val[0]
         else:
+            print("no hidden nodes, fitness is 0.0")
             ft = 0.0
         return ft
 
@@ -162,7 +160,7 @@ class PurpleTrader:
 
     def validate_fitness(self):
         config = self.config
-        genomes = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-21").population
+        genomes = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-55").population
         self.epoch_len = 377
         r_start = self.hs.hist_full_size - self.epoch_len-1
         best_g_fit = 0.0
@@ -174,14 +172,14 @@ class PurpleTrader:
             g.fitness = self.evaluate(net, network, r_start, g)
             if(g.fitness > best_g_fit):
                 best_g_fit = g.fitness
-                with open('./champ_data/latest_greatest_2.pkl', 'wb') as output:
+                with open('./champ_data/latest_greatest.pkl', 'wb') as output:
                     pickle.dump(g, output)
         return
 
 # Create the population and run the XOR task by providing the above fitness function.
 def run_pop(task, gens):
-    #pop = neat.population.Population(task.config)
-    pop = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-37")
+    pop = neat.population.Population(task.config)
+    #pop = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-55")
     checkpoints = neat.Checkpointer(generation_interval=2, time_interval_seconds=None, filename_prefix='./pkl_pops/pop-checkpoint-')
     stats = neat.statistics.StatisticsReporter()
     pop.add_reporter(stats)
@@ -216,5 +214,5 @@ def run_validation():
 
     task.validate_fitness()
 
-#run_training()
-run_validation()
+run_training()
+#run_validation()
