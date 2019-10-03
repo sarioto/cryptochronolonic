@@ -233,15 +233,19 @@ class PaperTrader:
         self.end_ts = datetime.now()+timedelta(seconds=(ticker_len*24))
         self.start_amount = start_amount
         self.hs = HistWorker()
-        self.refresh_data()
+        self.hs.combine_polo_usd_frames()
+        print(self.hs.currentHists.keys())
+        self.end_idx = len(self.hs.hist_shaped[0])
+        self.but_target = .1
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = self.hs.hist_shaped.shape[0]
-        self.make_shapes()
-        self.folio = CryptoFolio(start_amount, list(self.hs.currentHists.keys()))
-        self.leaf_names = []
-        for l in range(len(self.in_shapes[0])):
-            self.leaf_names.append('leaf_one_'+str(l))
-            self.leaf_names.append('leaf_two_'+str(l))
+        sign = 1
+        for ix in range(1,self.outputs+1):
+            sign = sign *-1
+            self.out_shapes.append((0.0-(sign*.005*ix), 0.0, -1.0))
+            for ix2 in range(1,(self.inputs//self.outputs)+1):
+                self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0))
+        self.subStrate = Substrate(self.in_shapes, self.out_shapes)
         self.load_net()
         print(self.hs.coin_dict)
         self.poloTrader()
