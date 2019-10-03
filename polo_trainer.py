@@ -160,7 +160,7 @@ class PurpleTrader:
 
     def validate_fitness(self):
         config = self.config
-        genomes = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-55").population
+        genomes = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-35").population
         self.epoch_len = 233
         r_start = self.hs.hist_full_size - self.epoch_len-1
         best_g_fit = 0.0
@@ -214,5 +214,5 @@ def run_validation():
 
     task.validate_fitness()
 
-run_training()
-#run_validation()
+#run_training()
+run_validation()
