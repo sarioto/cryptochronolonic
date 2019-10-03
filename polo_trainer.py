@@ -152,7 +152,9 @@ class PurpleTrader:
             cppn = neat.nn.FeedForwardNetwork.create(g, config)
             network = ESNetwork(self.subStrate, cppn, self.params)
             net = network.create_phenotype_network_nd()
-            g.fitness = self.evaluate(net, network, r_start, g)
+            train_ft = self.evaluate(net, network, r_start, g)
+            validate_ft = self.evaluate(net, network, r_start_2, g)
+            g.fitness = (train_ft+validate_ft)/2
             if(g.fitness > best_g_fit):
                 best_g_fit = g.fitness
                 with open('./champ_data/latest_greatest.pkl', 'wb') as output:
@@ -161,7 +163,7 @@ class PurpleTrader:
 
     def validate_fitness(self):
         config = self.config
-        genomes = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-35").population
+        genomes = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-61").population
         self.epoch_len = 233
         r_start = self.hs.hist_full_size - self.epoch_len-1
         best_g_fit = 0.0
