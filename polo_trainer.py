@@ -146,6 +146,7 @@ class PurpleTrader:
     def eval_fitness(self, genomes, config):
         self.epoch_len = 233
         r_start = randint(0+self.hd, self.hs.hist_full_size - self.epoch_len)
+        r_start_2 = self.hs.hist_full_size - self.epoch_len-1
         best_g_fit = 0.0
         for idx, g in genomes:
             cppn = neat.nn.FeedForwardNetwork.create(g, config)
