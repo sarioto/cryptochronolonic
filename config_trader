@@ -3,7 +3,7 @@
 [NEAT]
 fitness_criterion     = max
 fitness_threshold     = 3069466
-pop_size              = 255
+pop_size              = 399
 reset_on_extinction   = True
 
 
@@ -23,7 +23,7 @@ bias_init_mean          = 0.1
 bias_init_stdev         = 1.0
 bias_max_value          = 34.0
 bias_min_value          = -34.0
-bias_mutate_power       = 0.55
+bias_mutate_power       = 0.34
 bias_mutate_rate        = 0.55
 bias_replace_rate       = 0.2
 
@@ -79,4 +79,4 @@ species_elitism      = 21
 
 [DefaultReproduction]
 elitism            = 8
-survival_threshold = .051
+survival_threshold = .5
