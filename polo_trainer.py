@@ -127,6 +127,7 @@ class PurpleTrader:
                     portfolio.target_amount = .1 + (out[x] * .1)
                     portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
             result_val = portfolio.get_total_btc_value(end_prices)
+            print(g.key, " : ")
             print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
             ft = result_val[0]
         return ft
@@ -144,7 +145,7 @@ class PurpleTrader:
         return fitness
 
     def eval_fitness(self, genomes, config):
-        self.epoch_len = 233
+        self.epoch_len = 89
         r_start = randint(0+self.hd, self.hs.hist_full_size - self.epoch_len)
         r_start_2 = self.hs.hist_full_size - self.epoch_len-1
         best_g_fit = 0.0
@@ -181,8 +182,8 @@ class PurpleTrader:
 
 # Create the population and run the XOR task by providing the above fitness function.
 def run_pop(task, gens):
-    #pop = neat.population.Population(task.config)
-    pop = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-55")
+    pop = neat.population.Population(task.config)
+    #pop = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-65")
     checkpoints = neat.Checkpointer(generation_interval=2, time_interval_seconds=None, filename_prefix='./pkl_pops/pop-checkpoint-')
     stats = neat.statistics.StatisticsReporter()
     pop.add_reporter(stats)
@@ -217,5 +218,5 @@ def run_validation():
 
     task.validate_fitness()
 
-#run_training()
-run_validation()
+run_training()
+#run_validation()
