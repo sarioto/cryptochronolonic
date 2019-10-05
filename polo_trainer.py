@@ -170,7 +170,7 @@ class PurpleTrader:
         for idx in genomes:
             g = genomes[idx]
             cppn = neat.nn.FeedForwardNetwork.create(g, config)
-            network = ESNetwork(self.subStrate, cppn, self.params)
+            network = ESNetwork(self.subStrate, cppn, self.params, self.hd)
             net = network.create_phenotype_network_nd()
             g.fitness = self.evaluate(net, network, r_start, g)
             if(g.fitness > best_g_fit):
