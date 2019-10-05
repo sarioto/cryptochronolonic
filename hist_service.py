@@ -182,10 +182,10 @@ class HistWorker:
                 frame['avg_close_13'] = frame['close'].rolling(13).mean()
                 frame['avg_close_34'] = frame['close'].rolling(34).mean()
                 '''
-                frame['avg_vol_3'] = pd.Series(np.where(frame.volume.rolling(3).mean() > frame.volume, 1, 0),frame.index)
-                frame['avg_close_3'] = pd.Series(np.where(frame.close.rolling(3).mean() > frame.close, 1, 0),frame.index)
-                frame['avg_close_13'] = pd.Series(np.where(frame.close.rolling(13).mean() > frame.close, 1, 0),frame.index)
-                frame['avg_close_34'] = pd.Series(np.where(frame.volume.rolling(34).mean() > frame.close, 1, 0),frame.index)
+                frame['avg_vol_3'] = pd.Series(np.where(frame.volume.rolling(3).mean() / frame.volume, 1, 0),frame.index)
+                frame['avg_close_3'] = pd.Series(np.where(frame.close.rolling(3).mean() / frame.close, 1, 0),frame.index)
+                frame['avg_close_13'] = pd.Series(np.where(frame.close.rolling(21).mean() / frame.close.rolling(3).mean(), 1, 0),frame.index)
+                frame['avg_close_34'] = pd.Series(np.where(frame.volume.rolling(55).mean() / frame.close.rolling(21).mean(), 1, 0),frame.index)
                 frame['std_close'] = frame['open']/frame['close']
                 frame['std_high'] = frame['high']/frame['low']
                 frame.fillna(value=0.0, inplace=True)
@@ -213,10 +213,10 @@ class HistWorker:
                 frame['avg_close_13'] = frame['close'].rolling(13).mean()
                 frame['avg_close_34'] = frame['close'].rolling(34).mean()
                 '''
-                frame['avg_vol_3'] = pd.Series(np.where(frame.volume.rolling(3).mean() > frame.volume, 1, 0),frame.index)
-                frame['avg_close_3'] = pd.Series(np.where(frame.close.rolling(3).mean() > frame.close, 1, 0),frame.index)
-                frame['avg_close_13'] = pd.Series(np.where(frame.close.rolling(13).mean() > frame.close, 1, 0),frame.index)
-                frame['avg_close_34'] = pd.Series(np.where(frame.volume.rolling(34).mean() > frame.close, 1, 0),frame.index)
+                frame['avg_vol_3'] = pd.Series(np.where(frame.volume.rolling(3).mean() / frame.volume, 1, 0),frame.index)
+                frame['avg_close_3'] = pd.Series(np.where(frame.close.rolling(3).mean() / frame.close, 1, 0),frame.index)
+                frame['avg_close_13'] = pd.Series(np.where(frame.close.rolling(21).mean() / frame.close.rolling(3).mean(), 1, 0),frame.index)
+                frame['avg_close_34'] = pd.Series(np.where(frame.volume.rolling(55).mean() / frame.close.rolling(21).mean(), 1, 0),frame.index)
                 frame['std_close'] = frame['open']/frame['close']
                 frame['std_high'] = frame['high']/frame['low']
                 frame.fillna(value=0.0, inplace=True)
@@ -454,7 +454,7 @@ class HistWorker:
         for ix in vollist:
             print(prefixes[ix])
             df['volume'] = (df['volume'] - df['volume'].mean())/(df['volume'].max() - df['volume'].min())
-            df = self.currentHists[prefixes[ix]][['volume', 'std_high', 'std_close', 'std_open', 'avg_vol_3', 'avg_close_3', 'avg_close_13', 'avg_close_34']].copy()
+            df = self.currentHists[prefixes[ix]][['volume', 'std_high', 'std_close', 'avg_vol_3', 'avg_close_3', 'avg_close_13', 'avg_close_34']].copy()
             #norm_df = (df - df.mean()) / (df.max() - df.min())
             as_array=np.array(df)
             self.hist_shaped[coin_and_hist_index] = as_array
