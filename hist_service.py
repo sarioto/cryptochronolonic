@@ -500,8 +500,8 @@ class HistWorker:
             self.coin_dict[coin_and_hist_index] = prefixes[ix]
             coin_and_hist_index += 1
         self.hist_shaped = pd.Series(self.hist_shaped)
-hs = HistWorker()
-hs.pull_polo_usd(144)
+#hs = HistWorker()
+#hs.pull_polo_usd(144)
 #hs.pull_polo_usd_live(60)
 '''
 hs.combine_polo_frames_vol_sorted()
