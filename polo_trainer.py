@@ -89,7 +89,7 @@ class PurpleTrader:
         end_prices = {}
         buys = 0
         sells = 0
-        if(len(network.node_evals) == 0 or network.node_evals[0][-1] == []):
+        if(len(network.node_evals) == 0):
             print("no hidden nodes, fitness is 0.0")
             ft = 0.0
         else:
@@ -129,7 +129,10 @@ class PurpleTrader:
             result_val = portfolio.get_total_btc_value(end_prices)
             print(g.key, " : ")
             print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
-            ft = result_val[0]
+            if result_val[1] == 0:
+                ft = .7
+            else:
+                ft = result_val[0]
         return ft
 
     def solve(self, network):
