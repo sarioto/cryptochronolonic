@@ -505,7 +505,7 @@ class HistWorker:
         self.hist_shaped = pd.Series(self.hist_shaped)
 #hs = HistWorker()
 
-#hs.pull_polo_usd(144)
+#hs.pull_polo_usd_live(60)
 '''
 hs.combine_polo_frames_vol_sorted()
 
