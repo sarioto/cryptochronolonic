@@ -186,10 +186,8 @@ class HistWorker:
                 frame['avg_close_3'] = pd.Series(np.where(frame.close.rolling(3).mean() > frame.close, 1, 0),frame.index)
                 frame['avg_close_13'] = pd.Series(np.where(frame.close.rolling(13).mean() > frame.close, 1, 0),frame.index)
                 frame['avg_close_34'] = pd.Series(np.where(frame.volume.rolling(34).mean() > frame.close, 1, 0),frame.index)
-                frame['std_close'] = frame['close']/frame['high']
-                frame['std_high'] = frame['high']/frame['high']
-                frame['std_low'] = frame['low']/frame['high']
-                frame['std_open'] = frame['open']/frame['high']
+                frame['std_close'] = frame['open']/frame['close']
+                frame['std_high'] = frame['high']/frame['low']
                 frame.fillna(value=0.0, inplace=True)
                 print(coin + " written")
                 frame.to_csv("./usd_histories/"+coin+"_hist.txt", encoding="utf-8")
@@ -219,10 +217,8 @@ class HistWorker:
                 frame['avg_close_3'] = pd.Series(np.where(frame.close.rolling(3).mean() > frame.close, 1, 0),frame.index)
                 frame['avg_close_13'] = pd.Series(np.where(frame.close.rolling(13).mean() > frame.close, 1, 0),frame.index)
                 frame['avg_close_34'] = pd.Series(np.where(frame.volume.rolling(34).mean() > frame.close, 1, 0),frame.index)
-                frame['std_close'] = frame['close']/frame['high']
-                frame['std_high'] = frame['high']/frame['high']
-                frame['std_low'] = frame['low']/frame['high']
-                frame['std_open'] = frame['open']/frame['high']
+                frame['std_close'] = frame['open']/frame['close']
+                frame['std_high'] = frame['high']/frame['low']
                 frame.fillna(value=0.0, inplace=True)
                 print(coin + " written")
                 frame.to_csv("./usd_live/"+coin+"_hist.txt", encoding="utf-8")
@@ -504,8 +500,8 @@ class HistWorker:
             self.coin_dict[coin_and_hist_index] = prefixes[ix]
             coin_and_hist_index += 1
         self.hist_shaped = pd.Series(self.hist_shaped)
-#hs = HistWorker()
-
+hs = HistWorker()
+hs.pull_polo_usd(144)
 #hs.pull_polo_usd_live(60)
 '''
 hs.combine_polo_frames_vol_sorted()
