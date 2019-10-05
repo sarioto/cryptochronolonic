@@ -148,10 +148,11 @@ class PurpleTrader:
         r_start = randint(0+self.hd, self.hs.hist_full_size - self.epoch_len)
         r_start_2 = self.hs.hist_full_size - self.epoch_len-1
         best_g_fit = 0.0
+        img_count = 0
         for idx, g in genomes:
             cppn = neat.nn.FeedForwardNetwork.create(g, config)
             network = ESNetwork(self.subStrate, cppn, self.params)
-            net = network.create_phenotype_network_nd()
+            net = network.create_phenotype_network_nd("./train_vis/" + str(img_count) + ".png")
             train_ft = self.evaluate(net, network, r_start, g)
             validate_ft = self.evaluate(net, network, r_start_2, g)
             g.fitness = (train_ft+validate_ft)/2
@@ -159,6 +160,7 @@ class PurpleTrader:
                 best_g_fit = g.fitness
                 with open('./champ_data/latest_greatest.pkl', 'wb') as output:
                     pickle.dump(g, output)
+            img_count += 1
         return
 
     def validate_fitness(self):
