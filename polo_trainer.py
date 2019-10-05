@@ -217,5 +217,5 @@ def run_validation():
 
     task.validate_fitness()
 
-#run_training()
-run_validation()
+run_training()
+#run_validation()
