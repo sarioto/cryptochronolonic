@@ -89,50 +89,46 @@ class PurpleTrader:
         end_prices = {}
         buys = 0
         sells = 0
-        if(len(network.node_evals) == 0):
-            print("no hidden nodes, fitness is 0.0")
-            ft = 0.0
+        for z in range(rand_start, rand_start+self.epoch_len):
+            #TODO add comments to clarify all the 
+            #shit im doing here
+            active = self.get_one_epoch_input(z)
+            buy_signals = []
+            buy_syms = []
+            sell_syms = []
+            sell_signals = []
+            network.reset()
+            for n in range(1, self.hd):
+                network.activate(active[self.hd-n])
+            out = network.activate(active[0])
+            for x in range(len(out)):
+                if(z > (self.epoch_len+rand_start)-2):
+                    sym = self.hs.coin_dict[x]
+                    end_prices[sym] = self.hs.currentHists[sym]['close'][self.epoch_len+rand_start]
+                if(out[x] > .5):
+                    buy_signals.append(out[x])
+                    buy_syms.append(self.hs.coin_dict[x])
+                if(out[x] < -.5):
+                    sell_signals.append(out[x])
+                    sell_syms.append(self.hs.coin_dict[x])
+            #rng = iter(shuffle(rng))
+            sorted_buys = np.argsort(buy_signals)[::-1]
+            sorted_sells = np.argsort(sell_signals)
+            #print(len(sorted_shit), len(key_list))
+            for x in sorted_sells:
+                sym = sell_syms[x]
+                portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
+            for x in sorted_buys:
+                sym = buy_syms[x]
+                portfolio.target_amount = .1 + (out[x] * .1)
+                portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
+        result_val = portfolio.get_total_btc_value(end_prices)
+        print(g.key, " : ")
+        print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
+        if result_val[1] == 0:
+            ft = .7
         else:
-            for z in range(rand_start, rand_start+self.epoch_len):
-                #TODO add comments to clarify all the 
-                #shit im doing here
-                active = self.get_one_epoch_input(z)
-                buy_signals = []
-                buy_syms = []
-                sell_syms = []
-                sell_signals = []
-                network.reset()
-                for n in range(1, self.hd):
-                    network.activate(active[self.hd-n])
-                out = network.activate(active[0])
-                for x in range(len(out)):
-                    if(z > (self.epoch_len+rand_start)-2):
-                        sym = self.hs.coin_dict[x]
-                        end_prices[sym] = self.hs.currentHists[sym]['close'][self.epoch_len+rand_start]
-                    if(out[x] > .5):
-                        buy_signals.append(out[x])
-                        buy_syms.append(self.hs.coin_dict[x])
-                    if(out[x] < -.5):
-                        sell_signals.append(out[x])
-                        sell_syms.append(self.hs.coin_dict[x])
-                #rng = iter(shuffle(rng))
-                sorted_buys = np.argsort(buy_signals)[::-1]
-                sorted_sells = np.argsort(sell_signals)
-                #print(len(sorted_shit), len(key_list))
-                for x in sorted_sells:
-                    sym = sell_syms[x]
-                    portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
-                for x in sorted_buys:
-                    sym = buy_syms[x]
-                    portfolio.target_amount = .1 + (out[x] * .1)
-                    portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
-            result_val = portfolio.get_total_btc_value(end_prices)
-            print(g.key, " : ")
-            print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
-            if result_val[1] == 0:
-                ft = .7
-            else:
-                ft = result_val[0]
+            ft = result_val[0]
         return ft
 
     def solve(self, network):

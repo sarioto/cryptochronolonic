@@ -37,7 +37,7 @@ conn_delete_prob        = 0.21
 
 # connection enable options
 enabled_default         = True
-enabled_mutate_rate     = 0.55
+enabled_mutate_rate     = 0.21
 
 feed_forward            = True
 initial_connection      = full_direct
