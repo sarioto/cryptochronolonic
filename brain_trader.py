@@ -21,7 +21,7 @@ import neat
 import _pickle as pickle
 from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
-from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork
+from pureples.es_hyperneat.es_hyperneat import ESNetwork
 #polo = Poloniex('key', 'secret')
 key = ""
 secret = ""
@@ -252,19 +252,14 @@ class PaperTrader:
 
     def refresh_data(self):
         self.hs.pull_polo_live(21)
-        self.hs.combine_live_frames(89)
+        self.hs.combine_live_frames()
 
     def load_net(self):
         #file = open("./champ_gens/thot-checkpoint-13",'rb')
-        g = neat.Checkpointer.restore_checkpoint("./champ_gens/thot-checkpoint-25")
-        best_fit = 0.0
-        for gx in g.population:
-            if g.population[gx].fitness != None:
-                if g.population[gx].fitness > best_fit:
-                    bestg = g.population[gx]
+        g = neat.Checkpointer.restore_checkpoint("./champ_data/latest_greatest.pkl")
         g = bestg
         #file.close()
-        [the_cppn] = create_cppn(g, self.config, self.leaf_names, ['cppn_out'])
+        the_cppn = neat.nn.FeedForwardNetwork.create(g, config)
         self.cppn = the_cppn
 
     def make_shapes(self):
