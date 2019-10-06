@@ -148,9 +148,10 @@ class PurpleTrader:
         r_start = randint(0+self.hd, self.hs.hist_full_size - self.epoch_len)
         r_start_2 = self.hs.hist_full_size - self.epoch_len-1
         best_g_fit = 0.0
+        #img_count = 0
         for idx, g in genomes:
             cppn = neat.nn.FeedForwardNetwork.create(g, config)
-            network = ESNetwork(self.subStrate, cppn, self.params)
+            network = ESNetwork(self.subStrate, cppn, self.params, self.hd)
             net = network.create_phenotype_network_nd()
             train_ft = self.evaluate(net, network, r_start, g)
             validate_ft = self.evaluate(net, network, r_start_2, g)
@@ -159,6 +160,7 @@ class PurpleTrader:
                 best_g_fit = g.fitness
                 with open('./champ_data/latest_greatest.pkl', 'wb') as output:
                     pickle.dump(g, output)
+            #img_count += 1
         return
 
     def validate_fitness(self):
@@ -181,8 +183,8 @@ class PurpleTrader:
 
 # Create the population and run the XOR task by providing the above fitness function.
 def run_pop(task, gens):
-    pop = neat.population.Population(task.config)
-    #pop = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-65")
+    #pop = neat.population.Population(task.config)
+    pop = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-1")
     checkpoints = neat.Checkpointer(generation_interval=2, time_interval_seconds=None, filename_prefix='./pkl_pops/pop-checkpoint-')
     stats = neat.statistics.StatisticsReporter()
     pop.add_reporter(stats)
@@ -217,5 +219,5 @@ def run_validation():
 
     task.validate_fitness()
 
-#run_training()
-run_validation()
+run_training()
+#run_validation()
