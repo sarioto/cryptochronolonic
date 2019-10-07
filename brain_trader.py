@@ -251,8 +251,8 @@ class PaperTrader:
         self.poloTrader()
 
     def refresh_data(self):
-        self.hs.pull_polo_live(21)
-        self.hs.combine_live_frames()
+        self.hs.pull_polo_usd_live(21)
+        self.hs.combine_live_usd_frames()
 
     def load_net(self):
         #file = open("./champ_gens/thot-checkpoint-13",'rb')
@@ -312,13 +312,13 @@ class PaperTrader:
         active = self.get_one_bar_input_2d()
         self.load_net()
         sub = Substrate(self.in_shapes, self.out_shapes)
-        net = ESNetwork(sub, self.cppn, self.params)
-        network = network.create_phenotype_network_nd('paper_net.png')
+        net = ESNetwork(sub, self.cppn, self.params, self.hd)
+        network = net.create_phenotype_network_nd('paper_net.png')
         sell_syms = []
         buy_syms = []
         buy_signals = []
         sell_signals = []
-        for n in range(1, self.hd+1):
+        for n in range(1, self.hd):
             network.activate(active[self.hd-n])
         out = network.activate(active[0])
         self.reset_tickers()
