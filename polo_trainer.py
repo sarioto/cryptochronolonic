@@ -98,7 +98,7 @@ class PurpleTrader:
             sell_syms = []
             sell_signals = []
             network.reset()
-            for n in range(1, self.hd):
+            for n in range(1, self.hd+1):
                 network.activate(active[self.hd-n])
             out = network.activate(active[0])
             for x in range(len(out)):

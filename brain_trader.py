@@ -228,7 +228,7 @@ class PaperTrader:
     def __init__(self, ticker_len, start_amount, histdepth):
         self.trade_hist = {}
         self.polo = Poloniex()
-        self.hist_depth = histdepth
+        self.hd = histdepth
         self.ticker_len = ticker_len
         self.end_ts = datetime.now()+timedelta(seconds=(ticker_len*24))
         self.start_amount = start_amount
@@ -290,13 +290,13 @@ class PaperTrader:
                 c_prices[s] = self.hs.currentHists[s]['close'].iloc[-1]
         return self.folio.get_total_btc_value_no_sell(c_prices)
 
-    def get_one_bar_input_2d(self,end_idx=10):
+    def get_one_bar_input_2d(self):
         master_active = []
-        for x in range(0, self.hist_depth):
+        for x in range(0, self.hd):
             active = []
             #print(self.outputs)
             for y in range(0, self.outputs):
-                sym_data = self.hs.hist_shaped[y][self.hist_depth-x]
+                sym_data = self.hs.hist_shaped[y][self.end_idx-x]
                 #print(len(sym_data))
                 active += sym_data.tolist()
             master_active.append(active)
@@ -312,35 +312,38 @@ class PaperTrader:
         active = self.get_one_bar_input_2d()
         self.load_net()
         sub = Substrate(self.in_shapes, self.out_shapes)
-        network = ESNetwork(sub, self.cppn, self.params)
-        net = network.create_phenotype_network_nd('paper_net.png')
-        for n in range(1, self.hd):
+        net = ESNetwork(sub, self.cppn, self.params)
+        network = network.create_phenotype_network_nd('paper_net.png')
+        sell_syms = []
+        buy_syms = []
+        buy_signals = []
+        sell_signals = []
+        for n in range(1, self.hd+1):
             network.activate(active[self.hd-n])
         out = network.activate(active[0])
+        self.reset_tickers()
         for x in range(len(out)):
-            if(z > (self.epoch_len+rand_start)-2):
-                sym = self.hs.coin_dict[x]
-                end_prices[sym] = self.hs.currentHists[sym]['close'][self.epoch_len+rand_start]
+            sym = self.hs.coin_dict[x]
+            end_prices[sym] = self.get_price("USDT_"+sym)
             if(out[x] > .5):
                 buy_signals.append(out[x])
-                buy_syms.append(self.hs.coin_dict[x])
+                buy_syms.append(sym)
             if(out[x] < -.5):
                 sell_signals.append(out[x])
-                sell_syms.append(self.hs.coin_dict[x])
+                sell_syms.append(sym)
         #rng = iter(shuffle(rng))
         sorted_buys = np.argsort(buy_signals)[::-1]
         sorted_sells = np.argsort(sell_signals)
-        self.reset_tickers()
         try:
             for x in sorted_sells:
                 sym = sell_syms[x]
-                p = self.get_price('BTC_'+sym)
+                p = end_prices["USDT_" + sym]
                 print("selling: ", sym)
                 self.folio.sell_coin(sym, p)
                 #portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
             for x in sorted_buys:
                 sym = buy_syms[x]
-                p = self.get_price('BTC_'+sym)
+                p = end_prices["USDT_"+sym]
                 print("buying: ", sym)
                 self.folio.buy_coin(sym, p)
         except:
@@ -373,4 +376,4 @@ class PaperTrader:
 
 
 #LiveTrader(7200, .34, 34)
-PaperTrader(7200, 1.0 , 34)
+PaperTrader(7200, 1000.0 , 34)
