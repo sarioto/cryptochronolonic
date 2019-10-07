@@ -21,7 +21,7 @@ import neat
 import _pickle as pickle
 from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
-from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork
+from pureples.es_hyperneat.es_hyperneat import ESNetwork
 #polo = Poloniex('key', 'secret')
 key = ""
 secret = ""
@@ -252,19 +252,14 @@ class PaperTrader:
 
     def refresh_data(self):
         self.hs.pull_polo_live(21)
-        self.hs.combine_live_frames(89)
+        self.hs.combine_live_frames()
 
     def load_net(self):
         #file = open("./champ_gens/thot-checkpoint-13",'rb')
-        g = neat.Checkpointer.restore_checkpoint("./champ_gens/thot-checkpoint-25")
-        best_fit = 0.0
-        for gx in g.population:
-            if g.population[gx].fitness != None:
-                if g.population[gx].fitness > best_fit:
-                    bestg = g.population[gx]
+        g = neat.Checkpointer.restore_checkpoint("./champ_data/latest_greatest.pkl")
         g = bestg
         #file.close()
-        [the_cppn] = create_cppn(g, self.config, self.leaf_names, ['cppn_out'])
+        the_cppn = neat.nn.FeedForwardNetwork.create(g, config)
         self.cppn = the_cppn
 
     def make_shapes(self):
@@ -319,32 +314,37 @@ class PaperTrader:
         sub = Substrate(self.in_shapes, self.out_shapes)
         network = ESNetwork(sub, self.cppn, self.params)
         net = network.create_phenotype_network_nd('paper_net.png')
-        net.reset()
-        for n in range(1, self.hist_depth+1):
-            out = net.activate(active[self.hist_depth-n])
-        #print(len(out))
-        rng = len(out)
+        for n in range(1, self.hd):
+            network.activate(active[self.hd-n])
+        out = network.activate(active[0])
+        for x in range(len(out)):
+            if(z > (self.epoch_len+rand_start)-2):
+                sym = self.hs.coin_dict[x]
+                end_prices[sym] = self.hs.currentHists[sym]['close'][self.epoch_len+rand_start]
+            if(out[x] > .5):
+                buy_signals.append(out[x])
+                buy_syms.append(self.hs.coin_dict[x])
+            if(out[x] < -.5):
+                sell_signals.append(out[x])
+                sell_syms.append(self.hs.coin_dict[x])
         #rng = iter(shuffle(rng))
+        sorted_buys = np.argsort(buy_signals)[::-1]
+        sorted_sells = np.argsort(sell_signals)
         self.reset_tickers()
-        for x in np.random.permutation(rng):
-            sym = self.hs.coin_dict[x]
-            #print(out[x])
-            try:
-                if(out[x] < -.5):
-                    p = self.get_price('BTC_'+sym)
-                    print("selling: ", sym)
-                    self.folio.sell_coin(sym, p)
-                elif(out[x] > .5):
-                    p = self.get_price('BTC_'+sym)
-                    print("buying: ", sym)
-                    self.folio.buy_coin(sym, p)
-                else:
-
-            except:
-                print("error buying or selling")
-            #skip the hold case because we just dont buy or sell hehe
-            end_prices[sym] = self.hs.currentHists[sym]["close"].iloc[-1]
-        
+        try:
+            for x in sorted_sells:
+                sym = sell_syms[x]
+                p = self.get_price('BTC_'+sym)
+                print("selling: ", sym)
+                self.folio.sell_coin(sym, p)
+                #portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
+            for x in sorted_buys:
+                sym = buy_syms[x]
+                p = self.get_price('BTC_'+sym)
+                print("buying: ", sym)
+                self.folio.buy_coin(sym, p)
+        except:
+            print("error placing order")
         self.trade_hist["date"] = datetime.now()
         self.trade_hist["portfoliovalue"] = self.folio.get_total_btc_value_no_sell(end_prices)[0] 
         self.trade_hist["portfolio"] = self.folio.ledger
