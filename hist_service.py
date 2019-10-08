@@ -462,7 +462,7 @@ class HistWorker:
             coin_and_hist_index += 1
         self.hist_shaped = pd.Series(self.hist_shaped)
 
-    def combine_live_usd_frames(self, restrict_val):
+    def combine_live_usd_frames(self, restrict_val = 0):
         fileNames = self.get_usd_files()
         coin_and_hist_index = 0
         file_lens = []

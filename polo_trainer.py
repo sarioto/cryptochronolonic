@@ -46,10 +46,16 @@ class PurpleTrader:
 
     in_shapes = []
     out_shapes = []
-    def __init__(self, hist_depth):
-        self.hs = HistWorker()
-        self.hs.combine_polo_usd_frames()
+    def __init__(self, hist_depth, num_gens, gen_count = 0):
         self.hd = hist_depth
+        self.refresh()
+        self.num_gens = num_gens
+        self.gen_count = gen_count
+
+    def refresh(self):
+        self.hs = HistWorker()
+        self.hs.pull_polo_usd(144)
+        self.hs.combine_polo_usd_frames()
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
         self.but_target = .1
