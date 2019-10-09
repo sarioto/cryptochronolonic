@@ -46,10 +46,16 @@ class PurpleTrader:
 
     in_shapes = []
     out_shapes = []
-    def __init__(self, hist_depth):
-        self.hs = HistWorker()
-        self.hs.combine_polo_usd_frames()
+    def __init__(self, hist_depth, num_gens, gen_count = 1):
         self.hd = hist_depth
+        self.num_gens = num_gens
+        self.gen_count = gen_count
+        self.refresh()
+
+    def refresh(self):
+        self.hs = HistWorker()
+        self.hs.pull_polo_usd(144)
+        self.hs.combine_polo_usd_frames()
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
         self.but_target = .1
@@ -148,6 +154,7 @@ class PurpleTrader:
         r_start = randint(0+self.hd, self.hs.hist_full_size - self.epoch_len)
         r_start_2 = self.hs.hist_full_size - self.epoch_len-1
         best_g_fit = 0.0
+        champ_counter = self.gen_count % 10 
         #img_count = 0
         for idx, g in genomes:
             cppn = neat.nn.FeedForwardNetwork.create(g, config)
@@ -158,9 +165,37 @@ class PurpleTrader:
             g.fitness = (train_ft+validate_ft)/2
             if(g.fitness > best_g_fit):
                 best_g_fit = g.fitness
-                with open('./champ_data/latest_greatest.pkl', 'wb') as output:
+                with open("./champ_data/latest_greatest"+str(champ_counter)+".pkl", 'wb') as output:
                     pickle.dump(g, output)
             #img_count += 1
+        if(champ_counter == 0):
+            self.refresh()
+            self.compare_champs()
+        self.gen_count += 1
+        return
+
+    def compare_champs(self):
+        self.epoch_len = 233
+        r_start = self.hs.hist_full_size - self.epoch_len-1
+        champ_current = open("./champ_data/latest_greatest.pkl",'rb')
+        g = pickle.load(champ_current)
+        champ_current.close()
+        cppn = neat.nn.FeedForwardNetwork.create(g, self.config)
+        network = ESNetwork(self.subStrate, cppn, self.params, self.hd)
+        net = network.create_phenotype_network_nd()
+        champ_fit = self.evaluate(net, network, r_start, g)
+        for f in os.listdir("./champ_data"):
+            if(f != "lastest_greatest.pkl"):
+                champ_file = open("./champ_data/"+f,'rb')
+                g = pickle.load(champ_file)
+                champ_file.close()
+                cppn = neat.nn.FeedForwardNetwork.create(g, self.config)
+                network = ESNetwork(self.subStrate, cppn, self.params, self.hd)
+                net = network.create_phenotype_network_nd()
+                g.fitness = self.evaluate(net, network, r_start, g)
+                if (g.fitness > champ_fit):
+                    with open("./champ_data/latest_greatest.pkl", 'wb') as output:
+                        pickle.dump(g, output)
         return
 
     def validate_fitness(self):
@@ -182,42 +217,34 @@ class PurpleTrader:
         return
 
 # Create the population and run the XOR task by providing the above fitness function.
-def run_pop(task, gens):
-    #pop = neat.population.Population(task.config)
-    pop = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-85")
-    checkpoints = neat.Checkpointer(generation_interval=2, time_interval_seconds=None, filename_prefix='./pkl_pops/pop-checkpoint-')
-    stats = neat.statistics.StatisticsReporter()
-    pop.add_reporter(stats)
-    pop.add_reporter(checkpoints)
-    pop.add_reporter(neat.reporting.StdOutReporter(True))
+    def run_pop(self, checkpoint=""):
+        if(checkpoint == ""):
+            pop = neat.population.Population(self.config)
+        else:
+            pop = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-" + checkpoint)
+        checkpoints = neat.Checkpointer(generation_interval=2, time_interval_seconds=None, filename_prefix='./pkl_pops/pop-checkpoint-')
+        stats = neat.statistics.StatisticsReporter()
+        pop.add_reporter(stats)
+        pop.add_reporter(checkpoints)
+        pop.add_reporter(neat.reporting.StdOutReporter(True))
 
-    winner = pop.run(task.eval_fitness, gens)
-    print("es trade god summoned")
-    return winner, stats
+        winner = pop.run(self.eval_fitness, self.num_gens)
+        return winner, stats
 
 
 # If run as script.
 
-def run_training():
-    task = PurpleTrader(34)
-    #print(task.trial_run())
-    winner = run_pop(task, 144)[0]
-    print('\nBest genome:\n{!s}'.format(winner))
-
-    # Verify network output against training data.
-    print('\nOutput:')
-    [cppn] = create_cppn(winner, task.config, task.leaf_names, ['cppn_out'])
-    network = ESNetwork(task.subStrate, cppn, task.params)
-    with open('es_trade_god_cppn_3d.pkl', 'wb') as output:
-        pickle.dump(winner, output)
-    #draw_net(cppn, filename="es_trade_god")
-    winner_net = network.create_phenotype_network_nd('dabestest.png')  # This will also draw winner_net.
+    def run_training(self):
+        #print(task.trial_run())
+        winner = self.run_pop()[0]
+        print('\nBest genome:\n{!s}'.format(winner))
+        checkpoint_string = str(self.num_gens-1)
+        self.num_gens += self.num_gens
+        self.run_training(checkpoint_string)
 
 
-def run_validation():
-    task = PurpleTrader(34)
-
-    task.validate_fitness()
-
-run_training()
+    def run_validation(self):
+        self.validate_fitness()
+pt = PurpleTrader(34, 144, 0)
+pt.run_training()
 #run_validation()

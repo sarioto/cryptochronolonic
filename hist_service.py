@@ -462,7 +462,7 @@ class HistWorker:
             coin_and_hist_index += 1
         self.hist_shaped = pd.Series(self.hist_shaped)
 
-    def combine_live_usd_frames(self, restrict_val):
+    def combine_live_usd_frames(self, restrict_val = 0):
         fileNames = self.get_usd_files()
         coin_and_hist_index = 0
         file_lens = []
@@ -493,7 +493,7 @@ class HistWorker:
             print(prefixes[ix])
             #print(self.currentHists[col_prefix].head())
             df['volume'] = (df['volume'] - df['volume'].mean())/(df['volume'].max() - df['volume'].min())
-            df = self.currentHists[prefixes[ix]][['volume', 'std_high', 'std_close', 'std_open', 'avg_vol_3', 'avg_close_3', 'avg_close_13', 'avg_close_34']].copy()
+            df = self.currentHists[prefixes[ix]][['volume', 'std_high', 'std_close', 'avg_vol_3', 'avg_close_3', 'avg_close_13', 'avg_close_34']].copy()
             #norm_df = (df - df.mean()) / (df.max() - df.min())
             as_array=np.array(df)
             self.hist_shaped[coin_and_hist_index] = as_array

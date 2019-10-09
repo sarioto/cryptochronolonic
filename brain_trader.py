@@ -225,20 +225,24 @@ class PaperTrader:
     config = neat.config.Config(neat.genome.DefaultGenome, neat.reproduction.DefaultReproduction,
                                 neat.species.DefaultSpeciesSet, neat.stagnation.DefaultStagnation,
                                 'config_trader')
-    def __init__(self, ticker_len, start_amount, histdepth):
+    in_shapes = []
+    out_shapes = []
+    def __init__(self, ticker_len, start_amount, histdepth, base_sym):
         self.trade_hist = {}
         self.polo = Poloniex()
-        self.hist_depth = histdepth
+        self.hd = histdepth
         self.ticker_len = ticker_len
         self.end_ts = datetime.now()+timedelta(seconds=(ticker_len*24))
         self.start_amount = start_amount
         self.hs = HistWorker()
-        self.hs.combine_polo_usd_frames()
+        self.hs.combine_live_usd_frames()
         print(self.hs.currentHists.keys())
-        self.end_idx = len(self.hs.hist_shaped[0])
+        self.end_idx = len(self.hs.hist_shaped[0])-1
         self.but_target = .1
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = self.hs.hist_shaped.shape[0]
+        self.folio = CryptoFolio(start_amount, list(self.hs.currentHists.keys()), base_sym)
+        self.base_sym = base_sym
         sign = 1
         for ix in range(1,self.outputs+1):
             sign = sign *-1
@@ -251,15 +255,15 @@ class PaperTrader:
         self.poloTrader()
 
     def refresh_data(self):
-        self.hs.pull_polo_live(21)
-        self.hs.combine_live_frames()
+        self.hs.pull_polo_usd_live(21)
+        self.hs.combine_live_usd_frames()
+        self.end_idx = len(self.hs.hist_shaped[0])-1
 
     def load_net(self):
-        #file = open("./champ_gens/thot-checkpoint-13",'rb')
-        g = neat.Checkpointer.restore_checkpoint("./champ_data/latest_greatest.pkl")
-        g = bestg
+        champ_file = open("./champ_data/latest_greatest.pkl",'rb')
+        g = pickle.load(champ_file)
         #file.close()
-        the_cppn = neat.nn.FeedForwardNetwork.create(g, config)
+        the_cppn = neat.nn.FeedForwardNetwork.create(g, self.config)
         self.cppn = the_cppn
 
     def make_shapes(self):
@@ -284,19 +288,20 @@ class PaperTrader:
 
     def get_current_balance(self):
         #self.refresh_data()
+        self.reset_tickers()
         c_prices = {}
         for s in self.hs.currentHists.keys():
-            if s != 'BTC':
-                c_prices[s] = self.hs.currentHists[s]['close'].iloc[-1]
+            if s != self.base_sym:
+                c_prices[s] = self.get_price(self.base_sym + "_"+s)
         return self.folio.get_total_btc_value_no_sell(c_prices)
 
-    def get_one_bar_input_2d(self,end_idx=10):
+    def get_one_bar_input_2d(self):
         master_active = []
-        for x in range(0, self.hist_depth):
+        for x in range(0, self.hd):
             active = []
             #print(self.outputs)
             for y in range(0, self.outputs):
-                sym_data = self.hs.hist_shaped[y][self.hist_depth-x]
+                sym_data = self.hs.hist_shaped[y][self.end_idx-x]
                 #print(len(sym_data))
                 active += sym_data.tolist()
             master_active.append(active)
@@ -312,46 +317,50 @@ class PaperTrader:
         active = self.get_one_bar_input_2d()
         self.load_net()
         sub = Substrate(self.in_shapes, self.out_shapes)
-        network = ESNetwork(sub, self.cppn, self.params)
-        net = network.create_phenotype_network_nd('paper_net.png')
+        net = ESNetwork(sub, self.cppn, self.params, self.hd)
+        network = net.create_phenotype_network_nd('paper_net.png')
+        sell_syms = []
+        buy_syms = []
+        buy_signals = []
+        sell_signals = []
         for n in range(1, self.hd):
             network.activate(active[self.hd-n])
         out = network.activate(active[0])
+        self.reset_tickers()
         for x in range(len(out)):
-            if(z > (self.epoch_len+rand_start)-2):
-                sym = self.hs.coin_dict[x]
-                end_prices[sym] = self.hs.currentHists[sym]['close'][self.epoch_len+rand_start]
+            sym = self.hs.coin_dict[x]
+            end_prices[sym] = self.get_price(self.base_sym+"_"+sym)
             if(out[x] > .5):
                 buy_signals.append(out[x])
-                buy_syms.append(self.hs.coin_dict[x])
+                buy_syms.append(sym)
             if(out[x] < -.5):
                 sell_signals.append(out[x])
-                sell_syms.append(self.hs.coin_dict[x])
+                sell_syms.append(sym)
         #rng = iter(shuffle(rng))
         sorted_buys = np.argsort(buy_signals)[::-1]
         sorted_sells = np.argsort(sell_signals)
-        self.reset_tickers()
         try:
             for x in sorted_sells:
                 sym = sell_syms[x]
-                p = self.get_price('BTC_'+sym)
+                p = end_prices[sym]
                 print("selling: ", sym)
                 self.folio.sell_coin(sym, p)
                 #portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
             for x in sorted_buys:
                 sym = buy_syms[x]
-                p = self.get_price('BTC_'+sym)
+                p = end_prices[sym]
                 print("buying: ", sym)
                 self.folio.buy_coin(sym, p)
         except:
             print("error placing order")
+        '''
         self.trade_hist["date"] = datetime.now()
         self.trade_hist["portfoliovalue"] = self.folio.get_total_btc_value_no_sell(end_prices)[0] 
         self.trade_hist["portfolio"] = self.folio.ledger
-        self.trade_hist["percentchange"] = ((self.trade_hist["portfoliovalue"] - self.folio.start)/sefl.folio.start)*100
+        self.trade_hist["percentchange"] = ((self.trade_hist["portfoliovalue"] - self.folio.start)/self.folio.start)*100
         trade_df.append(self.trade_hist)
         trade_df.to_json("./live_hist/json_hist.json")
-        '''
+        
         if(self.trade_hist["portfoliovalue"] > self.folio.start *1.1):
             self.folio.start = self.folio.get_total_btc_value(end_prices)[0]
         '''
@@ -363,14 +372,13 @@ class PaperTrader:
         else:
             print(self.get_current_balance())
             for t in range(2):
-                self.refresh_data
                 p_vals = self.get_current_balance()
-                print("current value: ", p_vals[0], "current btc holdings: ", p_vals[1])
+                print("current value: ", p_vals[0], "current holdings: ", p_vals[1])
                 time.sleep(self.ticker_len/2)
-                #print(self.folio.ledger)
+        self.refresh_data()
         self.poloTrader()
 
 
 
 #LiveTrader(7200, .34, 34)
-PaperTrader(7200, 1.0 , 34)
+PaperTrader(7200, 1000.0 , 34, "USDT")
