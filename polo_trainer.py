@@ -48,9 +48,9 @@ class PurpleTrader:
     out_shapes = []
     def __init__(self, hist_depth, num_gens, gen_count = 1):
         self.hd = hist_depth
-        self.refresh()
         self.num_gens = num_gens
         self.gen_count = gen_count
+        self.refresh()
 
     def refresh(self):
         self.hs = HistWorker()
@@ -180,7 +180,7 @@ class PurpleTrader:
         champ_current = open("./champ_data/latest_greatest.pkl",'rb')
         g = pickle.load(champ_current)
         champ_current.close()
-        cppn = neat.nn.FeedForwardNetwork.create(g, config)
+        cppn = neat.nn.FeedForwardNetwork.create(g, self.config)
         network = ESNetwork(self.subStrate, cppn, self.params, self.hd)
         net = network.create_phenotype_network_nd()
         champ_fit = self.evaluate(net, network, r_start, g)
@@ -189,7 +189,7 @@ class PurpleTrader:
                 champ_file = open("./champ_data/"+f,'rb')
                 g = pickle.load(champ_file)
                 champ_file.close()
-                cppn = neat.nn.FeedForwardNetwork.create(g, config)
+                cppn = neat.nn.FeedForwardNetwork.create(g, self.config)
                 network = ESNetwork(self.subStrate, cppn, self.params, self.hd)
                 net = network.create_phenotype_network_nd()
                 g.fitness = self.evaluate(net, network, r_start, g)
@@ -217,9 +217,11 @@ class PurpleTrader:
         return
 
 # Create the population and run the XOR task by providing the above fitness function.
-    def run_pop(self):
-        #pop = neat.population.Population(task.config)
-        pop = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-85")
+    def run_pop(self, checkpoint=""):
+        if(checkpoint == ""):
+            pop = neat.population.Population(self.config)
+        else:
+            pop = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-" + checkpoint)
         checkpoints = neat.Checkpointer(generation_interval=2, time_interval_seconds=None, filename_prefix='./pkl_pops/pop-checkpoint-')
         stats = neat.statistics.StatisticsReporter()
         pop.add_reporter(stats)
@@ -236,12 +238,13 @@ class PurpleTrader:
         #print(task.trial_run())
         winner = self.run_pop()[0]
         print('\nBest genome:\n{!s}'.format(winner))
+        checkpoint_string = str(self.num_gens-1)
         self.num_gens += self.num_gens
-        self.run_training()
+        self.run_training(checkpoint_string)
 
 
     def run_validation(self):
         self.validate_fitness()
 pt = PurpleTrader(34, 144, 0)
-pt.compare_champs()
+pt.run_training()
 #run_validation()
