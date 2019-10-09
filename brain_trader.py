@@ -235,7 +235,7 @@ class PaperTrader:
         self.end_ts = datetime.now()+timedelta(seconds=(ticker_len*24))
         self.start_amount = start_amount
         self.hs = HistWorker()
-        self.hs.combine_polo_usd_frames()
+        self.hs.combine_live_usd_frames()
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])-1
         self.but_target = .1
@@ -257,6 +257,7 @@ class PaperTrader:
     def refresh_data(self):
         self.hs.pull_polo_usd_live(21)
         self.hs.combine_live_usd_frames()
+        self.end_idx = len(self.hs.hist_shaped[0])-1
 
     def load_net(self):
         champ_file = open("./champ_data/latest_greatest.pkl",'rb')
