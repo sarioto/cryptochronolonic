@@ -42,7 +42,7 @@ class LiveTrader:
                                 neat.species.DefaultSpeciesSet, neat.stagnation.DefaultStagnation,
                                 'config_trader')
 
-    def __init__(self, ticker_len, target_percent, hd):
+    def __init__(self, ticker_len, target_percent, hd, base_sym="BTC"):
         self.polo = Poloniex(key, secret)
         self.hist_depth = hd
         self.target_percent = target_percent
@@ -255,9 +255,14 @@ class PaperTrader:
         self.poloTrader()
 
     def refresh_data(self):
-        self.hs.pull_polo_usd_live(21)
-        self.hs.combine_live_usd_frames()
-        self.end_idx = len(self.hs.hist_shaped[0])-1
+        try:
+            self.hs.pull_polo_usd_live(21)
+            self.hs.combine_live_usd_frames()
+            self.end_idx = len(self.hs.hist_shaped[0])-1
+        except:
+            time.sleep(360)
+            self.refresh_data()
+        return
 
     def load_net(self):
         champ_file = open("./champ_data/latest_greatest.pkl",'rb')
