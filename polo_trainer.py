@@ -41,11 +41,6 @@ class PurpleTrader:
     start_idx = 0
     highest_returns = 0
     portfolio_list = []
-
-
-
-    in_shapes = []
-    out_shapes = []
     def __init__(self, hist_depth, num_gens, gen_count = 1):
         self.hd = hist_depth
         self.num_gens = num_gens
@@ -53,6 +48,8 @@ class PurpleTrader:
         self.refresh()
 
     def refresh(self):
+        self.in_shapes = []
+        self.out_shapes = []
         self.hs = HistWorker()
         self.hs.pull_polo_usd(144)
         self.hs.combine_polo_usd_frames()
