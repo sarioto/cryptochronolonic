@@ -57,10 +57,6 @@ class LiveTrader:
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = self.hs.hist_shaped.shape[0]
         self.make_shapes()
-        self.leaf_names = []
-        for l in range(len(self.in_shapes[0])):
-            self.leaf_names.append('leaf_one_'+str(l))
-            self.leaf_names.append('leaf_two_'+str(l))
         #self.load_net()
         self.poloTrader()
 
@@ -78,8 +74,8 @@ class LiveTrader:
         self.cppn = the_cppn
 
     def refresh_data(self):
-        self.hs.pull_polo_live(20)
-        self.hs.combine_live_frames(self.hist_depth)
+        self.hs.pull_polo_usd_live(21)
+        self.hs.combine_live_usd_frames()
 
     def make_shapes(self):
         self.in_shapes = []
