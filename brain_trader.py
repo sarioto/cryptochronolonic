@@ -43,7 +43,7 @@ class LiveTrader:
     def __init__(self, ticker_len, target_percent, hd, base_sym="BTC"):
         keys = self.get_keys()
         self.polo = Poloniex(keys[0], keys[1])
-        self.hist_depth = hd
+        self.hd = hd
         self.target_percent = target_percent
         self.ticker_len = ticker_len
         self.end_ts = datetime.now()+timedelta(seconds=(ticker_len*55))
@@ -170,6 +170,8 @@ class LiveTrader:
         full_bal = self.polo.returnCompleteBalances()
         for x in full_bal:
             total += full_bal[x]["btcValue"]
+        if(self.base_sym != "BTC"):
+            total = total * self.get_price(self.base_sym +"_"+"BTC")
         self.target = total*self.target_percent
 
     def poloTrader(self):
