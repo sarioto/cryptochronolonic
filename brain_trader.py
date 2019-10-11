@@ -23,8 +23,6 @@ from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
 from pureples.es_hyperneat.es_hyperneat import ESNetwork
 #polo = Poloniex('key', 'secret')
-key = ""
-secret = ""
 
 class LiveTrader:
     params = {"initial_depth": 3,
@@ -43,7 +41,8 @@ class LiveTrader:
                                 'config_trader')
 
     def __init__(self, ticker_len, target_percent, hd, base_sym="BTC"):
-        self.polo = Poloniex(key, secret)
+        keys = self.get_keys()
+        self.polo = Poloniex(keys[0], keys[1])
         self.hist_depth = hd
         self.target_percent = target_percent
         self.ticker_len = ticker_len
@@ -56,26 +55,32 @@ class LiveTrader:
         self.set_target()
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = self.hs.hist_shaped.shape[0]
-        self.make_shapes()
-        #self.load_net()
+        self.base_sym = base_sym
+        sign = 1
+        for ix in range(1,self.outputs+1):
+            sign = sign *-1
+            self.out_shapes.append((0.0-(sign*.005*ix), 0.0, -1.0))
+            for ix2 in range(1,(self.inputs//self.outputs)+1):
+                self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0))
+        self.subStrate = Substrate(self.in_shapes, self.out_shapes)
+        self.load_net()
         self.poloTrader()
 
+
     def load_net(self):
-        #file = open("./champ_gens/thot-checkpoint-13",'rb')
-        g = neat.Checkpointer.restore_checkpoint("./champ_gens/thot-checkpoint-25")
-        best_fit = 0.0
-        for gx in g.population:
-            if g.population[gx].fitness != None:
-                if g.population[gx].fitness > best_fit:
-                    bestg = g.population[gx]
-        g = bestg
+        champ_file = open("./champ_data/latest_greatest.pkl",'rb')
+        g = pickle.load(champ_file)
         #file.close()
-        [the_cppn] = create_cppn(g, self.config, self.leaf_names, ['cppn_out'])
+        the_cppn = neat.nn.FeedForwardNetwork.create(g, self.config)
         self.cppn = the_cppn
 
     def refresh_data(self):
-        self.hs.pull_polo_usd_live(21)
-        self.hs.combine_live_usd_frames()
+        try:
+            self.hs.pull_polo_usd_live(21)
+            self.hs.combine_live_usd_frames()
+        except:
+            time.sleep(360)
+            self.refresh_data()
 
     def make_shapes(self):
         self.in_shapes = []
@@ -88,18 +93,16 @@ class LiveTrader:
                 self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 1.0))
 
 
-    def get_one_bar_input_2d(self,end_idx=10):
+    def get_one_bar_input_2d(self):
         master_active = []
-        for x in range(0, self.hist_depth):
+        for x in range(0, self.hd):
             active = []
             #print(self.outputs)
             for y in range(0, self.outputs):
-                sym_data = self.hs.hist_shaped[y][self.hist_depth-x]
+                sym_data = self.hs.hist_shaped[y][self.end_idx-x]
                 #print(len(sym_data))
                 active += sym_data.tolist()
             master_active.append(active)
-        #print(active)
-        return master_active
 
 
     def closeOrders(self):
@@ -121,20 +124,20 @@ class LiveTrader:
 
     def sellCoins(self):
         for b in self.tickers:
-            if(b[:3] == "BTC"):
+            if(b.split("_")[0] == self.base_sym):
                 price = self.get_price(b)
                 price = price - (price * .005)
                 self.sell_coin(b, price)
 
     def buy_coin(self, coin, price):
         amt = self.target / price
-        if(self.bal['BTC'] > self.target):
+        if(self.bal[self.base_sym] > self.target):
             self.polo.buy(coin, price, amt, fillOrKill=1)
             print("buying: ", coin)
         return
 
     def sell_coin(self, coin, price):
-        amt = self.bal[coin[4:]]
+        amt = self.bal[coin.split("_")[1]]
         if (amt*price > .0001):
             try:
                 self.polo.sell(coin, price, amt,fillOrKill=1)
@@ -152,7 +155,11 @@ class LiveTrader:
             time.sleep(360)
             self.reset_tickers()
         return
-
+    def get_keys(self):
+        with open("./godsplan.txt") as f:
+            content = f.readlines()
+            content[0] = content[0][:-2]
+            return content
 
 
     def get_price(self, coin):
@@ -169,35 +176,48 @@ class LiveTrader:
         end_prices = {}
         active = self.get_one_bar_input_2d()
         self.load_net()
-        sub = Substrate(self.in_shapes, self.out_shapes)
         network = ESNetwork(sub, self.cppn, self.params)
         net = network.create_phenotype_network_nd('paper_net.png')
         net.reset()
-        for n in range(1, self.hist_depth+1):
-            out = net.activate(active[self.hist_depth-n])
-        #print(len(out))
-        rng = len(out)
-        #rng = iter(shuffle(rng))
+        sell_syms = []
+        buy_syms = []
+        buy_signals = []
+        sell_signals = []
+        for n in range(1, self.hd):
+            network.activate(active[self.hd-n])
+        out = network.activate(active[0])
         self.reset_tickers()
-        for x in np.random.permutation(rng):
+        for x in range(len(out)):
             sym = self.hs.coin_dict[x]
-            #print(out[x])
+            end_prices[sym] = self.get_price(self.base_sym+"_"+sym)
+            if(out[x] > .5):
+                buy_signals.append(out[x])
+                buy_syms.append(sym)
+            if(out[x] < -.5):
+                sell_signals.append(out[x])
+                sell_syms.append(sym)
+        #rng = iter(shuffle(rng))
+        sorted_buys = np.argsort(buy_signals)[::-1]
+        sorted_sells = np.argsort(sell_signals)
+        for x in sorted_sells:
+            sym = sell_syms[x]
             try:
-                if(out[x] < -.5):
-                    print("selling: ", sym)
-                    p = self.get_price('BTC_'+sym)
-                    price = p -(p*.01)
-                    self.sell_coin('BTC_'+sym, price)
-                elif(out[x] > .5):
-                    print("buying: ", sym)
-                    self.target_percent = .1 + out[x] - .45
-                    p = self.get_price('BTC_'+sym)
-                    price = p*1.01
-                    self.buy_coin('BTC_'+sym, price)
+                print("selling: ", sym)
+                p = self.get_price(self.base_sym + "_" +sym)
+                price = p -(p*.01)
+                self.sell_coin(self.base_sym + "_" sym, price)
             except:
-                print('error', sym)
-            #skip the hold case because we just dont buy or sell hehe
-
+                print("error selling", sym)
+        for x in sorted_buys:
+            sym = buy_syms[x]
+            try:
+                print("buying: ", sym)
+                self.target_percent = .1 + out[x] - .45
+                p = self.get_price(self.base_sym + "_" +sym)
+                price = p*1.01
+                self.buy_coin(self.base_sym + "_" +sym, price)
+            except:
+                print("error selling", sym)
         if datetime.now() >= self.end_ts:
             return
         else:
@@ -381,5 +401,5 @@ class PaperTrader:
 
 
 
-#LiveTrader(7200, .34, 34)
-PaperTrader(7200, 1000.0 , 34, "USDT")
+LiveTrader(7200, .34, 34)
+#PaperTrader(7200, 1000.0 , 34, "USDT")
