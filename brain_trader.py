@@ -43,7 +43,7 @@ class LiveTrader:
     def __init__(self, ticker_len, target_percent, hd, base_sym="BTC"):
         self.base_sym = base_sym
         keys = self.get_keys()
-        self.polo = Poloniex()
+        self.polo = Poloniex(keys[0], keys[1])
         self.hd = hd
         self.target_percent = target_percent
         self.ticker_len = ticker_len
@@ -56,6 +56,7 @@ class LiveTrader:
         self.set_target()
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = self.hs.hist_shaped.shape[0]
+        self.end_idx = len(self.hs.hist_shaped[0]) -1
         self.make_shapes()
         self.load_net()
         self.poloTrader()
@@ -76,17 +77,6 @@ class LiveTrader:
             print(e)
             time.sleep(360)
             self.refresh_data()
-
-    def make_shapes(self):
-        self.in_shapes = []
-        self.out_shapes = []
-        sign = 1
-        for ix in range(1,self.outputs+1):
-            sign = sign *-1
-            self.out_shapes.append((0.0-(sign*.005*ix), 0.0, -1.0))
-            for ix2 in range(1,(self.inputs//self.outputs)+1):
-                self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0))
-        self.subStrate = Substrate(self.in_shapes, self.out_shapes)
 
 
     def get_one_bar_input_2d(self):
@@ -136,7 +126,10 @@ class LiveTrader:
         return
 
     def sell_coin(self, coin, price):
-        amt = self.bal[coin.split("_")[1]]
+        if (self.base_sym != "BTC"):
+
+        else:
+            amt = self.bal[coin.split("_")[1]]
         if (amt*price > .0001):
             try:
                 self.polo.sell(coin, price, amt,fillOrKill=1)
@@ -166,7 +159,7 @@ class LiveTrader:
 
     def make_shapes(self):
         sign = 1
-        self.out_shape = []
+        self.out_shapes = []
         self.in_shapes = []
         for ix in range(1,self.outputs+1):
             sign = sign *-1
@@ -184,14 +177,15 @@ class LiveTrader:
         for x in full_bal:
             total += full_bal[x]["btcValue"]
         if(self.base_sym != "BTC"):
-            total = total * self.get_price(self.base_sym +"_"+"BTC")
+            total = total * self.get_price(self.base_sym +"_"+"BTC") * self.target_percent
+        print(total)
         self.target = total*self.target_percent
 
     def poloTrader(self):
         end_prices = {}
         active = self.get_one_bar_input_2d()
         self.load_net()
-        network = ESNetwork(self.subStrate, self.cppn, self.params)
+        network = ESNetwork(self.subStrate, self.cppn, self.params, self.hd)
         net = network.create_phenotype_network_nd('paper_net.png')
         net.reset()
         sell_syms = []
@@ -420,5 +414,5 @@ class PaperTrader:
 
 
 
-LiveTrader(7200, .1, 34, "USDT")
+LiveTrader(7200, .5, 34, "USDT")
 #PaperTrader(7200, 1000.0 , 34, "USDT")
