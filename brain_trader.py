@@ -117,7 +117,8 @@ class LiveTrader:
                 try:
                     ordnum = orders[o][0]['orderNumber']
                     self.polo.cancelOrder(ordnum)
-                except:
+                except e:
+                    print(e)
                     print('error closing')
 
 
@@ -142,7 +143,8 @@ class LiveTrader:
             try:
                 self.polo.sell(coin, price, amt,fillOrKill=1)
                 print("selling this shit: ", coin)
-            except:
+            except e:
+                print(e)
                 print('error selling', coin)
         return
 
@@ -151,7 +153,8 @@ class LiveTrader:
         try:
             self.tickers = self.polo.returnTicker()
             self.bal = self.polo.returnBalances()
-        except:
+        except e:
+            print(e)
             time.sleep(360)
             self.reset_tickers()
         return
@@ -159,6 +162,8 @@ class LiveTrader:
         with open("./godsplan.txt") as f:
             content = f.readlines()
             content[0] = content[0][:-2]
+            if (content[1][:-2] == "/n"):
+                content[1] = content[1][:-2]
             return content
 
 
@@ -208,7 +213,8 @@ class LiveTrader:
                 p = self.get_price(self.base_sym + "_" +sym)
                 price = p -(p*.01)
                 self.sell_coin(self.base_sym + "_" sym, price)
-            except:
+            except e:
+                print(e)
                 print("error selling", sym)
         for x in sorted_buys:
             sym = buy_syms[x]
@@ -218,7 +224,8 @@ class LiveTrader:
                 p = self.get_price(self.base_sym + "_" +sym)
                 price = p*1.01
                 self.buy_coin(self.base_sym + "_" +sym, price)
-            except:
+            except e:
+                print(e)
                 print("error selling", sym)
         if datetime.now() >= self.end_ts:
             return
