@@ -41,6 +41,7 @@ class LiveTrader:
                                 'config_trader')
 
     def __init__(self, ticker_len, target_percent, hd, base_sym="BTC"):
+        self.base_sym = base_sym
         keys = self.get_keys()
         self.polo = Poloniex(keys[0], keys[1])
         self.hd = hd
@@ -55,14 +56,7 @@ class LiveTrader:
         self.set_target()
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = self.hs.hist_shaped.shape[0]
-        self.base_sym = base_sym
-        sign = 1
-        for ix in range(1,self.outputs+1):
-            sign = sign *-1
-            self.out_shapes.append((0.0-(sign*.005*ix), 0.0, -1.0))
-            for ix2 in range(1,(self.inputs//self.outputs)+1):
-                self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0))
-        self.subStrate = Substrate(self.in_shapes, self.out_shapes)
+        self.make_shapes()
         self.load_net()
         self.poloTrader()
 
@@ -78,7 +72,8 @@ class LiveTrader:
         try:
             self.hs.pull_polo_usd_live(21)
             self.hs.combine_live_usd_frames()
-        except:
+        except Exception as  e:
+            print(e)
             time.sleep(360)
             self.refresh_data()
 
@@ -88,9 +83,10 @@ class LiveTrader:
         sign = 1
         for ix in range(1,self.outputs+1):
             sign = sign *-1
-            self.out_shapes.append((0.0-(sign*.005*ix), -1.0, -1.0))
+            self.out_shapes.append((0.0-(sign*.005*ix), 0.0, -1.0))
             for ix2 in range(1,(self.inputs//self.outputs)+1):
-                self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 1.0))
+                self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0))
+        self.subStrate = Substrate(self.in_shapes, self.out_shapes)
 
 
     def get_one_bar_input_2d(self):
@@ -108,7 +104,8 @@ class LiveTrader:
     def closeOrders(self):
         try:
             orders = self.polo.returnOpenOrders()
-        except:
+        except Exception as  e:
+            print(e)
             print('error getting open orers')
             time.sleep(360)
             self.closeOrder()
@@ -117,7 +114,7 @@ class LiveTrader:
                 try:
                     ordnum = orders[o][0]['orderNumber']
                     self.polo.cancelOrder(ordnum)
-                except e:
+                except Exception as  e:
                     print(e)
                     print('error closing')
 
@@ -143,7 +140,7 @@ class LiveTrader:
             try:
                 self.polo.sell(coin, price, amt,fillOrKill=1)
                 print("selling this shit: ", coin)
-            except e:
+            except Exception as  e:
                 print(e)
                 print('error selling', coin)
         return
@@ -153,7 +150,7 @@ class LiveTrader:
         try:
             self.tickers = self.polo.returnTicker()
             self.bal = self.polo.returnBalances()
-        except e:
+        except Exception as  e:
             print(e)
             time.sleep(360)
             self.reset_tickers()
@@ -161,9 +158,9 @@ class LiveTrader:
     def get_keys(self):
         with open("./godsplan.txt") as f:
             content = f.readlines()
-            content[0] = content[0][:-2]
-            if (content[1][:-2] == "/n"):
-                content[1] = content[1][:-2]
+            content[0] = content[0][:-1]
+            if (content[1][-1:] == "\n"):
+                content[1] = content[1][:-1]
             return content
 
 
@@ -212,8 +209,8 @@ class LiveTrader:
                 print("selling: ", sym)
                 p = self.get_price(self.base_sym + "_" +sym)
                 price = p -(p*.01)
-                self.sell_coin(self.base_sym + "_" sym, price)
-            except e:
+                self.sell_coin(self.base_sym + "_" + sym, price)
+            except Exception as  e:
                 print(e)
                 print("error selling", sym)
         for x in sorted_buys:
@@ -224,7 +221,7 @@ class LiveTrader:
                 p = self.get_price(self.base_sym + "_" +sym)
                 price = p*1.01
                 self.buy_coin(self.base_sym + "_" +sym, price)
-            except e:
+            except Exception as  e:
                 print(e)
                 print("error selling", sym)
         if datetime.now() >= self.end_ts:
@@ -232,6 +229,7 @@ class LiveTrader:
         else:
             time.sleep(self.ticker_len)
         self.refresh_data()
+        self.make_shapes()
         #self.closeOrders()
         self.poloTrader()
 
@@ -284,7 +282,8 @@ class PaperTrader:
             self.hs.pull_polo_usd_live(21)
             self.hs.combine_live_usd_frames()
             self.end_idx = len(self.hs.hist_shaped[0])-1
-        except:
+        except Exception as e:
+            print(e)
             time.sleep(360)
             self.refresh_data()
         return
@@ -309,7 +308,7 @@ class PaperTrader:
     def reset_tickers(self):
         try:
             self.tickers = self.polo.returnTicker()
-        except:
+        except Exception as e:
             time.sleep(360)
             self.reset_tickers()
         return
@@ -341,7 +340,7 @@ class PaperTrader:
     def poloTrader(self):
         try:
             trade_df = pd.read_json("./live_hist/json_hist.json")
-        except:
+        except Exception as e:
             trade_df = pd.DataFrame()
         end_prices = {}
         active = self.get_one_bar_input_2d()
@@ -381,7 +380,7 @@ class PaperTrader:
                 p = end_prices[sym]
                 print("buying: ", sym)
                 self.folio.buy_coin(sym, p)
-        except:
+        except Exception as e:
             print("error placing order")
         '''
         self.trade_hist["date"] = datetime.now()
