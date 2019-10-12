@@ -56,10 +56,7 @@ class LiveTrader:
         self.set_target()
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = self.hs.hist_shaped.shape[0]
-<<<<<<< HEAD
         self.make_shapes()
-=======
->>>>>>> 1fa47e6135192ac32c95ccd6f01ff30c41f429cc
         self.load_net()
         self.poloTrader()
 
@@ -75,8 +72,7 @@ class LiveTrader:
         try:
             self.hs.pull_polo_usd_live(21)
             self.hs.combine_live_usd_frames()
-<<<<<<< HEAD
-        except Exception as  e:
+        except Exception as e:
             print(e)
             time.sleep(360)
             self.refresh_data()
@@ -92,13 +88,6 @@ class LiveTrader:
                 self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0))
         self.subStrate = Substrate(self.in_shapes, self.out_shapes)
 
-=======
-            self.make_shapes()
-        except:
-            time.sleep(360)
-            self.refresh_data()
-
->>>>>>> 1fa47e6135192ac32c95ccd6f01ff30c41f429cc
 
     def get_one_bar_input_2d(self):
         master_active = []
@@ -232,12 +221,8 @@ class LiveTrader:
                 p = self.get_price(self.base_sym + "_" +sym)
                 price = p -(p*.01)
                 self.sell_coin(self.base_sym + "_" + sym, price)
-<<<<<<< HEAD
-            except Exception as  e:
+            except Exception as e:
                 print(e)
-=======
-            except:
->>>>>>> 1fa47e6135192ac32c95ccd6f01ff30c41f429cc
                 print("error selling", sym)
         for x in sorted_buys:
             sym = buy_syms[x]
@@ -246,14 +231,9 @@ class LiveTrader:
                 self.target_percent = .1 + out[x] - .45
                 p = self.get_price(self.base_sym + "_" +sym)
                 price = p*1.01
-<<<<<<< HEAD
                 self.buy_coin(self.base_sym + "_" +sym, price)
             except Exception as  e:
                 print(e)
-=======
-                self.buy_coin(self.base_sym + "_" + sym, price)
-            except:
->>>>>>> 1fa47e6135192ac32c95ccd6f01ff30c41f429cc
                 print("error selling", sym)
         if datetime.now() >= self.end_ts:
             return
