@@ -43,7 +43,7 @@ class LiveTrader:
     def __init__(self, ticker_len, target_percent, hd, base_sym="BTC"):
         self.base_sym = base_sym
         keys = self.get_keys()
-        self.polo = Poloniex(keys[0], keys[1])
+        self.polo = Poloniex()
         self.hd = hd
         self.target_percent = target_percent
         self.ticker_len = ticker_len
@@ -56,7 +56,10 @@ class LiveTrader:
         self.set_target()
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = self.hs.hist_shaped.shape[0]
+<<<<<<< HEAD
         self.make_shapes()
+=======
+>>>>>>> 1fa47e6135192ac32c95ccd6f01ff30c41f429cc
         self.load_net()
         self.poloTrader()
 
@@ -72,6 +75,7 @@ class LiveTrader:
         try:
             self.hs.pull_polo_usd_live(21)
             self.hs.combine_live_usd_frames()
+<<<<<<< HEAD
         except Exception as  e:
             print(e)
             time.sleep(360)
@@ -88,6 +92,13 @@ class LiveTrader:
                 self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0))
         self.subStrate = Substrate(self.in_shapes, self.out_shapes)
 
+=======
+            self.make_shapes()
+        except:
+            time.sleep(360)
+            self.refresh_data()
+
+>>>>>>> 1fa47e6135192ac32c95ccd6f01ff30c41f429cc
 
     def get_one_bar_input_2d(self):
         master_active = []
@@ -99,7 +110,8 @@ class LiveTrader:
                 #print(len(sym_data))
                 active += sym_data.tolist()
             master_active.append(active)
-
+        #print(active)
+        return master_active
 
     def closeOrders(self):
         try:
@@ -163,6 +175,16 @@ class LiveTrader:
                 content[1] = content[1][:-1]
             return content
 
+    def make_shapes(self):
+        sign = 1
+        self.out_shape = []
+        self.in_shapes = []
+        for ix in range(1,self.outputs+1):
+            sign = sign *-1
+            self.out_shapes.append((0.0-(sign*.005*ix), 0.0, -1.0))
+            for ix2 in range(1,(self.inputs//self.outputs)+1):
+                self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0))
+        self.subStrate = Substrate(self.in_shapes, self.out_shapes)
 
     def get_price(self, coin):
         return self.tickers[coin]['last']
@@ -180,7 +202,7 @@ class LiveTrader:
         end_prices = {}
         active = self.get_one_bar_input_2d()
         self.load_net()
-        network = ESNetwork(sub, self.cppn, self.params)
+        network = ESNetwork(self.subStrate, self.cppn, self.params)
         net = network.create_phenotype_network_nd('paper_net.png')
         net.reset()
         sell_syms = []
@@ -210,8 +232,12 @@ class LiveTrader:
                 p = self.get_price(self.base_sym + "_" +sym)
                 price = p -(p*.01)
                 self.sell_coin(self.base_sym + "_" + sym, price)
+<<<<<<< HEAD
             except Exception as  e:
                 print(e)
+=======
+            except:
+>>>>>>> 1fa47e6135192ac32c95ccd6f01ff30c41f429cc
                 print("error selling", sym)
         for x in sorted_buys:
             sym = buy_syms[x]
@@ -220,9 +246,14 @@ class LiveTrader:
                 self.target_percent = .1 + out[x] - .45
                 p = self.get_price(self.base_sym + "_" +sym)
                 price = p*1.01
+<<<<<<< HEAD
                 self.buy_coin(self.base_sym + "_" +sym, price)
             except Exception as  e:
                 print(e)
+=======
+                self.buy_coin(self.base_sym + "_" + sym, price)
+            except:
+>>>>>>> 1fa47e6135192ac32c95ccd6f01ff30c41f429cc
                 print("error selling", sym)
         if datetime.now() >= self.end_ts:
             return
@@ -409,5 +440,5 @@ class PaperTrader:
 
 
 
-LiveTrader(7200, .34, 34)
+LiveTrader(7200, .1, 34, "USDT")
 #PaperTrader(7200, 1000.0 , 34, "USDT")
