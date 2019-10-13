@@ -51,7 +51,7 @@ class LiveTrader:
         self.hs = HistWorker()
         self.refresh_data()
         self.tickers = self.polo.returnTicker()
-        self.bal = self.polo.returnBalances()
+        self.refresh_balances()
         self.sellCoins()
         self.set_target()
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
@@ -78,6 +78,13 @@ class LiveTrader:
             time.sleep(360)
             self.refresh_data()
 
+    def refresh_balances(self):
+        try:
+            self.bal = self.polo.returnCompleteBalances()
+        except Exception as e:
+            print(e)
+            time.sleep(360)
+            self.refresh_balances()
 
     def get_one_bar_input_2d(self):
         master_active = []
@@ -127,9 +134,9 @@ class LiveTrader:
 
     def sell_coin(self, coin, price):
         if (self.base_sym != "BTC"):
-
+            amt = self.bal[coin.split("_")[1]]["available"]
         else:
-            amt = self.bal[coin.split("_")[1]]
+            amt = self.bal[coin.split("_")[1]]["btcValue"]
         if (amt*price > .0001):
             try:
                 self.polo.sell(coin, price, amt,fillOrKill=1)
@@ -179,9 +186,10 @@ class LiveTrader:
         if(self.base_sym != "BTC"):
             total = total * self.get_price(self.base_sym +"_"+"BTC") * self.target_percent
         print(total)
-        self.target = total*self.target_percent
+        self.target = total
 
     def poloTrader(self):
+        self.refresh_balances()
         end_prices = {}
         active = self.get_one_bar_input_2d()
         self.load_net()
@@ -193,8 +201,8 @@ class LiveTrader:
         buy_signals = []
         sell_signals = []
         for n in range(1, self.hd):
-            network.activate(active[self.hd-n])
-        out = network.activate(active[0])
+            net.activate(active[self.hd-n])
+        out = net.activate(active[0])
         self.reset_tickers()
         for x in range(len(out)):
             sym = self.hs.coin_dict[x]
