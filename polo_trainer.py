@@ -231,7 +231,7 @@ class PurpleTrader:
 
 # If run as script.
 
-    def run_training(self):
+    def run_training(self, checkpoint = ""):
         #print(task.trial_run())
         winner = self.run_pop()[0]
         print('\nBest genome:\n{!s}'.format(winner))
