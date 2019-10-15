@@ -106,7 +106,7 @@ class LiveTrader:
             print(e)
             print('error getting open orers')
             time.sleep(360)
-            self.closeOrder()
+            self.closeOrders()
         for o in orders:
             if orders[o] != []:
                 try:
@@ -127,8 +127,8 @@ class LiveTrader:
 
     def buy_coin(self, coin, price):
         amt = self.target / price
-        if(self.bal[self.base_sym] > self.target):
-            self.polo.buy(coin, price, amt, fillOrKill=1)
+        if(self.bal[self.base_sym]["available"] > self.target):
+            self.polo.buy(coin, price, amt)
             print("buying: ", coin)
         return
 
@@ -138,12 +138,8 @@ class LiveTrader:
         else:
             amt = self.bal[coin.split("_")[1]]["btcValue"]
         if (amt*price > .0001):
-            try:
-                self.polo.sell(coin, price, amt,fillOrKill=1)
-                print("selling this shit: ", coin)
-            except Exception as  e:
-                print(e)
-                print('error selling', coin)
+            self.polo.sell(coin, price, amt)
+            print("selling this shit: ", coin)
         return
 
 
@@ -200,10 +196,10 @@ class LiveTrader:
         buy_syms = []
         buy_signals = []
         sell_signals = []
+        self.closeOrders()
         for n in range(1, self.hd):
             net.activate(active[self.hd-n])
         out = net.activate(active[0])
-        self.reset_tickers()
         for x in range(len(out)):
             sym = self.hs.coin_dict[x]
             end_prices[sym] = self.get_price(self.base_sym+"_"+sym)
@@ -216,12 +212,13 @@ class LiveTrader:
         #rng = iter(shuffle(rng))
         sorted_buys = np.argsort(buy_signals)[::-1]
         sorted_sells = np.argsort(sell_signals)
+        self.reset_tickers()
         for x in sorted_sells:
             sym = sell_syms[x]
             try:
                 print("selling: ", sym)
                 p = self.get_price(self.base_sym + "_" +sym)
-                price = p -(p*.01)
+                price = p -(p*.005)
                 self.sell_coin(self.base_sym + "_" + sym, price)
             except Exception as e:
                 print(e)
@@ -232,7 +229,7 @@ class LiveTrader:
                 print("buying: ", sym)
                 self.target_percent = .1 + out[x] - .45
                 p = self.get_price(self.base_sym + "_" +sym)
-                price = p*1.01
+                price = p*1.005
                 self.buy_coin(self.base_sym + "_" +sym, price)
             except Exception as  e:
                 print(e)
