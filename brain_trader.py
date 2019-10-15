@@ -150,7 +150,7 @@ class LiveTrader:
     def reset_tickers(self):
         try:
             self.tickers = self.polo.returnTicker()
-            self.bal = self.polo.returnBalances()
+            self.bal = self.polo.returnCompleteBalances()
         except Exception as  e:
             print(e)
             time.sleep(360)
@@ -381,20 +381,22 @@ class PaperTrader:
         #rng = iter(shuffle(rng))
         sorted_buys = np.argsort(buy_signals)[::-1]
         sorted_sells = np.argsort(sell_signals)
-        try:
-            for x in sorted_sells:
+        for x in sorted_sells:
+            try:
                 sym = sell_syms[x]
                 p = end_prices[sym]
                 print("selling: ", sym)
                 self.folio.sell_coin(sym, p)
-                #portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
-            for x in sorted_buys:
+            except Exception as e:
+                print("error placing order")
+        for x in sorted_buys:
+            try:
                 sym = buy_syms[x]
                 p = end_prices[sym]
                 print("buying: ", sym)
                 self.folio.buy_coin(sym, p)
-        except Exception as e:
-            print("error placing order")
+            except Exception as e:
+                print("error placing order")
         '''
         self.trade_hist["date"] = datetime.now()
         self.trade_hist["portfoliovalue"] = self.folio.get_total_btc_value_no_sell(end_prices)[0] 
@@ -422,5 +424,5 @@ class PaperTrader:
 
 
 
-LiveTrader(7200, .5, 34, "USDT")
+LiveTrader(7200, .2, 34, "USDT")
 #PaperTrader(7200, 1000.0 , 34, "USDT")
