@@ -128,8 +128,12 @@ class LiveTrader:
     def buy_coin(self, coin, price):
         amt = self.target / price
         if(self.bal[self.base_sym]["available"] > self.target):
-            self.polo.buy(coin, price, amt)
-            print("buying: ", coin)
+            try:
+                self.polo.buy(coin, price, amt)
+                print("buying: ", coin)
+            except Exception as e:
+                print("error buying ", coin)
+                print(e)
         return
 
     def sell_coin(self, coin, price):
@@ -138,8 +142,12 @@ class LiveTrader:
         else:
             amt = self.bal[coin.split("_")[1]]["btcValue"]
         if (amt*price > .0001):
-            self.polo.sell(coin, price, amt)
-            print("selling this shit: ", coin)
+            try:
+                self.polo.sell(coin, price, amt)
+                print("selling this shit: ", coin)
+            except Exception as e:
+                print("error selling ", coin)
+                print(e)
         return
 
 
@@ -215,25 +223,17 @@ class LiveTrader:
         self.reset_tickers()
         for x in sorted_sells:
             sym = sell_syms[x]
-            try:
-                print("selling: ", sym)
-                p = self.get_price(self.base_sym + "_" +sym)
-                price = p -(p*.005)
-                self.sell_coin(self.base_sym + "_" + sym, price)
-            except Exception as e:
-                print(e)
-                print("error selling", sym)
+            print("selling: ", sym)
+            p = self.get_price(self.base_sym + "_" +sym)
+            price = p -(p*.005)
+            self.sell_coin(self.base_sym + "_" + sym, price)
         for x in sorted_buys:
             sym = buy_syms[x]
-            try:
-                print("buying: ", sym)
-                self.target_percent = .1 + out[x] - .45
-                p = self.get_price(self.base_sym + "_" +sym)
-                price = p*1.005
-                self.buy_coin(self.base_sym + "_" +sym, price)
-            except Exception as  e:
-                print(e)
-                print("error selling", sym)
+            print("buying: ", sym)
+            self.target_percent = .1 + out[x] - .45
+            p = self.get_price(self.base_sym + "_" +sym)
+            price = p*1.005
+            self.buy_coin(self.base_sym + "_" +sym, price)
         if datetime.now() >= self.end_ts:
             return
         else:
