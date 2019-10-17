@@ -223,13 +223,11 @@ class LiveTrader:
         self.reset_tickers()
         for x in sorted_sells:
             sym = sell_syms[x]
-            print("selling: ", sym)
             p = self.get_price(self.base_sym + "_" +sym)
             price = p -(p*.005)
             self.sell_coin(self.base_sym + "_" + sym, price)
         for x in sorted_buys:
             sym = buy_syms[x]
-            print("buying: ", sym)
             self.target_percent = .1 + out[x] - .45
             p = self.get_price(self.base_sym + "_" +sym)
             price = p*1.005
@@ -421,5 +419,5 @@ class PaperTrader:
 
 
 
-LiveTrader(7200, .2, 34, "USDT")
+LiveTrader(7200, .1, 34, "USDT")
 #PaperTrader(7200, 1000.0 , 34, "USDT")
