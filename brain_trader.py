@@ -88,14 +88,19 @@ class LiveTrader:
 
     def get_one_bar_input_2d(self):
         master_active = []
-        for x in range(0, self.hd):
-            active = []
-            #print(self.outputs)
-            for y in range(0, self.outputs):
-                sym_data = self.hs.hist_shaped[y][self.end_idx-x]
-                #print(len(sym_data))
-                active += sym_data.tolist()
-            master_active.append(active)
+        try:
+            for x in range(0, self.hd):
+                active = []
+                #print(self.outputs)
+                for y in range(0, self.outputs):
+                    sym_data = self.hs.hist_shaped[y][self.end_idx-x]
+                    #print(len(sym_data))
+                    active += sym_data.tolist()
+                master_active.append(active)
+        except:
+            print("error getting look back data")
+            self.refresh_data()
+            self.get_one_bar_input_2d()
         #print(active)
         return master_active
 
@@ -334,14 +339,18 @@ class PaperTrader:
 
     def get_one_bar_input_2d(self):
         master_active = []
-        for x in range(0, self.hd):
-            active = []
-            #print(self.outputs)
-            for y in range(0, self.outputs):
-                sym_data = self.hs.hist_shaped[y][self.end_idx-x]
-                #print(len(sym_data))
-                active += sym_data.tolist()
-            master_active.append(active)
+        try:
+            for x in range(0, self.hd):
+                active = []
+                #print(self.outputs)
+                for y in range(0, self.outputs):
+                    sym_data = self.hs.hist_shaped[y][self.end_idx-x]
+                    #print(len(sym_data))
+                    active += sym_data.tolist()
+                master_active.append(active)
+        except:
+            self.refresh_data()
+            self.get_one_bar_input_2d()
         #print(active)
         return master_active
 
