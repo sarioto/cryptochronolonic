@@ -8,6 +8,7 @@ from binance.client import Client
 from datetime import date, timedelta, datetime
 import os
 from statistics import mode
+from exchange_wrappers import kraken_wrapper
 #from ephemGravityWrapper import gravity as gbaby
 '''
 As can be expected by this point, you will notice that
@@ -33,6 +34,7 @@ class HistWorker:
         self.look_back = 90
         self.hist_full_size = self.look_back * 12
         #self.binance_client = Client("", "")
+        self.kw = kraken_wrapper.KrakenWrapper()
         return
 
     def get_hist_files(self):
@@ -87,6 +89,10 @@ class HistWorker:
     def get_binance_symbol(self, f):
         f = f.split("_", 2)
         return f[0]
+
+    def get_kraken_syms(self):
+        self.kw.get_assets()
+
     '''
     def get_data_for_astro(self):
         data = {}
@@ -194,6 +200,36 @@ class HistWorker:
 
 
     def pull_polo_usd_live(self, lb):
+        polo = Poloniex()
+        coins = polo.returnTicker()
+        tickLen = '7200'
+        start = datetime.today() - timedelta(lb)
+        start = str(int(start.timestamp()))
+        for coin in coins:
+            if coin[:4] == 'USDT':
+                #print(coin)
+                hist = requests.get('https://poloniex.com/public?command=returnChartData&currencyPair='+coin+'&start='+start+'&end=9999999999&period='+tickLen)
+                h_frame = pd.DataFrame(hist.json())
+                frame = h_frame.copy()
+                '''
+                frame['avg_vol_3'] = frame['volume'].rolling(3).mean()
+                frame['avg_vol_13'] = frame['volume'].rolling(13).mean()
+                frame['avg_vol_34'] = frame['volume'].rolling(34).mean()
+                frame['avg_close_3'] = frame['close'].rolling(3).mean()
+                frame['avg_close_13'] = frame['close'].rolling(13).mean()
+                frame['avg_close_34'] = frame['close'].rolling(34).mean()
+                '''
+                frame['avg_vol_3'] = pd.Series(np.where(frame.volume.rolling(3).mean() / frame.volume, 1, 0),frame.index)
+                frame['avg_close_3'] = pd.Series(np.where(frame.close.rolling(3).mean() / frame.close, 1, 0),frame.index)
+                frame['avg_close_13'] = pd.Series(np.where(frame.close.rolling(21).mean() / frame.close.rolling(3).mean(), 1, 0),frame.index)
+                frame['avg_close_34'] = pd.Series(np.where(frame.volume.rolling(55).mean() / frame.close.rolling(21).mean(), 1, 0),frame.index)
+                frame['std_close'] = frame['open']/frame['close']
+                frame['std_high'] = frame['high']/frame['low']
+                frame.fillna(value=0.0, inplace=True)
+                print(coin + " written")
+                frame.to_csv("./usd_live/"+coin+"_hist.txt", encoding="utf-8")
+
+    def pull_kraken_hist(self, lb):
         polo = Poloniex()
         coins = polo.returnTicker()
         tickLen = '7200'
@@ -500,7 +536,11 @@ class HistWorker:
             self.coin_dict[coin_and_hist_index] = prefixes[ix]
             coin_and_hist_index += 1
         self.hist_shaped = pd.Series(self.hist_shaped)
-#hs = HistWorker()
+
+
+
+hs = HistWorker()
+hs.kw.pull_kraken_hist_usd()
 #hs.pull_polo_usd(144)
 #hs.pull_polo_usd_live(60)
 '''
