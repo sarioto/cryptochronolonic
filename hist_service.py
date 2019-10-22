@@ -540,7 +540,7 @@ class HistWorker:
 
 
 hs = HistWorker()
-hs.kw.pull_kraken_hist_usd()
+hs.kw.load_hist_files()
 #hs.pull_polo_usd(144)
 #hs.pull_polo_usd_live(60)
 '''

@@ -39,7 +39,10 @@ class KrakenWrapper(object):
                 for l in range(len(results)):
                     next_line = results[l]
                     for x in range(len(next_line)):
-                        f.write(str(next_line[x]))
+                        if(x != len(next_line)-1):
+                            f.write(str(next_line[x]) + ",")
+                        else:
+                            f.write(str(next_line[x]))
                     f.write("\n")
             print(i, " written")
 
