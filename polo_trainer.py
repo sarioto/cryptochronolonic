@@ -43,10 +43,14 @@ class PurpleTrader:
     portfolio_list = []
     def __init__(self, hist_depth, num_gens, gen_count = 1):
         self.hd = hist_depth
+<<<<<<< HEAD
         if gen_count != 1:
             self.num_gens = num_gens
         else:
             self.num_gens = gen_count + num_gens
+=======
+        self.num_gens = num_gens + num_gens
+>>>>>>> 2df8de49fabb4eae923e34dca5bc4a6e92e6f6ba
         self.gen_count = gen_count
         self.refresh()
 
@@ -236,10 +240,14 @@ class PurpleTrader:
 
     def run_training(self, checkpoint = ""):
         #print(task.trial_run())
+<<<<<<< HEAD
         if checkpoint == "":
             winner = self.run_pop()[0]
         else:
             winner = self.run_pop(checkpoint)[0]
+=======
+        winner = self.run_pop(checkpoint)[0]
+>>>>>>> 2df8de49fabb4eae923e34dca5bc4a6e92e6f6ba
         print('\nBest genome:\n{!s}'.format(winner))
         checkpoint_string = str(self.num_gens-1)
         self.num_gens += self.num_gens
@@ -248,6 +256,11 @@ class PurpleTrader:
 
     def run_validation(self):
         self.validate_fitness()
+<<<<<<< HEAD
 pt = PurpleTrader(34, 144, 143)
 pt.run_training("233")
+=======
+pt = PurpleTrader(34, 144, 211)
+pt.run_training("211")
+>>>>>>> 2df8de49fabb4eae923e34dca5bc4a6e92e6f6ba
 #run_validation()

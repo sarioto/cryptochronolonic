@@ -93,14 +93,19 @@ class LiveTrader:
 
     def get_one_bar_input_2d(self):
         master_active = []
-        for x in range(0, self.hd):
-            active = []
-            #print(self.outputs)
-            for y in range(0, self.outputs):
-                sym_data = self.hs.hist_shaped[y][self.end_idx-x]
-                #print(len(sym_data))
-                active += sym_data.tolist()
-            master_active.append(active)
+        try:
+            for x in range(0, self.hd):
+                active = []
+                #print(self.outputs)
+                for y in range(0, self.outputs):
+                    sym_data = self.hs.hist_shaped[y][self.end_idx-x]
+                    #print(len(sym_data))
+                    active += sym_data.tolist()
+                master_active.append(active)
+        except:
+            print("error getting look back data")
+            self.refresh_data()
+            self.get_one_bar_input_2d()
         #print(active)
         return master_active
 
@@ -111,7 +116,7 @@ class LiveTrader:
             print(e)
             print('error getting open orers')
             time.sleep(360)
-            self.closeOrder()
+            self.closeOrders()
         for o in orders:
             if orders[o] != []:
                 try:
@@ -132,9 +137,13 @@ class LiveTrader:
 
     def buy_coin(self, coin, price):
         amt = self.target / price
-        if(self.bal[self.base_sym] > self.target):
-            self.polo.buy(coin, price, amt, fillOrKill=1)
-            print("buying: ", coin)
+        if(self.bal[self.base_sym]["available"] > self.target):
+            try:
+                self.polo.buy(coin, price, amt)
+                print("buying: ", coin)
+            except Exception as e:
+                print("error buying ", coin)
+                print(e)
         return
 
     def sell_coin(self, coin, price):
@@ -144,18 +153,18 @@ class LiveTrader:
             amt = self.bal[coin.split("_")[1]]["btcValue"]
         if (amt*price > .0001):
             try:
-                self.polo.sell(coin, price, amt,fillOrKill=1)
+                self.polo.sell(coin, price, amt)
                 print("selling this shit: ", coin)
-            except Exception as  e:
+            except Exception as e:
+                print("error selling ", coin)
                 print(e)
-                print('error selling', coin)
         return
 
 
     def reset_tickers(self):
         try:
             self.tickers = self.polo.returnTicker()
-            self.bal = self.polo.returnBalances()
+            self.bal = self.polo.returnCompleteBalances()
         except Exception as  e:
             print(e)
             time.sleep(360)
@@ -205,10 +214,10 @@ class LiveTrader:
         buy_syms = []
         buy_signals = []
         sell_signals = []
+        self.closeOrders()
         for n in range(1, self.hd):
             net.activate(active[self.hd-n])
         out = net.activate(active[0])
-        self.reset_tickers()
         for x in range(len(out)):
             sym = self.hs.coin_dict[x]
             end_prices[sym] = self.get_price(self.base_sym+"_"+sym)
@@ -221,27 +230,18 @@ class LiveTrader:
         #rng = iter(shuffle(rng))
         sorted_buys = np.argsort(buy_signals)[::-1]
         sorted_sells = np.argsort(sell_signals)
+        self.reset_tickers()
         for x in sorted_sells:
             sym = sell_syms[x]
-            try:
-                print("selling: ", sym)
-                p = self.get_price(self.base_sym + "_" +sym)
-                price = p -(p*.01)
-                self.sell_coin(self.base_sym + "_" + sym, price)
-            except Exception as e:
-                print(e)
-                print("error selling", sym)
+            p = self.get_price(self.base_sym + "_" +sym)
+            price = p -(p*.005)
+            self.sell_coin(self.base_sym + "_" + sym, price)
         for x in sorted_buys:
             sym = buy_syms[x]
-            try:
-                print("buying: ", sym)
-                self.target_percent = .1 + out[x] - .45
-                p = self.get_price(self.base_sym + "_" +sym)
-                price = p*1.01
-                self.buy_coin(self.base_sym + "_" +sym, price)
-            except Exception as  e:
-                print(e)
-                print("error selling", sym)
+            self.target_percent = .1 + out[x] - .45
+            p = self.get_price(self.base_sym + "_" +sym)
+            price = p*1.005
+            self.buy_coin(self.base_sym + "_" +sym, price)
         if datetime.now() >= self.end_ts:
             return
         else:
@@ -346,14 +346,18 @@ class PaperTrader:
 
     def get_one_bar_input_2d(self):
         master_active = []
-        for x in range(0, self.hd):
-            active = []
-            #print(self.outputs)
-            for y in range(0, self.outputs):
-                sym_data = self.hs.hist_shaped[y][self.end_idx-x]
-                #print(len(sym_data))
-                active += sym_data.tolist()
-            master_active.append(active)
+        try:
+            for x in range(0, self.hd):
+                active = []
+                #print(self.outputs)
+                for y in range(0, self.outputs):
+                    sym_data = self.hs.hist_shaped[y][self.end_idx-x]
+                    #print(len(sym_data))
+                    active += sym_data.tolist()
+                master_active.append(active)
+        except:
+            self.refresh_data()
+            self.get_one_bar_input_2d()
         #print(active)
         return master_active
 
@@ -388,20 +392,22 @@ class PaperTrader:
         #rng = iter(shuffle(rng))
         sorted_buys = np.argsort(buy_signals)[::-1]
         sorted_sells = np.argsort(sell_signals)
-        try:
-            for x in sorted_sells:
+        for x in sorted_sells:
+            try:
                 sym = sell_syms[x]
                 p = end_prices[sym]
                 print("selling: ", sym)
                 self.folio.sell_coin(sym, p)
-                #portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
-            for x in sorted_buys:
+            except Exception as e:
+                print("error placing order")
+        for x in sorted_buys:
+            try:
                 sym = buy_syms[x]
                 p = end_prices[sym]
                 print("buying: ", sym)
                 self.folio.buy_coin(sym, p)
-        except Exception as e:
-            print("error placing order")
+            except Exception as e:
+                print("error placing order")
         '''
         self.trade_hist["date"] = datetime.now()
         self.trade_hist["portfoliovalue"] = self.folio.get_total_btc_value_no_sell(end_prices)[0] 
@@ -429,5 +435,5 @@ class PaperTrader:
 
 
 
-LiveTrader(7200, .5, 34, "USDT")
+LiveTrader(7200, .1, 34, "USDT")
 #PaperTrader(7200, 1000.0 , 34, "USDT")
