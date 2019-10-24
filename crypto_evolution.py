@@ -10,7 +10,7 @@ class CryptoFolio:
     fees = .002
     buys = 0
     sells = 0
-    target_amount = 0.1
+    target_amount = 0.2
     ledger = {}
     start = 0
     def __init__(self, start_amount, coins, base="BTC", save_trades=False):
