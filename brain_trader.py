@@ -42,8 +42,7 @@ class LiveTrader:
 
     def __init__(self, ticker_len, target_percent, hd, base_sym="BTC"):
         self.base_sym = base_sym
-        keys = self.get_keys()
-        self.polo = Poloniex(keys[0], keys[1])
+        self.load_polo_client()
         self.hd = hd
         self.target_percent = target_percent
         self.ticker_len = ticker_len
@@ -61,6 +60,12 @@ class LiveTrader:
         self.load_net()
         self.poloTrader()
 
+    def load_polo_client(self):
+        keys = self.get_keys()
+        self.polo = Poloniex(keys[0], keys[1])
+
+    def purge_polo_client(self):
+        self.polo = None
 
     def load_net(self):
         champ_file = open("./champ_data/latest_greatest.pkl",'rb')
@@ -240,7 +245,9 @@ class LiveTrader:
         if datetime.now() >= self.end_ts:
             return
         else:
+            self.purge_polo_client()
             time.sleep(self.ticker_len)
+            self.load_polo_client()
         self.refresh_data()
         self.make_shapes()
         #self.closeOrders()
