@@ -188,12 +188,13 @@ class HistWorker:
                 frame['avg_close_13'] = frame['close'].rolling(13).mean()
                 frame['avg_close_34'] = frame['close'].rolling(34).mean()
                 '''
+                frame.dropna()
                 frame['avg_vol_3'] = pd.Series(np.where(frame.volume.rolling(3).mean() / frame.volume, 1, 0),frame.index)
                 frame['avg_close_3'] = pd.Series(np.where(frame.close.rolling(3).mean() / frame.close, 1, 0),frame.index)
                 frame['avg_close_13'] = pd.Series(np.where(frame.close.rolling(21).mean() / frame.close.rolling(3).mean(), 1, 0),frame.index)
-                frame['avg_close_34'] = pd.Series(np.where(frame.volume.rolling(55).mean() / frame.close.rolling(21).mean(), 1, 0),frame.index)
+                frame['avg_close_34'] = pd.Series(np.where(frame.close.rolling(55).mean() / frame.close.rolling(21).mean(), 1, 0),frame.index)
                 frame['std_close'] = frame['open']/frame['close']
-                frame['std_high'] = frame['high']/frame['low']
+                frame['std_high'] = frame['low']/frame['close']
                 frame.fillna(value=0.0, inplace=True)
                 print(coin + " written")
                 frame.to_csv("./usd_histories/"+coin+"_hist.txt", encoding="utf-8")
@@ -219,12 +220,13 @@ class HistWorker:
                 frame['avg_close_13'] = frame['close'].rolling(13).mean()
                 frame['avg_close_34'] = frame['close'].rolling(34).mean()
                 '''
+                frame.dropna()
                 frame['avg_vol_3'] = pd.Series(np.where(frame.volume.rolling(3).mean() / frame.volume, 1, 0),frame.index)
                 frame['avg_close_3'] = pd.Series(np.where(frame.close.rolling(3).mean() / frame.close, 1, 0),frame.index)
                 frame['avg_close_13'] = pd.Series(np.where(frame.close.rolling(21).mean() / frame.close.rolling(3).mean(), 1, 0),frame.index)
-                frame['avg_close_34'] = pd.Series(np.where(frame.volume.rolling(55).mean() / frame.close.rolling(21).mean(), 1, 0),frame.index)
+                frame['avg_close_34'] = pd.Series(np.where(frame.close.rolling(55).mean() / frame.close.rolling(21).mean(), 1, 0),frame.index)
                 frame['std_close'] = frame['open']/frame['close']
-                frame['std_high'] = frame['high']/frame['low']
+                frame['std_high'] = frame['low']/frame['close']
                 frame.fillna(value=0.0, inplace=True)
                 print(coin + " written")
                 frame.to_csv("./usd_live/"+coin+"_hist.txt", encoding="utf-8")

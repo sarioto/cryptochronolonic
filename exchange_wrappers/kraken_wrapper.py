@@ -1,6 +1,7 @@
 import pickle
 import time
 import pandas as pd
+import numpy as np
 import requests
 from datetime import date, timedelta, datetime
 import os
@@ -58,5 +59,12 @@ class KrakenWrapper(object):
     def load_hist_files(self):
         histFiles = os.listdir(os.path.join(os.path.dirname(__file__), '../hist_data/kraken_data'))
         first_sym = histFiles[0]
-        df = pd.DataFrame().from_csv(self.endpoints["files_path"]+first_sym)
-        print(df.head())
+        frame = pd.DataFrame().from_csv(self.endpoints["files_path"]+first_sym)
+        frame['avg_vol_3'] = pd.Series(np.where(frame.vol.rolling(3).mean() / frame.vol, 1, 0),frame.index)
+        frame['avg_close_3'] = pd.Series(np.where(frame.close.rolling(3).mean() / frame.close, 1, 0),frame.index)
+        frame['avg_close_13'] = pd.Series(np.where(frame.close.rolling(21).mean() / frame.close.rolling(3).mean(), 1, 0),frame.index)
+        frame['avg_close_34'] = pd.Series(np.where(frame.close.rolling(55).mean() / frame.close.rolling(21).mean(), 1, 0),frame.index)
+        frame['std_close'] = frame['open']/frame['close']
+        frame['std_high'] = frame['low']/frame['close']
+        print(frame.head())
+
