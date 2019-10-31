@@ -435,5 +435,5 @@ class PaperTrader:
 
 
 
-LiveTrader(7200, .1, 34, "USDT")
+LiveTrader(7200, .2, 34, "USDT")
 #PaperTrader(7200, 1000.0 , 34, "USDT")
