@@ -18,7 +18,7 @@ class KrakenWrapper(object):
         self.secret = secret
         self.look_back = default_lookback
         self.lb_interval = default_lb_interval
-        return 
+        return
 
     def get_assets(self, base_pair):
         tradeable_assets = requests.get(self.endpoints["trade_assets"])
@@ -69,4 +69,43 @@ class KrakenWrapper(object):
             frame['std_high'] = frame['low']/frame['close']
             df_dict[sym] = frame
         return df_dict
+
+
+    def combine_polo_usd_frames(self, restrict_val = 0):
+        df_dict = self.load_hist_files()
+        coin_and_hist_index = 0
+        file_lens = []
+        for y in df_dict:
+            df = self.get_polo_usd_frame(df_dict[y])
+            df_len = len(df)
+            #print(df.head())
+            file_lens.append(df_len)
+        mode_len = mode(file_lens)
+        print(mode_len)
+        self.hist_full_size = mode_len
+        vollist = []
+        prefixes = []
+        for x in df_dict:
+            df = df_dict[x]
+            col_prefix = self.get_file_symbol(fileNames[x])
+            #as_array = np.array(df)
+            if(len(df) == mode_len):
+                #print(as_array)
+                prefixes.append(col_prefix)
+                self.currentHists[col_prefix] = df
+                vollist.append(df['volume'][0])
+        if restrict_val != 0:
+            vollist = np.argsort(vollist)[-restrict_val:][::-1]
+        vollist = np.argsort(vollist)[::-1]
+        #print(vollist)
+        for ix in vollist:
+            print(prefixes[ix])
+            df['volume'] = (df['volume'] - df['volume'].mean())/(df['volume'].max() - df['volume'].min())
+            df = self.currentHists[prefixes[ix]][['volume', 'std_high', 'std_close', 'avg_vol_3', 'avg_close_3', 'avg_close_13', 'avg_close_34']].copy()
+            #norm_df = (df - df.mean()) / (df.max() - df.min())
+            as_array=np.array(df)
+            self.hist_shaped[coin_and_hist_index] = as_array
+            self.coin_dict[coin_and_hist_index] = prefixes[ix]
+            coin_and_hist_index += 1
+        self.hist_shaped = pd.Series(self.hist_shaped)
 

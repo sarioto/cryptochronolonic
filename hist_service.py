@@ -448,6 +448,7 @@ class HistWorker:
         prefixes = []
         for x in range(0, len(fileNames)):
             df = self.get_polo_usd_frame(fileNames[x])
+            as_array = np.array(df)
             col_prefix = self.get_file_symbol(fileNames[x])
             #as_array = np.array(df)
             if(len(as_array) == mode_len):
