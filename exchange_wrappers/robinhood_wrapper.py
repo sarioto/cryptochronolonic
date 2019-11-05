@@ -3,6 +3,7 @@ import robin_stocks as r
 import pandas as pd
 import numpy as np
 import os
+from statistics import mode
 
 class RobinHoodWrapper(object):
 
@@ -36,6 +37,7 @@ class RobinHoodWrapper(object):
 
     def load_df_from_file(self, file_name):
         df = pd.DataFrame().from_csv(file_name)
+        return df
     
     def get_spxl_spxs_hist(self, tf="5year"):
         df_dict = {}
@@ -59,47 +61,38 @@ class RobinHoodWrapper(object):
             frame['std_close'] = frame['open_price']/frame['close_price']
             frame['std_high'] = frame['low_price']/frame['high_price']
             frame.to_csv("../hist_data/robinhood_train/"+x+".txt")
-        return
+        return 
 
     def load_train_data(self, restrict_val = 0):
         fileNames = self.get_train_filenames()
         coin_and_hist_index = 0
         file_lens = []
         currentHists = {}
-        for y in range(0,len(fileNames)):
-            df = self.load_df_from_file(fileNames[y])
-            df_len = len(df)
-            #print(df.head())
-            file_lens.append(df_len)
-        mode_len = mode(file_lens)
+        hist_shaped = []
+        coin_dict = {}
         print(mode_len)
         hist_full_size = mode_len
         vollist = []
         prefixes = []
         for x in range(0, len(fileNames)):
-            df = self.load_df_from_file(fileNames[x])
+            df = self.load_df_from_file("./hist_data/robinhood_train/"+fileNames[x])
             as_array = np.array(df)
             col_prefix = self.get_file_symbol(fileNames[x])
-            #as_array = np.array(df)
-            if(len(as_array) == mode_len):
-                #print(as_array)
-                prefixes.append(col_prefix)
-                currentHists[col_prefix] = df
-                vollist.append(df['volume'][0])
-        if restrict_val != 0:
-            vollist = np.argsort(vollist)[-restrict_val:][::-1]
-        vollist = np.argsort(vollist)[::-1]
+            #print(as_array)
+            prefixes.append(col_prefix)
+            currentHists[col_prefix] = df
         #print(vollist)
-        for ix in vollist:
+        for ix in len(prefixes):
             print(prefixes[ix])
             df['volume'] = (df['volume'] - df['volume'].mean())/(df['volume'].max() - df['volume'].min())
-            df = self.currentHists[prefixes[ix]][['volume', 'std_high', 'std_close', 'avg_vol_3', 'avg_close_3', 'avg_close_13', 'avg_close_34']].copy()
+            df = currentHists[prefixes[ix]][self.feature_list].copy()
             #norm_df = (df - df.mean()) / (df.max() - df.min())
             as_array=np.array(df)
-            self.hist_shaped[coin_and_hist_index] = as_array
-            self.coin_dict[coin_and_hist_index] = prefixes[ix]
+            hist_shaped[coin_and_hist_index] = as_array
+            coin_dict[coin_and_hist_index] = prefixes[ix]
             coin_and_hist_index += 1
-        self.hist_shaped = pd.Series(self.hist_shaped)
+        hist_shaped = pd.Series(hist_shaped)
+        return coin_dict, currentHists, hist_shaped
 
 
 
