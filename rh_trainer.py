@@ -4,7 +4,6 @@ import random
 import sys, os
 from functools import partial
 from itertools import product
-from pytorch_neat.cppn import create_cppn
 # Libs
 import numpy as np
 from hist_service import HistWorker
@@ -43,7 +42,7 @@ class PurpleTrader:
     portfolio_list = []
     def __init__(self, hist_depth, num_gens, gen_count = 1):
         self.hd = hist_depth
-        if gen_count == 0:
+        if gen_count == 1:
             self.num_gens = num_gens
         else:
             self.num_gens = gen_count + num_gens
@@ -51,6 +50,7 @@ class PurpleTrader:
         self.refresh()
 
     def refresh(self):
+        print("refreshing")
         self.in_shapes = []
         self.out_shapes = []
         self.hs = HistWorker()
@@ -110,7 +110,7 @@ class PurpleTrader:
             for x in range(len(out)):
                 if(z > (self.epoch_len+rand_start)-2):
                     sym = self.hs.coin_dict[x]
-                    end_prices[sym] = self.hs.currentHists[sym]['close'][self.epoch_len+rand_start]
+                    end_prices[sym] = self.hs.currentHists[sym]['open_price'][self.epoch_len+rand_start]
                 if(out[x] > .5):
                     buy_signals.append(out[x])
                     buy_syms.append(self.hs.coin_dict[x])
@@ -123,11 +123,11 @@ class PurpleTrader:
             #print(len(sorted_shit), len(key_list))
             for x in sorted_sells:
                 sym = sell_syms[x]
-                portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
+                portfolio.sell_coin(sym, self.hs.currentHists[sym]['open_price'][z])
             for x in sorted_buys:
                 sym = buy_syms[x]
                 portfolio.target_amount = .1 + (out[x] * .1)
-                portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
+                portfolio.buy_coin(sym, self.hs.currentHists[sym]['open_price'][z])
         result_val = portfolio.get_total_btc_value(end_prices)
         print(g.key, " : ")
         print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
@@ -150,11 +150,12 @@ class PurpleTrader:
         return fitness
 
     def eval_fitness(self, genomes, config):
-        self.epoch_len = 21
+        self.epoch_len = 10
         r_start = randint(0+self.hd, self.hs.hist_full_size - self.epoch_len)
-        r_start_2 = self.hs.hist_full_size - self.epoch_len-1
+        r_start_2 = self.hs.hist_full_size - 20-1
         best_g_fit = 0.0
-        champ_counter = self.gen_count % 10 
+        champ_counter = self.gen_count % 10
+        #print(champ_counter) 
         #img_count = 0
         for idx, g in genomes:
             cppn = neat.nn.FeedForwardNetwork.create(g, config)
@@ -227,7 +228,7 @@ class PurpleTrader:
         pop.add_reporter(stats)
         pop.add_reporter(checkpoints)
         pop.add_reporter(neat.reporting.StdOutReporter(True))
-
+        print(self.num_gens)
         winner = pop.run(self.eval_fitness, self.num_gens)
         return winner, stats
 
@@ -249,7 +250,7 @@ class PurpleTrader:
     def run_validation(self):
         self.validate_fitness()
         
-pt = PurpleTrader(21, 144, 0)
+pt = PurpleTrader(21, 144, 1)
 pt.run_training()
 
 #run_validation()

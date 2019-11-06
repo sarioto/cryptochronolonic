@@ -23,7 +23,6 @@ class RobinHoodWrapper(object):
 
     def api_init(self):
         creds = self.get_keys()
-        print(creds)
         r.login(creds[0], creds[1])
         return
 
@@ -60,7 +59,7 @@ class RobinHoodWrapper(object):
             frame['avg_close_55'] = pd.Series(np.where(frame.close_price.rolling(55).mean() / frame.close_price.rolling(21).mean(), 1, 0),frame.index)
             frame['std_close'] = frame['open_price']/frame['close_price']
             frame['std_high'] = frame['low_price']/frame['high_price']
-            frame.to_csv("../hist_data/robinhood_train/"+x+".txt")
+            frame.to_csv("./hist_data/robinhood_train/"+x+".txt")
         return 
 
     def load_train_data(self, restrict_val = 0):
@@ -83,13 +82,13 @@ class RobinHoodWrapper(object):
             hist_full_sized = len(df)
         #print(vollist)
         for ix in range(0,len(prefixes)):
-            print(prefixes[ix])
+            #print(prefixes[ix])
             df = currentHists[prefixes[ix]]
             df['volume'] = (df['volume'] - df['volume'].mean())/(df['volume'].max() - df['volume'].min())
             df = df[self.feature_list].copy()
             #norm_df = (df - df.mean()) / (df.max() - df.min())
             as_array=np.array(df)
-            print(as_array)
+            #print(as_array)
             hist_shaped[ix] = as_array
             coin_dict[ix] = prefixes[ix]
         hist_shaped = pd.Series(hist_shaped)

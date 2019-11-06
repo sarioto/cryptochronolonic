@@ -552,9 +552,6 @@ class HistWorker:
         self.coin_dict, self.currentHists, self.hist_shaped, self.hist_full_size = self.rh.load_train_data()
         return
 
-
-hs = HistWorker()
-hs.get_robinhood_train()
 #hs.kw.load_hist_files()
 #hs.pull_polo_usd(144)
 #hs.pull_polo_usd_live(60)
