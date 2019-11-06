@@ -8,7 +8,7 @@ from binance.client import Client
 from datetime import date, timedelta, datetime
 import os
 from statistics import mode
-from exchange_wrappers import kraken_wrapper
+from exchange_wrappers import kraken_wrapper, robinhood_wrapper
 #from ephemGravityWrapper import gravity as gbaby
 '''
 As can be expected by this point, you will notice that
@@ -35,6 +35,7 @@ class HistWorker:
         self.hist_full_size = self.look_back * 12
         #self.binance_client = Client("", "")
         self.kw = kraken_wrapper.KrakenWrapper()
+        self.rh = robinhood_wrapper.RobinHoodWrapper()
         return
 
     def get_hist_files(self):
@@ -478,8 +479,9 @@ class HistWorker:
         prefixes = []
         for x in range(0, len(fileNames)):
             df = self.get_polo_usd_frame(fileNames[x])
-            col_prefix = self.get_file_symbol(fileNames[x])
             as_array = np.array(df)
+            col_prefix = self.get_file_symbol(fileNames[x])
+            #as_array = np.array(df)
             if(len(as_array) == mode_len):
                 #print(as_array)
                 prefixes.append(col_prefix)
@@ -491,8 +493,9 @@ class HistWorker:
         #print(vollist)
         for ix in vollist:
             print(prefixes[ix])
+            df = self.currentHists[prefixes[ix]]
             df['volume'] = (df['volume'] - df['volume'].mean())/(df['volume'].max() - df['volume'].min())
-            df = self.currentHists[prefixes[ix]][['volume', 'std_high', 'std_close', 'avg_vol_3', 'avg_close_3', 'avg_close_13', 'avg_close_34']].copy()
+            df = df[['volume', 'std_high', 'std_close', 'avg_vol_3', 'avg_close_3', 'avg_close_13', 'avg_close_34']].copy()
             #norm_df = (df - df.mean()) / (df.max() - df.min())
             as_array=np.array(df)
             self.hist_shaped[coin_and_hist_index] = as_array
@@ -530,8 +533,10 @@ class HistWorker:
         for ix in vollist:
             print(prefixes[ix])
             #print(self.currentHists[col_prefix].head())
+            df = self.currentHists[prefixes[ix]]
             df['volume'] = (df['volume'] - df['volume'].mean())/(df['volume'].max() - df['volume'].min())
-            df = self.currentHists[prefixes[ix]][['volume', 'std_high', 'std_close', 'avg_vol_3', 'avg_close_3', 'avg_close_13', 'avg_close_34']].copy()
+
+            df = df[['volume', 'std_high', 'std_close', 'avg_vol_3', 'avg_close_3', 'avg_close_13', 'avg_close_34']].copy()
             #norm_df = (df - df.mean()) / (df.max() - df.min())
             as_array=np.array(df)
             self.hist_shaped[coin_and_hist_index] = as_array
@@ -539,9 +544,14 @@ class HistWorker:
             coin_and_hist_index += 1
         self.hist_shaped = pd.Series(self.hist_shaped)
 
+    def pull_robinhood_train_data(self):
+        self.rh.get_spxl_spxs_hist()
+        return
 
+    def get_robinhood_train(self):
+        self.coin_dict, self.currentHists, self.hist_shaped, self.hist_full_size = self.rh.load_train_data()
+        return
 
-#hs = HistWorker()
 #hs.kw.load_hist_files()
 #hs.pull_polo_usd(144)
 #hs.pull_polo_usd_live(60)
