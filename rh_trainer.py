@@ -43,7 +43,7 @@ class PurpleTrader:
     portfolio_list = []
     def __init__(self, hist_depth, num_gens, gen_count = 1):
         self.hd = hist_depth
-        if gen_count != 1:
+        if gen_count == 0:
             self.num_gens = num_gens
         else:
             self.num_gens = gen_count + num_gens
@@ -54,8 +54,8 @@ class PurpleTrader:
         self.in_shapes = []
         self.out_shapes = []
         self.hs = HistWorker()
-        self.hs.pull_polo_usd(144)
-        self.hs.combine_polo_usd_frames()
+        self.hs.pull_robinhood_train_data()
+        self.hs.get_robinhood_train()
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
         self.but_target = .1
@@ -150,7 +150,7 @@ class PurpleTrader:
         return fitness
 
     def eval_fitness(self, genomes, config):
-        self.epoch_len = 89
+        self.epoch_len = 21
         r_start = randint(0+self.hd, self.hs.hist_full_size - self.epoch_len)
         r_start_2 = self.hs.hist_full_size - self.epoch_len-1
         best_g_fit = 0.0
@@ -249,7 +249,7 @@ class PurpleTrader:
     def run_validation(self):
         self.validate_fitness()
         
-pt = PurpleTrader(34, 144, 423)
-pt.run_training("423")
+pt = PurpleTrader(21, 144, 0)
+pt.run_training()
 
 #run_validation()

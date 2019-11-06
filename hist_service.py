@@ -544,9 +544,13 @@ class HistWorker:
             coin_and_hist_index += 1
         self.hist_shaped = pd.Series(self.hist_shaped)
 
+    def pull_robinhood_train_data(self):
+        self.rh.get_spxl_spxs_hist()
+        return
+
     def get_robinhood_train(self):
         self.coin_dict, self.currentHists, self.hist_shaped, self.hist_full_size = self.rh.load_train_data()
-
+        return
 
 
 hs = HistWorker()
