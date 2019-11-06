@@ -545,7 +545,7 @@ class HistWorker:
         self.hist_shaped = pd.Series(self.hist_shaped)
 
     def get_robinhood_train(self):
-        self.coin_dict, self.currentHists, self.hist_shaped = self.rh.load_train_data()
+        self.coin_dict, self.currentHists, self.hist_shaped, self.hist_full_size = self.rh.load_train_data()
 
 
 

@@ -7,7 +7,7 @@ from statistics import mode
 
 class RobinHoodWrapper(object):
 
-    feature_list = ['avg_vol', 'avg_close_13', 'avg_close_21', 'avg_close_55', 'std_close', 'std_high', 'volume', 'begins_at']
+    feature_list = ['avg_vol', 'avg_close_13', 'avg_close_21', 'avg_close_55', 'std_close', 'std_high', 'volume']
     def __init__(self, lookback = 55):
         self.lb = lookback
         self.api_init() 
@@ -68,12 +68,11 @@ class RobinHoodWrapper(object):
         coin_and_hist_index = 0
         file_lens = []
         currentHists = {}
-        hist_shaped = []
+        hist_shaped = {}
         coin_dict = {}
-        print(mode_len)
-        hist_full_size = mode_len
         vollist = []
         prefixes = []
+        hist_full_sized = 0
         for x in range(0, len(fileNames)):
             df = self.load_df_from_file("./hist_data/robinhood_train/"+fileNames[x])
             as_array = np.array(df)
@@ -81,20 +80,19 @@ class RobinHoodWrapper(object):
             #print(as_array)
             prefixes.append(col_prefix)
             currentHists[col_prefix] = df
+            hist_full_sized = len(df)
         #print(vollist)
-        for ix in len(prefixes):
+        for ix in range(0,len(prefixes)):
             print(prefixes[ix])
+            df = currentHists[prefixes[ix]]
             df['volume'] = (df['volume'] - df['volume'].mean())/(df['volume'].max() - df['volume'].min())
-            df = currentHists[prefixes[ix]][self.feature_list].copy()
+            df = df[self.feature_list].copy()
             #norm_df = (df - df.mean()) / (df.max() - df.min())
             as_array=np.array(df)
-            hist_shaped[coin_and_hist_index] = as_array
-            coin_dict[coin_and_hist_index] = prefixes[ix]
-            coin_and_hist_index += 1
+            print(as_array)
+            hist_shaped[ix] = as_array
+            coin_dict[ix] = prefixes[ix]
         hist_shaped = pd.Series(hist_shaped)
-        return coin_dict, currentHists, hist_shaped
+        return coin_dict, currentHists, hist_shaped, hist_full_sized
 
 
-
-rw = RobinHoodWrapper()
-print(rw.get_train_filenames())
