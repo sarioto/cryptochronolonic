@@ -20,7 +20,6 @@ class CryptoFolio:
             self.ledger[coins[ix]] = 0.0
         #print(self.ledger)
         self.start = start_amount
-        self.hs = hs.HistWorker()
         self.save_trades = save_trades
     '''
     def __init__(self, start_amount, coins, base, save_trades=False):

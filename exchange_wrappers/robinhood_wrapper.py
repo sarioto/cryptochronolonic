@@ -9,6 +9,7 @@ class RobinHoodWrapper(object):
 
     feature_list = ['avg_vol', 'avg_close_13', 'avg_close_21', 'avg_close_55', 'std_close', 'std_high', 'volume']
     def __init__(self, lookback = 55):
+        print("reinitializing")
         self.lb = lookback
         self.api_init() 
         return
