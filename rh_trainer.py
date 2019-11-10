@@ -58,7 +58,7 @@ class PurpleTrader:
         self.hs.get_robinhood_train()
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
-        self.but_target = .1
+        self.but_target = .25
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = self.hs.hist_shaped.shape[0]
         sign = 1
@@ -246,11 +246,10 @@ class PurpleTrader:
         self.num_gens += self.num_gens
         self.run_training(checkpoint_string)
 
-
     def run_validation(self):
         self.validate_fitness()
         
-pt = PurpleTrader(21, 144, 1)
-pt.run_training()
+pt = PurpleTrader(21, 144, 57)
+pt.run_training("57")
 
 #run_validation()
