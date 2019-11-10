@@ -81,21 +81,25 @@ class RobinHoodWrapper(object):
             prefixes.append(col_prefix)
             currentHists[col_prefix] = df
             hist_full_sized = len(df)
+            #print(len(df))
         #print(vollist)
         for s in currentHists:
             if(hist_full_sized > len(currentHists[s])):
+                print("trimming df")
                 currentHists[s].drop(currentHists[s].tail(hist_full_sized-len(currentHists[s])).index, inplace=True)
         for ix in range(0,len(prefixes)):
             #print(prefixes[ix])
             df = currentHists[prefixes[ix]]
             df['volume'] = (df['volume'] - df['volume'].mean())/(df['volume'].max() - df['volume'].min())
-            df = df[self.feature_list].copy()
+            df = df[self.feature_list + ["begins_at"]].copy()
             #norm_df = (df - df.mean()) / (df.max() - df.min())
             as_array=np.array(df)
             #print(as_array)
             hist_shaped[ix] = as_array
             coin_dict[ix] = prefixes[ix]
         hist_shaped = pd.Series(hist_shaped)
+        #print(hist_shaped[0][0])
+        #print(hist_shaped[0][1])
         return coin_dict, currentHists, hist_shaped, hist_full_sized
 
 
