@@ -249,7 +249,7 @@ class PurpleTrader:
     def run_validation(self):
         self.validate_fitness()
         
-pt = PurpleTrader(21, 144, 57)
-pt.run_training("57")
+pt = PurpleTrader(21, 144, 1)
+pt.run_training()
 
 #run_validation()
