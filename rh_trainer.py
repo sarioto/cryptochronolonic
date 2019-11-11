@@ -90,7 +90,7 @@ class PurpleTrader:
         return master_active
 
     def evaluate(self, network, es, rand_start, g, verbose=False):
-        portfolio_start = 1.0
+        portfolio_start = 10000.0
         portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USDT")
         end_prices = {}
         buys = 0
@@ -176,8 +176,9 @@ class PurpleTrader:
         return
 
     def compare_champs(self):
-        self.epoch_len = 233
-        r_start = self.hs.hist_full_size - self.epoch_len-1
+        self.epoch_len = 30
+        r_start = self.hd + 1
+        print(self.end_idx)
         champ_current = open("./champ_data/latest_greatest.pkl",'rb')
         g = pickle.load(champ_current)
         champ_current.close()
@@ -197,6 +198,7 @@ class PurpleTrader:
                 if (g.fitness > champ_fit):
                     with open("./champ_data/latest_greatest.pkl", 'wb') as output:
                         pickle.dump(g, output)
+        print(champ_fit)
         return
 
     def validate_fitness(self):
@@ -249,7 +251,12 @@ class PurpleTrader:
     def run_validation(self):
         self.validate_fitness()
         
+<<<<<<< HEAD
 pt = PurpleTrader(21, 144, 1)
 pt.run_training()
+=======
+pt = PurpleTrader(21, 144, 57)
+pt.compare_champs()
+>>>>>>> bab726069806a18c310c8f15115b172b4ad8d9a9
 
 #run_validation()
