@@ -91,7 +91,7 @@ class RobinHoodWrapper(object):
             #print(prefixes[ix])
             df = currentHists[prefixes[ix]]
             df['volume'] = (df['volume'] - df['volume'].mean())/(df['volume'].max() - df['volume'].min())
-            df = df[self.feature_list + ["begins_at"]].copy()
+            df = df[self.feature_list].copy()
             #norm_df = (df - df.mean()) / (df.max() - df.min())
             as_array=np.array(df)
             #print(as_array)

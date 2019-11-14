@@ -251,12 +251,7 @@ class PurpleTrader:
     def run_validation(self):
         self.validate_fitness()
         
-<<<<<<< HEAD
 pt = PurpleTrader(21, 144, 1)
 pt.run_training()
-=======
-pt = PurpleTrader(21, 144, 57)
-pt.compare_champs()
->>>>>>> bab726069806a18c310c8f15115b172b4ad8d9a9
 
 #run_validation()
