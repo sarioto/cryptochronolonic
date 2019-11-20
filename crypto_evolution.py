@@ -10,7 +10,7 @@ class CryptoFolio:
     fees = .002
     buys = 0
     sells = 0
-    target_amount = 0.2
+    target_amount = 0.25
     ledger = {}
     start = 0
     def __init__(self, start_amount, coins, base="BTC", save_trades=False):
@@ -37,7 +37,7 @@ class CryptoFolio:
         if(amount > self.ledger[self.base_sym]):
             return False
         else:
-            coin_amount = amount/(price* 1.01)
+            coin_amount = amount/(price* 1.005)
             the_fee = self.fees * amount
             self.ledger[self.base_sym] -= (amount + the_fee)
             self.ledger[c_name] += coin_amount
@@ -46,7 +46,6 @@ class CryptoFolio:
 
 
     def sell_coin(self, c_name, price):
-        price = price -(price*.01)
         if self.ledger[c_name] != 0.0:
             amount = self.ledger[c_name]
             self.ledger[self.base_sym] += ((amount*price) - ((amount * price)*self.fees))

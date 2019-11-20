@@ -39,7 +39,7 @@ class RobinHoodWrapper(object):
         df = pd.DataFrame().from_csv(file_name)
         return df
     
-    def get_spxl_spxs_hist(self, tf="5year"):
+    def get_spxl_spxs_hist(self, tf="year"):
         df_dict = {}
         results = r.get_historicals("SPXL", span=tf)
         df = pd.DataFrame().from_dict(results)

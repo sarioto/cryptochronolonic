@@ -75,7 +75,7 @@ class PurpleTrader:
 
     def get_one_epoch_input(self,end_idx):
         master_active = []
-        for x in range(0, self.hd):
+        for x in range(1, self.hd+1):
             active = []
             #print(self.outputs)
             for y in range(0, self.outputs):
@@ -88,6 +88,44 @@ class PurpleTrader:
             master_active.append(active)
         #print(active)
         return master_active
+
+    def evaluate_champ(self, network, es, rand_start, g, verbose=False):
+        portfolio_start = 10000.0
+        portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USDT")
+        end_prices = {}
+        buys = 0
+        sells = 0
+        with open("./trade_hists/" + str(g.key) + "_hist.txt", "w") as ft:
+            ft.write('date,current_balance \n')
+            for z in range(rand_start, rand_start+self.epoch_len):
+                #TODO add comments to clarify all the 
+                #shit im doing here
+                active = self.get_one_epoch_input(z)
+                buy_signals = []
+                buy_syms = []
+                sell_syms = []
+                sell_signals = []
+                network.reset()
+                for n in range(1, self.hd+1):
+                    network.activate(active[self.hd-n])
+                out = network.activate(active[0])
+                for x in range(len(out)):
+                    sym = self.hs.coin_dict[x]
+                    if (out[x] > .5):
+                        portfolio.buy_coin(sym, self.hs.currentHists[sym]['open_price'][z])
+                    if (out[x] < -.5):
+                        portfolio.sell_coin(sym, self.hs.currentHists[sym]['open_price'][z])
+                    end_prices[sym] = self.hs.currentHists[sym]['open_price'][self.epoch_len+rand_start]
+                ft.write(self.hs.currentHists[sym]['begins_at'][z] + ",")
+                ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[0])+ " \n")
+            result_val = portfolio.get_total_btc_value(end_prices)
+            print("genome id ", g.key, " : ")
+            print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
+            if result_val[1] == 0:
+                ft = .7
+            else:
+                ft = result_val[0]
+            return ft
 
     def evaluate(self, network, es, rand_start, g, verbose=False):
         portfolio_start = 10000.0
@@ -108,6 +146,15 @@ class PurpleTrader:
                 network.activate(active[self.hd-n])
             out = network.activate(active[0])
             for x in range(len(out)):
+                sym = self.hs.coin_dict[x]
+                if (out[x] > .5):
+                    portfolio.buy_coin(sym, self.hs.currentHists[sym]['open_price'][z])
+                if (out[x] < -.5):
+                    portfolio.sell_coin(sym, self.hs.currentHists[sym]['open_price'][z])
+                if(z > (self.epoch_len+rand_start)-2):
+                    end_prices[sym] = self.hs.currentHists[sym]['open_price'][self.epoch_len+rand_start]
+                '''
+                # if this is the last loop of bars
                 if(z > (self.epoch_len+rand_start)-2):
                     sym = self.hs.coin_dict[x]
                     end_prices[sym] = self.hs.currentHists[sym]['open_price'][self.epoch_len+rand_start]
@@ -128,11 +175,12 @@ class PurpleTrader:
                 sym = buy_syms[x]
                 #portfolio.target_amount = .1 + (out[x] * .1)
                 portfolio.buy_coin(sym, self.hs.currentHists[sym]['open_price'][z])
+            '''
         result_val = portfolio.get_total_btc_value(end_prices)
-        print(g.key, " : ")
+        print("genome id ", g.key, " : ")
         print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
         if result_val[1] == 0:
-            ft = .7
+            ft = .5
         else:
             ft = result_val[0]
         return ft
@@ -194,7 +242,7 @@ class PurpleTrader:
                 cppn = neat.nn.FeedForwardNetwork.create(g, self.config)
                 network = ESNetwork(self.subStrate, cppn, self.params, self.hd)
                 net = network.create_phenotype_network_nd()
-                g.fitness = self.evaluate(net, network, r_start, g)
+                g.fitness = self.evaluate_champ(net, network, r_start, g)
                 if (g.fitness > champ_fit):
                     with open("./champ_data/latest_greatest.pkl", 'wb') as output:
                         pickle.dump(g, output)
@@ -251,7 +299,7 @@ class PurpleTrader:
     def run_validation(self):
         self.validate_fitness()
         
-pt = PurpleTrader(21, 144, 57)
-pt.compare_champs()
+pt = PurpleTrader(21, 144, 1)
+pt.run_pop()
 
 #run_validation()
