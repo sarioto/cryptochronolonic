@@ -133,9 +133,10 @@ class PurpleTrader:
         end_prices = {}
         buys = 0
         sells = 0
-        for z in range(rand_start, rand_start+self.epoch_len):
+        for z_minus in range(0, self.epoch_len - 1):
             #TODO add comments to clarify all the 
             #shit im doing here
+            z = rand_start - z_minus
             active = self.get_one_epoch_input(z)
             buy_signals = []
             buy_syms = []
@@ -151,8 +152,8 @@ class PurpleTrader:
                     portfolio.buy_coin(sym, self.hs.currentHists[sym]['open_price'][z])
                 if (out[x] < -.5):
                     portfolio.sell_coin(sym, self.hs.currentHists[sym]['open_price'][z])
-                if(z > (self.epoch_len+rand_start)-2):
-                    end_prices[sym] = self.hs.currentHists[sym]['open_price'][self.epoch_len+rand_start]
+                if(z_minus == self.epoch_len - 2):
+                    end_prices[sym] = self.hs.currentHists[sym]['open_price'][z]
                 '''
                 # if this is the last loop of bars
                 if(z > (self.epoch_len+rand_start)-2):
@@ -198,9 +199,11 @@ class PurpleTrader:
         return fitness
 
     def eval_fitness(self, genomes, config):
-        self.epoch_len = 90
-        r_start = randint(0+self.epoch_len, self.hs.hist_full_size - sel.hd)
-        r_start_2 = self.hs.hist_full_size - 20-1
+        r_start = randint(40, (self.hs.hist_full_size - self.hd))
+        self.epoch_len = r_start
+        print(r_start)
+        r_start_2 = 20
+        self.epoch_len = r_start_2
         best_g_fit = 0.0
         champ_counter = self.gen_count % 10
         #print(champ_counter) 
@@ -224,8 +227,8 @@ class PurpleTrader:
         return
 
     def compare_champs(self):
-        self.epoch_len = 20
-        r_start = self.end_idx - (20 + 1)
+        r_start = self.end_idx - self.hd
+        self.epoch_len = r_start
         print(self.end_idx)
         champ_current = open("./champ_data/latest_greatest.pkl",'rb')
         g = pickle.load(champ_current)
@@ -242,7 +245,7 @@ class PurpleTrader:
                 cppn = neat.nn.FeedForwardNetwork.create(g, self.config)
                 network = ESNetwork(self.subStrate, cppn, self.params, self.hd)
                 net = network.create_phenotype_network_nd()
-                g.fitness = self.evaluate_champ(net, network, r_start, g)
+                g.fitness = self.evaluate(net, network, r_start, g)
                 if (g.fitness > champ_fit):
                     with open("./champ_data/latest_greatest.pkl", 'wb') as output:
                         pickle.dump(g, output)
@@ -300,6 +303,6 @@ class PurpleTrader:
         self.validate_fitness()
         
 pt = PurpleTrader(21, 144, 1)
-pt.run_training()
+pt.compare_champs()
 
 #run_validation()

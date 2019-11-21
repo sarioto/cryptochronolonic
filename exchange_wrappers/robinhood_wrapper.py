@@ -81,7 +81,7 @@ class RobinHoodWrapper(object):
             prefixes.append(col_prefix)
             currentHists[col_prefix] = df
             hist_full_sized = len(df)
-            #print(len(df))
+            print(len(df))
         #print(vollist)
         for s in currentHists:
             if(hist_full_sized > len(currentHists[s])):
