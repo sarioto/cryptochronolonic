@@ -58,7 +58,7 @@ class PurpleTrader:
         self.hs.get_robinhood_train()
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
-        self.but_target = .25
+        self.but_target = 1.0
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
         self.outputs = self.hs.hist_shaped.shape[0]
         sign = 1
@@ -126,7 +126,7 @@ class PurpleTrader:
                 portfolio.sell_coin(sym, self.hs.currentHists[sym]['open_price'][z])
             for x in sorted_buys:
                 sym = buy_syms[x]
-                portfolio.target_amount = .1 + (out[x] * .1)
+                #portfolio.target_amount = .1 + (out[x] * .1)
                 portfolio.buy_coin(sym, self.hs.currentHists[sym]['open_price'][z])
         result_val = portfolio.get_total_btc_value(end_prices)
         print(g.key, " : ")
@@ -176,8 +176,8 @@ class PurpleTrader:
         return
 
     def compare_champs(self):
-        self.epoch_len = 30
-        r_start = self.hd + 1
+        self.epoch_len = 20
+        r_start = self.end_idx - (20 + 1)
         print(self.end_idx)
         champ_current = open("./champ_data/latest_greatest.pkl",'rb')
         g = pickle.load(champ_current)
@@ -251,7 +251,7 @@ class PurpleTrader:
     def run_validation(self):
         self.validate_fitness()
         
-pt = PurpleTrader(21, 144, 1)
-pt.run_training()
+pt = PurpleTrader(21, 144, 5)
+pt.run_training("5")
 
 #run_validation()
