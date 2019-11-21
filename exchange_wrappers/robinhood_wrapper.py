@@ -10,8 +10,7 @@ class RobinHoodWrapper(object):
     feature_list = ['avg_vol', 'avg_close_13', 'avg_close_21', 'avg_close_55', 'std_close', 'std_high', 'volume']
     def __init__(self, lookback = 55):
         print("reinitializing")
-        self.lb = lookback
-        self.api_init() 
+        self.lb = lookback 
         return
 
     def get_keys(self):
@@ -40,6 +39,7 @@ class RobinHoodWrapper(object):
         return df
     
     def get_spxl_spxs_hist(self, tf="year"):
+        self.api_init()
         df_dict = {}
         results = r.get_historicals("SPXL", span=tf)
         df = pd.DataFrame().from_dict(results)
@@ -102,5 +102,3 @@ class RobinHoodWrapper(object):
         #print(hist_shaped[0][1])
         return coin_dict, currentHists, hist_shaped, hist_full_sized
 
-rw = RobinHoodWrapper()
-rw.get_spxl_spxs_hist()
