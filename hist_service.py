@@ -552,13 +552,10 @@ class HistWorker:
         self.coin_dict, self.currentHists, self.hist_shaped, self.hist_full_size = self.rh.load_train_data()
         return
 
-<<<<<<< HEAD
 #hs = HistWorker()
 #hs.rh.get_spxl_spxs_hist()
 #hs.rh.load_train_data()
 
-=======
->>>>>>> 0383a9f95d1b7bf9430e95b41a5e417a8523e82f
 #hs.pull_polo_usd(144)
 #hs.pull_polo_usd_live(60)
 '''

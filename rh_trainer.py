@@ -35,7 +35,7 @@ class PurpleTrader:
     # Config for CPPN.
     config = neat.config.Config(neat.genome.DefaultGenome, neat.reproduction.DefaultReproduction,
                                 neat.species.DefaultSpeciesSet, neat.stagnation.DefaultStagnation,
-                                'config_trader')
+                                'config_trader0')
 
     start_idx = 0
     highest_returns = 0
@@ -133,6 +133,7 @@ class PurpleTrader:
         end_prices = {}
         buys = 0
         sells = 0
+        loss_factor = 0
         for z_minus in range(0, self.epoch_len - 1):
             #TODO add comments to clarify all the 
             #shit im doing here
@@ -147,13 +148,18 @@ class PurpleTrader:
                 network.activate(active[self.hd-n])
             out = network.activate(active[0])
             for x in range(len(out)):
+                if x > 0:
+                    if (portfolio.get_total_btc_value_no_sell(end_prices)[0] < portfolio_start):
+                        loss_factor += .005
                 sym = self.hs.coin_dict[x]
                 if (out[x] > .5):
+                    #print("buying " + sym)
                     portfolio.buy_coin(sym, self.hs.currentHists[sym]['open_price'][z])
                 if (out[x] < -.5):
+                    #print("selling " + sym)
                     portfolio.sell_coin(sym, self.hs.currentHists[sym]['open_price'][z])
-                if(z_minus == self.epoch_len - 2):
-                    end_prices[sym] = self.hs.currentHists[sym]['open_price'][z]
+                
+                end_prices[sym] = self.hs.currentHists[sym]['open_price'][z]
                 '''
                 # if this is the last loop of bars
                 if(z > (self.epoch_len+rand_start)-2):
@@ -182,8 +188,10 @@ class PurpleTrader:
         print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
         if result_val[1] == 0:
             ft = .5
+        if result_val[2] > 2:
+            ft = (result_val[0] * 1.02) - loss_factor
         else:
-            ft = result_val[0]
+            ft = result_val[0] - loss_factor
         return ft
 
     def solve(self, network):
@@ -199,7 +207,7 @@ class PurpleTrader:
         return fitness
 
     def eval_fitness(self, genomes, config):
-        r_start = randint(40, (self.hs.hist_full_size - self.hd))
+        r_start = randint(60, (self.hs.hist_full_size - self.hd))
         self.epoch_len = r_start
         print(r_start)
         r_start_2 = 20
@@ -303,8 +311,8 @@ class PurpleTrader:
         self.validate_fitness()
         
 
-pt = PurpleTrader(21, 144, 5)
-pt.run_training("")
+pt = PurpleTrader(21, 144, 1)
+pt.run_training()
 
 
 #run_validation()
