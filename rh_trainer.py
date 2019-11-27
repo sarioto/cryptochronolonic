@@ -21,16 +21,15 @@ class PurpleTrader:
 
     #needs to be initialized so as to allow for 62 outputs that return a coordinate
 
-    # ES-HyperNEAT specific parameters.
-    params = {"initial_depth": 3,
-            "max_depth": 4,
-            "variance_threshold": 0.00013,
-            "band_threshold": 0.00013,
-            "iteration_level": 3,
-            "division_threshold": 0.00013,
+# ES-HyperNEAT specific parameters.
+    params = {"initial_depth": 2,
+            "max_depth": 3,
+            "variance_threshold": 0.03,
+            "band_threshold": 0.3,
+            "iteration_level": 1,
+            "division_threshold": 0.5,
             "max_weight": 8.0,
             "activation": "tanh"}
-
 
     # Config for CPPN.
     config = neat.config.Config(neat.genome.DefaultGenome, neat.reproduction.DefaultReproduction,
@@ -82,6 +81,8 @@ class PurpleTrader:
                 try:
                     sym_data = self.hs.hist_shaped[y][end_idx-x]
                     #print(len(sym_data))
+                    #add bias
+                    sym_data = sym_data + 1.0
                     active += sym_data.tolist()
                 except:
                     print('error')
@@ -189,7 +190,7 @@ class PurpleTrader:
         if result_val[1] == 0:
             ft = .5
         if result_val[2] > 2:
-            ft = (result_val[0] * 1.02) - loss_factor
+            ft = (result_val[0] * 1.1) - loss_factor
         else:
             ft = result_val[0] - loss_factor
         return ft
