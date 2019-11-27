@@ -22,15 +22,15 @@ class PurpleTrader:
     #needs to be initialized so as to allow for 62 outputs that return a coordinate
 
     # ES-HyperNEAT specific parameters.
-    params = {"initial_depth": 3,
-            "max_depth": 4,
-            "variance_threshold": 0.00013,
-            "band_threshold": 0.00013,
-            "iteration_level": 3,
-            "division_threshold": 0.00013,
+# ES-HyperNEAT specific parameters.
+    params = {"initial_depth": 2,
+            "max_depth": 3,
+            "variance_threshold": 0.03,
+            "band_threshold": 0.3,
+            "iteration_level": 1,
+            "division_threshold": 0.5,
             "max_weight": 8.0,
             "activation": "tanh"}
-
 
     # Config for CPPN.
     config = neat.config.Config(neat.genome.DefaultGenome, neat.reproduction.DefaultReproduction,
@@ -193,9 +193,6 @@ class PurpleTrader:
         else:
             ft = result_val[0] - loss_factor
         return ft
-
-    def solve(self, network):
-        return self.evaluate(network) >= self.highest_returns
 
     def trial_run(self):
         r_start = 0
