@@ -21,6 +21,10 @@ class PurpleTrader:
 
     #needs to be initialized so as to allow for 62 outputs that return a coordinate
 
+<<<<<<< HEAD
+=======
+    # ES-HyperNEAT specific parameters.
+>>>>>>> 5186fa70c2fc9baa4ab0e509e32fc994767e27f7
 # ES-HyperNEAT specific parameters.
     params = {"initial_depth": 2,
             "max_depth": 3,
@@ -194,9 +198,6 @@ class PurpleTrader:
         else:
             ft = result_val[0] - loss_factor
         return ft
-
-    def solve(self, network):
-        return self.evaluate(network) >= self.highest_returns
 
     def trial_run(self):
         r_start = 0
