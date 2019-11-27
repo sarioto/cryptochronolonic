@@ -21,12 +21,8 @@ class PurpleTrader:
 
     #needs to be initialized so as to allow for 62 outputs that return a coordinate
 
-<<<<<<< HEAD
-=======
     # ES-HyperNEAT specific parameters.
->>>>>>> 5186fa70c2fc9baa4ab0e509e32fc994767e27f7
-# ES-HyperNEAT specific parameters.
-    params = {"initial_depth": 2,
+    params = {"initial_depth": 1,
             "max_depth": 3,
             "variance_threshold": 0.03,
             "band_threshold": 0.3,
@@ -191,10 +187,8 @@ class PurpleTrader:
         result_val = portfolio.get_total_btc_value(end_prices)
         print("genome id ", g.key, " : ")
         print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
-        if result_val[1] == 0:
-            ft = .5
-        if result_val[2] > 2:
-            ft = (result_val[0] * 1.1) - loss_factor
+        if result_val[2] == 0 :
+            ft = (result_val[0] * .8) - loss_factor
         else:
             ft = result_val[0] - loss_factor
         return ft
