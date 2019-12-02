@@ -6,8 +6,9 @@ def pull_in_file(f_name):
 
 
 if __name__ == '__main__':
-    thist = pull_in_file('7893_hist.txt')
+    thist = pull_in_file('134_hist.txt')
     print(list(thist))
     print(thist.head())
     plt.plot(thist['date'], thist['current_balance '])
+    plt.xticks(rotation=90)
     plt.show()

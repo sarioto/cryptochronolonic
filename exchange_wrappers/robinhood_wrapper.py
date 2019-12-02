@@ -60,6 +60,7 @@ class RobinHoodWrapper(object):
             frame['avg_close_55'] = pd.Series(np.where(frame.close_price.rolling(55).mean() / frame.close_price.rolling(21).mean(), 1, 0),frame.index)
             frame['std_close'] = frame['open_price']/frame['close_price']
             frame['std_high'] = frame['low_price']/frame['high_price']
+            frame = frame.iloc[::-1]
             frame.to_csv("./hist_data/robinhood_train/"+x+".txt")
         return 
 
@@ -102,3 +103,5 @@ class RobinHoodWrapper(object):
         #print(hist_shaped[0][1])
         return coin_dict, currentHists, hist_shaped, hist_full_sized
 
+#rh = RobinHoodWrapper()
+#rh.get_spxl_spxs_hist()

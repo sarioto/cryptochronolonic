@@ -11,7 +11,7 @@ reset_on_extinction   = True
 # node activation options
 activation_default      = tanh
 activation_mutate_rate  = 0.5
-activation_options      = gauss sin tanh
+activation_options      = gauss sin tanh cube
 
 # node aggregation options
 aggregation_default     = sum
@@ -48,7 +48,7 @@ node_delete_prob        = 0.2
 
 # network parameters
 num_hidden              = 0
-num_inputs              = 7
+num_inputs              = 5
 num_outputs             = 1
 
 # node response options
