@@ -15,9 +15,9 @@ class YahooWrapper(object):
     def pull_historicals_three_years(self):
         self.hist_dict = {}
         for s in self.sym_list:
-            yah = Share('SPXL')
+            yah = Share(s)
 
 
-yw = YahooWrapper(['SPXL', 'SPXS'])
+yw = YahooWrapper(['VIX'])
 yw.pull_historicals_three_years()
         

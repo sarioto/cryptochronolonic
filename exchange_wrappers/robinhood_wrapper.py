@@ -6,7 +6,7 @@ import os
 from statistics import mode
 
 class RobinHoodWrapper(object):
-
+    sym_list = ["SPXL", "SPXS", "CBOE"]
     feature_list = ['avg_vol', 'avg_close_13', 'avg_close_21', 'avg_close_55', 'std_close', 'std_high', 'volume']
     def __init__(self, lookback = 55):
         print("reinitializing")
@@ -60,7 +60,7 @@ class RobinHoodWrapper(object):
             frame['avg_close_55'] = pd.Series(np.where(frame.close_price.rolling(55).mean() / frame.close_price.rolling(21).mean(), 1, 0),frame.index)
             frame['std_close'] = frame['open_price']/frame['close_price']
             frame['std_high'] = frame['low_price']/frame['high_price']
-            frame = frame.iloc[::-1]
+            frame = frame.iloc[::-1].reset_index()
             frame.to_csv("./hist_data/robinhood_train/"+x+".txt")
         return 
 
@@ -103,5 +103,6 @@ class RobinHoodWrapper(object):
         #print(hist_shaped[0][1])
         return coin_dict, currentHists, hist_shaped, hist_full_sized
 
+
 #rh = RobinHoodWrapper()
-#rh.get_spxl_spxs_hist()
+#print(rh.load_train_data()[1]["SPXL"])

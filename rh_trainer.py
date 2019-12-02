@@ -198,8 +198,6 @@ class PurpleTrader:
         print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
         if result_val[1] == 0:
             ft = .5
-        if result_val[2] > 2:
-            ft = (result_val[0] * 1.02) - loss_factor
         else:
             ft = result_val[0] - loss_factor
         return ft
@@ -311,7 +309,7 @@ class PurpleTrader:
         
 
 pt = PurpleTrader(1, 144, 1)
-pt.compare_champs()
+pt.run_training()
 
 
 #run_validation()
