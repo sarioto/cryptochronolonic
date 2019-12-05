@@ -175,7 +175,7 @@ class PurpleTrader:
             bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0] 
             if (bal_now < last_val):
                 ft -= 1
-            if (bal_now > last_val):
+            if (bal_now >= last_val):
                 ft += 1
             last_val = bal_now
         result_val = portfolio.get_total_btc_value(end_prices)
@@ -199,7 +199,7 @@ class PurpleTrader:
         return fitness
 
     def eval_fitness(self, genomes, config):
-        r_start = randint(5,20)
+        r_start = randint((self.hs.hist_full_size - self.hd)//2,self.hs.hist_full_size - self.hd)
         self.epoch_len = r_start
         best_g_fit = 0.0
         champ_counter = self.gen_count % 10
@@ -295,9 +295,9 @@ class PurpleTrader:
         self.validate_fitness()
         
 
-pt = PurpleTrader(5, 144, 15)
-pt.compare_champs()
-#pt.run_training("15")
+pt = PurpleTrader(5, 144, 35)
+#pt.compare_champs()
+pt.run_training("35")
 
 
 #run_validation()
