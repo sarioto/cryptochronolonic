@@ -165,17 +165,17 @@ class PurpleTrader:
                         loss_factor += .005
                 sym = self.hs.coin_dict[x]
                 if (out[x] > .5):
-                    #print("buying " + sym)
+                    print("buying " + sym)
                     portfolio.buy_coin(sym, self.hs.currentHists[sym]['open_price'][z])
                 if (out[x] < -.5):
-                    #print("selling " + sym)
+                    print("selling " + sym)
                     portfolio.sell_coin(sym, self.hs.currentHists[sym]['open_price'][z])
                 
                 end_prices[sym] = self.hs.currentHists[sym]['open_price'][z]
             bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0] 
-            if (bal_now < last_val):
+            if (bal_now <= last_val):
                 ft -= 1
-            if (bal_now >= last_val):
+            if (bal_now > last_val):
                 ft += 1
             last_val = bal_now
         result_val = portfolio.get_total_btc_value(end_prices)
@@ -199,8 +199,8 @@ class PurpleTrader:
         return fitness
 
     def eval_fitness(self, genomes, config):
-        r_start = randint((self.hs.hist_full_size - self.hd)//2,self.hs.hist_full_size - self.hd)
-        self.epoch_len = r_start
+        r_start = randint(20,self.hs.hist_full_size - self.hd)
+        self.epoch_len = randint(5,20)
         best_g_fit = 0.0
         champ_counter = self.gen_count % 10
         #print(champ_counter) 
@@ -295,9 +295,9 @@ class PurpleTrader:
         self.validate_fitness()
         
 
-pt = PurpleTrader(5, 144, 35)
-#pt.compare_champs()
-pt.run_training("35")
+pt = PurpleTrader(5, 144, 21)
+pt.compare_champs()
+pt.run_training("21")
 
 
 #run_validation()
