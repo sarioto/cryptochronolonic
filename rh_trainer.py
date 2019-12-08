@@ -238,7 +238,7 @@ class PurpleTrader:
         return
 
     def compare_champs(self):
-        r_start = 20
+        r_start = self.hs.hist_full_size - self.hd
         self.epoch_len = r_start
         print(self.end_idx)
         champ_fit = 0
