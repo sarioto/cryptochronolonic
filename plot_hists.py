@@ -6,7 +6,7 @@ def pull_in_file(f_name):
 
 
 if __name__ == '__main__':
-    thist = pull_in_file('134_hist.txt')
+    thist = pull_in_file('817_hist.txt')
     print(list(thist))
     print(thist)
     thist['date'] = thist['date'].str[:-6]

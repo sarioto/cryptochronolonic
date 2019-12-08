@@ -112,14 +112,14 @@ class PurpleTrader:
                 #TODO add comments to clarify all the 
                 #shit im doing here
                 z = rand_start - z_minus
-                active = self.get_net_input(z)
+                active = self.get_one_epoch_input(z)
                 buy_signals = []
                 buy_syms = []
                 sell_syms = []
                 sell_signals = []
                 network.reset()
-                for x in range(0, es.activations):
-                    out = network.activate(active)
+                for n in range(1, self.hd+1):
+                    out = network.activate(active[self.hd-n])
                 for x in range(len(out)):
                     sym = self.hs.coin_dict[x]
                     if (out[x] > .5):
@@ -145,61 +145,48 @@ class PurpleTrader:
         buys = 0
         sells = 0
         loss_factor = 0
+        ft = 0
         for z_minus in range(0, self.epoch_len - 1):
             #TODO add comments to clarify all the 
             #shit im doing here
+            last_val = portfolio_start
             z = rand_start - z_minus
-            active = self.get_net_input(z)
+            active = self.get_one_epoch_input(z)
             buy_signals = []
             buy_syms = []
             sell_syms = []
             sell_signals = []
             network.reset()
-            for x in range(0, es.activations):
-                out = network.activate(active)
+            for n in range(1, self.hd+1):
+                out = network.activate(active[self.hd-n])
             for x in range(len(out)):
                 if x > 0:
                     if (portfolio.get_total_btc_value_no_sell(end_prices)[0] < portfolio_start):
                         loss_factor += .005
                 sym = self.hs.coin_dict[x]
                 if (out[x] > .5):
-                    #print("buying " + sym)
+                    print("buying " + sym)
                     portfolio.buy_coin(sym, self.hs.currentHists[sym]['open_price'][z])
                 if (out[x] < -.5):
-                    #print("selling " + sym)
+                    print("selling " + sym)
                     portfolio.sell_coin(sym, self.hs.currentHists[sym]['open_price'][z])
                 
                 end_prices[sym] = self.hs.currentHists[sym]['open_price'][z]
-                '''
-                # if this is the last loop of bars
-                if(z > (self.epoch_len+rand_start)-2):
-                    sym = self.hs.coin_dict[x]
-                    end_prices[sym] = self.hs.currentHists[sym]['open_price'][self.epoch_len+rand_start]
-                if(out[x] > .5):
-                    buy_signals.append(out[x])
-                    buy_syms.append(self.hs.coin_dict[x])
-                if(out[x] < -.5):
-                    sell_signals.append(out[x])
-                    sell_syms.append(self.hs.coin_dict[x])
-            #rng = iter(shuffle(rng))
-            sorted_buys = np.argsort(buy_signals)[::-1]
-            sorted_sells = np.argsort(sell_signals)
-            #print(len(sorted_shit), len(key_list))
-            for x in sorted_sells:
-                sym = sell_syms[x]
-                portfolio.sell_coin(sym, self.hs.currentHists[sym]['open_price'][z])
-            for x in sorted_buys:
-                sym = buy_syms[x]
-                #portfolio.target_amount = .1 + (out[x] * .1)
-                portfolio.buy_coin(sym, self.hs.currentHists[sym]['open_price'][z])
-            '''
+            bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0] 
+            if (bal_now <= last_val):
+                ft -= 1
+            if (bal_now > last_val):
+                ft += 1
+            last_val = bal_now
         result_val = portfolio.get_total_btc_value(end_prices)
         print("genome id ", g.key, " : ")
         print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
+        '''
         if result_val[1] == 0:
             ft = .5
         else:
             ft = result_val[0] - loss_factor
+        '''
         return ft
 
     def trial_run(self):
@@ -212,8 +199,8 @@ class PurpleTrader:
         return fitness
 
     def eval_fitness(self, genomes, config):
-        r_start = randint(60, (self.hs.hist_full_size - self.hd))
-        self.epoch_len = r_start
+        r_start = randint(20,self.hs.hist_full_size - self.hd)
+        self.epoch_len = randint(5,20)
         best_g_fit = 0.0
         champ_counter = self.gen_count % 10
         #print(champ_counter) 
@@ -308,8 +295,9 @@ class PurpleTrader:
         self.validate_fitness()
         
 
-pt = PurpleTrader(1, 144, 1)
-pt.run_training()
+pt = PurpleTrader(5, 144, 21)
+pt.compare_champs()
+pt.run_training("21")
 
 
 #run_validation()
