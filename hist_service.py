@@ -552,7 +552,16 @@ class HistWorker:
         self.coin_dict, self.currentHists, self.hist_shaped, self.hist_full_size = self.rh.load_train_data()
         return
 
+    def pull_kraken_hist(self):
+        self.kw.pull_kraken_hist_usd()
+
+    def get_kraken_train(self):
+        self.coin_dict, self.currentHists, self.hist_shaped, self.hist_full_size = self.kw.get_train_frames()
+        return
+
 #hs = HistWorker()
+#hs.get_kraken_train()
+#print(hs.coin_dict)
 #hs.rh.get_spxl_spxs_hist()
 #hs.pull_robinhood_train_data()
 

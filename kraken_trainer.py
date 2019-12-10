@@ -4,7 +4,6 @@ import random
 import sys, os
 from functools import partial
 from itertools import product
-from pytorch_neat.cppn import create_cppn
 # Libs
 import numpy as np
 from hist_service import HistWorker
@@ -23,12 +22,12 @@ class PurpleTrader:
     #needs to be initialized so as to allow for 62 outputs that return a coordinate
 
     # ES-HyperNEAT specific parameters.
-    params = {"initial_depth": 3,
-            "max_depth": 4,
-            "variance_threshold": 0.00013,
-            "band_threshold": 0.00013,
+    params = {"initial_depth": 1,
+            "max_depth": 3,
+            "variance_threshold": 0.3,
+            "band_threshold": 0.3,
             "iteration_level": 3,
-            "division_threshold": 0.00013,
+            "division_threshold": 0.3,
             "max_weight": 8.0,
             "activation": "tanh"}
 
@@ -54,8 +53,7 @@ class PurpleTrader:
         self.in_shapes = []
         self.out_shapes = []
         self.hs = HistWorker()
-        self.hs.pull_polo_usd(144)
-        self.hs.combine_polo_usd_frames()
+        self.hs.get_kraken_train()
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
         self.but_target = .1
@@ -150,9 +148,9 @@ class PurpleTrader:
         return fitness
 
     def eval_fitness(self, genomes, config):
-        self.epoch_len = 89
+        self.epoch_len = randint(42, 42*4)
         r_start = randint(0+self.hd, self.hs.hist_full_size - self.epoch_len)
-        r_start_2 = self.hs.hist_full_size - self.epoch_len-1
+        #r_start_2 = self.hs.hist_full_size - self.epoch_len-1
         best_g_fit = 0.0
         champ_counter = self.gen_count % 10 
         #img_count = 0
@@ -161,8 +159,8 @@ class PurpleTrader:
             network = ESNetwork(self.subStrate, cppn, self.params, self.hd)
             net = network.create_phenotype_network_nd()
             train_ft = self.evaluate(net, network, r_start, g)
-            validate_ft = self.evaluate(net, network, r_start_2, g)
-            g.fitness = (train_ft+validate_ft)/2
+            #validate_ft = self.evaluate(net, network, r_start_2, g)
+            g.fitness = train_ft
             if(g.fitness > best_g_fit):
                 best_g_fit = g.fitness
                 with open("./champ_data/latest_greatest"+str(champ_counter)+".pkl", 'wb') as output:
@@ -248,6 +246,7 @@ class PurpleTrader:
 
     def run_validation(self):
         self.validate_fitness()
-pt = PurpleTrader(34, 144, 143)
-pt.run_training("233")
+
+pt = PurpleTrader(21, 144, 1)
+pt.run_training()
 #run_validation()

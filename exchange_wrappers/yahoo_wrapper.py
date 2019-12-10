@@ -18,6 +18,6 @@ class YahooWrapper(object):
             yah = Share(s)
 
 
-yw = YahooWrapper(['VIX'])
+yw = YahooWrapper(['SPY'])
 yw.pull_historicals_three_years()
         

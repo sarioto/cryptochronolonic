@@ -5,6 +5,7 @@ import numpy as np
 import requests
 from datetime import date, timedelta, datetime
 import os
+from statistics import mode
 
 class KrakenWrapper(object):
     endpoints = {
@@ -28,6 +29,15 @@ class KrakenWrapper(object):
             if i[-(len(base_pair)):] == base_pair:
                 asset_list.append(i)
         return asset_list
+
+    def get_file_symbol(self, sym_full):
+        stripped = sym_full.split(".")[0][:-3]
+        return stripped
+    
+    def test_get_file_symbol(self):
+        df_dict = self.load_hist_files()
+        for x in df_dict:
+            print(self.get_file_symbol(x))
 
     def pull_kraken_hist_usd(self):
         sym_list = self.get_assets("USD")
@@ -71,41 +81,47 @@ class KrakenWrapper(object):
         return df_dict
 
 
-    def combine_polo_usd_frames(self, restrict_val = 0):
+    def get_train_frames(self, restrict_val = 0):
         df_dict = self.load_hist_files()
         coin_and_hist_index = 0
         file_lens = []
+        currentHists = {}
+        hist_shaped = {}
+        coin_dict = {}
+        vollist = []
+        prefixes = []
         for y in df_dict:
-            df = self.get_polo_usd_frame(df_dict[y])
+            df = df_dict[y]
             df_len = len(df)
             #print(df.head())
             file_lens.append(df_len)
         mode_len = mode(file_lens)
         print(mode_len)
-        self.hist_full_size = mode_len
+        hist_full_size = mode_len
         vollist = []
         prefixes = []
         for x in df_dict:
             df = df_dict[x]
-            col_prefix = self.get_file_symbol(fileNames[x])
+            col_prefix = self.get_file_symbol(x)
             #as_array = np.array(df)
             if(len(df) == mode_len):
                 #print(as_array)
                 prefixes.append(col_prefix)
-                self.currentHists[col_prefix] = df
-                vollist.append(df['volume'][0])
+                currentHists[col_prefix] = df
+                vollist.append(df['vol'][0])
         if restrict_val != 0:
             vollist = np.argsort(vollist)[-restrict_val:][::-1]
         vollist = np.argsort(vollist)[::-1]
-        #print(vollist)
         for ix in vollist:
             print(prefixes[ix])
-            df['volume'] = (df['volume'] - df['volume'].mean())/(df['volume'].max() - df['volume'].min())
-            df = self.currentHists[prefixes[ix]][['volume', 'std_high', 'std_close', 'avg_vol_3', 'avg_close_3', 'avg_close_13', 'avg_close_34']].copy()
+            df['vol'] = (df['vol'] - df['vol'].mean())/(df['vol'].max() - df['vol'].min())
+            df = currentHists[prefixes[ix]][['vol', 'std_high', 'std_close', 'avg_vol_3', 'avg_close_3', 'avg_close_13', 'avg_close_34']].copy()
             #norm_df = (df - df.mean()) / (df.max() - df.min())
             as_array=np.array(df)
-            self.hist_shaped[coin_and_hist_index] = as_array
-            self.coin_dict[coin_and_hist_index] = prefixes[ix]
+            hist_shaped[coin_and_hist_index] = as_array
+            coin_dict[coin_and_hist_index] = prefixes[ix]
             coin_and_hist_index += 1
-        self.hist_shaped = pd.Series(self.hist_shaped)
+        hist_shaped = pd.Series(hist_shaped)
+        return coin_dict, currentHists, hist_shaped, hist_full_size
+
 
