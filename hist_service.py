@@ -554,7 +554,7 @@ class HistWorker:
 
 #hs = HistWorker()
 #hs.rh.get_spxl_spxs_hist()
-#hs.rh.load_train_data()
+#hs.pull_robinhood_train_data()
 
 #hs.pull_polo_usd(144)
 #hs.pull_polo_usd_live(60)

@@ -146,10 +146,10 @@ class PurpleTrader:
         sells = 0
         loss_factor = 0
         ft = 0
+        last_val = portfolio_start
         for z_minus in range(0, self.epoch_len - 1):
             #TODO add comments to clarify all the 
             #shit im doing here
-            last_val = portfolio_start
             z = rand_start - z_minus
             active = self.get_one_epoch_input(z)
             buy_signals = []
@@ -172,11 +172,8 @@ class PurpleTrader:
                     portfolio.sell_coin(sym, self.hs.currentHists[sym]['open_price'][z])
                 
                 end_prices[sym] = self.hs.currentHists[sym]['open_price'][z]
-            bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0] 
-            if (bal_now <= last_val):
-                ft -= 1
-            if (bal_now > last_val):
-                ft += 1
+            bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0]
+            ft += bal_now - last_val 
             last_val = bal_now
         result_val = portfolio.get_total_btc_value(end_prices)
         print("genome id ", g.key, " : ")
@@ -225,8 +222,8 @@ class PurpleTrader:
         return
 
     def compare_champs(self):
-        r_start = self.hs.hist_full_size - self.hd
-        self.epoch_len = r_start
+        r_start = 40
+        self.epoch_len = 40
         print(self.end_idx)
         champ_fit = 0
         for f in os.listdir("./champ_data"):
@@ -295,9 +292,9 @@ class PurpleTrader:
         self.validate_fitness()
         
 
-pt = PurpleTrader(5, 144, 21)
-pt.compare_champs()
-pt.run_training("21")
+pt = PurpleTrader(5, 144, 1)
+#pt.compare_champs()
+pt.run_training()
 
 
 #run_validation()
