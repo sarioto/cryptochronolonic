@@ -81,7 +81,7 @@ class PurpleTrader:
             #print(self.outputs)
             for y in range(0, self.outputs):
                 try:
-                    sym_data = self.hs.hist_shaped[y][end_idx-x]
+                    sym_data = self.hs.hist_shaped[y][end_idx + x]
                     #print(len(sym_data))
                     active += sym_data.tolist()
                 except:
@@ -146,10 +146,10 @@ class PurpleTrader:
         sells = 0
         loss_factor = 0
         ft = 0
+        last_val = portfolio_start
         for z_minus in range(0, self.epoch_len - 1):
             #TODO add comments to clarify all the 
             #shit im doing here
-            last_val = portfolio_start
             z = rand_start - z_minus
             active = self.get_one_epoch_input(z)
             buy_signals = []
@@ -296,7 +296,7 @@ class PurpleTrader:
         
 
 pt = PurpleTrader(5, 144, 21)
-pt.compare_champs()
+#pt.compare_champs()
 pt.run_training("21")
 
 
