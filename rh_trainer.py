@@ -81,7 +81,11 @@ class PurpleTrader:
             #print(self.outputs)
             for y in range(0, self.outputs):
                 try:
+<<<<<<< HEAD
                     sym_data = self.hs.hist_shaped[y][end_idx + x]
+=======
+                    sym_data = self.hs.hist_shaped[y][end_idx+x]
+>>>>>>> bbb5e3575f5c6ccc439630bc7d4f5954140a5248
                     #print(len(sym_data))
                     active += sym_data.tolist()
                 except:
@@ -160,23 +164,17 @@ class PurpleTrader:
             for n in range(1, self.hd+1):
                 out = network.activate(active[self.hd-n])
             for x in range(len(out)):
-                if x > 0:
-                    if (portfolio.get_total_btc_value_no_sell(end_prices)[0] < portfolio_start):
-                        loss_factor += .005
                 sym = self.hs.coin_dict[x]
                 if (out[x] > .5):
-                    print("buying " + sym)
+                    #print("buying " + sym)
                     portfolio.buy_coin(sym, self.hs.currentHists[sym]['open_price'][z])
                 if (out[x] < -.5):
-                    print("selling " + sym)
+                    #print("selling " + sym)
                     portfolio.sell_coin(sym, self.hs.currentHists[sym]['open_price'][z])
                 
                 end_prices[sym] = self.hs.currentHists[sym]['open_price'][z]
-            bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0] 
-            if (bal_now <= last_val):
-                ft -= 1
-            if (bal_now > last_val):
-                ft += 1
+            bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0]
+            ft += bal_now - last_val 
             last_val = bal_now
         result_val = portfolio.get_total_btc_value(end_prices)
         print("genome id ", g.key, " : ")
@@ -225,8 +223,8 @@ class PurpleTrader:
         return
 
     def compare_champs(self):
-        r_start = self.hs.hist_full_size - self.hd
-        self.epoch_len = r_start
+        r_start = 40
+        self.epoch_len = 40
         print(self.end_idx)
         champ_fit = 0
         for f in os.listdir("./champ_data"):
@@ -295,9 +293,15 @@ class PurpleTrader:
         self.validate_fitness()
         
 
+<<<<<<< HEAD
 pt = PurpleTrader(5, 144, 21)
 #pt.compare_champs()
 pt.run_training("21")
+=======
+pt = PurpleTrader(5, 144, 1)
+pt.compare_champs()
+#pt.run_training()
+>>>>>>> bbb5e3575f5c6ccc439630bc7d4f5954140a5248
 
 
 #run_validation()

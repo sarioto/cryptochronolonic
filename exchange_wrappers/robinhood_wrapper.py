@@ -105,4 +105,5 @@ class RobinHoodWrapper(object):
 
 
 #rh = RobinHoodWrapper()
+#rh.get_spxl_spxs_hist()
 #print(rh.load_train_data()[1]["SPXL"])
