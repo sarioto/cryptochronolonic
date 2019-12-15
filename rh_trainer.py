@@ -81,7 +81,7 @@ class PurpleTrader:
             #print(self.outputs)
             for y in range(0, self.outputs):
                 try:
-                    sym_data = self.hs.hist_shaped[y][end_idx-x]
+                    sym_data = self.hs.hist_shaped[y][end_idx+x]
                     #print(len(sym_data))
                     active += sym_data.tolist()
                 except:
@@ -160,15 +160,12 @@ class PurpleTrader:
             for n in range(1, self.hd+1):
                 out = network.activate(active[self.hd-n])
             for x in range(len(out)):
-                if x > 0:
-                    if (portfolio.get_total_btc_value_no_sell(end_prices)[0] < portfolio_start):
-                        loss_factor += .005
                 sym = self.hs.coin_dict[x]
                 if (out[x] > .5):
-                    print("buying " + sym)
+                    #print("buying " + sym)
                     portfolio.buy_coin(sym, self.hs.currentHists[sym]['open_price'][z])
                 if (out[x] < -.5):
-                    print("selling " + sym)
+                    #print("selling " + sym)
                     portfolio.sell_coin(sym, self.hs.currentHists[sym]['open_price'][z])
                 
                 end_prices[sym] = self.hs.currentHists[sym]['open_price'][z]
@@ -293,8 +290,8 @@ class PurpleTrader:
         
 
 pt = PurpleTrader(5, 144, 1)
-#pt.compare_champs()
-pt.run_training()
+pt.compare_champs()
+#pt.run_training()
 
 
 #run_validation()

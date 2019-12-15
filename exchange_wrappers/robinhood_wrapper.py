@@ -49,6 +49,7 @@ class RobinHoodWrapper(object):
         df_dict["SPXS"] = df
         for x in df_dict:
             frame = df_dict[x]
+            frame = frame.iloc[::-1].reset_index()
             frame["close_price"] = pd.to_numeric(frame["close_price"])
             frame["low_price"] = pd.to_numeric(frame["low_price"])
             frame["high_price"] = pd.to_numeric(frame["high_price"])
@@ -60,7 +61,6 @@ class RobinHoodWrapper(object):
             frame['avg_close_55'] = pd.Series(np.where(frame.close_price.rolling(55).mean() / frame.close_price.rolling(21).mean(), 1, 0),frame.index)
             frame['std_close'] = frame['open_price']/frame['close_price']
             frame['std_high'] = frame['low_price']/frame['high_price']
-            frame = frame.iloc[::-1].reset_index()
             frame.to_csv("./hist_data/robinhood_train/"+x+".txt")
         return 
 
@@ -105,4 +105,5 @@ class RobinHoodWrapper(object):
 
 
 #rh = RobinHoodWrapper()
+#rh.get_spxl_spxs_hist()
 #print(rh.load_train_data()[1]["SPXL"])
