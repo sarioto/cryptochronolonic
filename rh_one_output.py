@@ -61,7 +61,8 @@ class PurpleTrader:
         self.end_idx = len(self.hs.hist_shaped[0])
         self.but_target = 1.0
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
-        self.outputs = self.hs.hist_shaped.shape[0]
+        self.outputs = 1
+        self.num_syms = self.hs.hist_shaped.shape[0]
         sign = 1
         for ix in range(1,self.outputs+1):
             sign = sign *-1
@@ -79,7 +80,7 @@ class PurpleTrader:
         for x in range(1, self.hd+1):
             active = []
             #print(self.outputs)
-            for y in range(0, self.outputs):
+            for y in range(0, self.num_syms):
                 try:
                     sym_data = self.hs.hist_shaped[y][end_idx + x]
                     #print(len(sym_data))
@@ -159,16 +160,17 @@ class PurpleTrader:
             network.reset()
             for n in range(1, self.hd+1):
                 out = network.activate(active[self.hd-n])
-            for x in range(len(out)):
-                sym = self.hs.coin_dict[x]
-                if (out[x] > .5):
-                    #print("buying " + sym)
-                    portfolio.buy_coin(sym, self.hs.currentHists[sym]['open_price'][z])
-                if (out[x] < -.5):
-                    #print("selling " + sym)
-                    portfolio.sell_coin(sym, self.hs.currentHists[sym]['open_price'][z])
-                
-                end_prices[sym] = self.hs.currentHists[sym]['open_price'][z]
+            if (out[0] > .5):
+                #print("buying " + sym)
+                portfolio.buy_coin("SPXL", self.hs.currentHists["SPXL"]['close_price'][z])
+            if (out[0] < -.5):
+                #print("selling " + sym)
+                portfolio.buy_coin("SPXS", self.hs.currentHists["SPXS"]['close_price'][z])
+            if (out[0] > -.5 and out[0] < .5):
+                portfolio.sell_coin("SPXL", self.hs.currentHists["SPXL"]['close_price'][z])
+                portfolio.sell_coin("SPXS", self.hs.currentHists["SPXS"]['close_price'][z])
+            end_prices["SPXS"] = self.hs.currentHists["SPXS"]['close_price'][z]
+            end_prices["SPXL"] = self.hs.currentHists["SPXL"]['close_price'][z]
             bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0]
             ft += bal_now - last_val 
             last_val = bal_now
@@ -194,7 +196,7 @@ class PurpleTrader:
 
     def eval_fitness(self, genomes, config):
         r_start = randint(20,self.hs.hist_full_size - self.hd)
-        self.epoch_len = randint(5,20)
+        self.epoch_len = randint(10,40)
         best_g_fit = 0.0
         champ_counter = self.gen_count % 10
         #print(champ_counter) 
@@ -223,9 +225,9 @@ class PurpleTrader:
         self.epoch_len = 40
         print(self.end_idx)
         champ_fit = 0
-        for f in os.listdir("./champ_data"):
+        for f in os.listdir("./champ_data/stonks"):
             if(f != "lastest_greatest.pkl"):
-                champ_file = open("./champ_data/"+f,'rb')
+                champ_file = open("./champ_data/stonks/"+f,'rb')
                 g = pickle.load(champ_file)
                 champ_file.close()
                 cppn = neat.nn.FeedForwardNetwork.create(g, self.config)
@@ -233,7 +235,7 @@ class PurpleTrader:
                 net = network.create_phenotype_network_nd()
                 g.fitness = self.evaluate_champ(net, network, r_start, g)
                 if (g.fitness > champ_fit):
-                    with open("./champ_data/latest_greatest.pkl", 'wb') as output:
+                    with open("./champ_data/stonks/latest_greatest.pkl", 'wb') as output:
                         pickle.dump(g, output)
         print(champ_fit)
         return
