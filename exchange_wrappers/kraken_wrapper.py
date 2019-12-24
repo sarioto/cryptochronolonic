@@ -79,7 +79,8 @@ class KrakenWrapper(object):
             frame['avg_close_34'] = pd.Series(np.where(frame.close.rolling(55).mean() / frame.close.rolling(21).mean(), 1, 0),frame.index)
             frame['std_close'] = frame['open']/frame['close']
             frame['std_high'] = frame['low']/frame['close']
-            frame.dropna()
+            frame.dropna(inplace=True)
+            frame.dropna(value=0.0, inplace=True)
             df_dict[sym] = frame
         return df_dict
 

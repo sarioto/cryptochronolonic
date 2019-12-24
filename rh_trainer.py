@@ -118,8 +118,27 @@ class PurpleTrader:
                 sell_syms = []
                 sell_signals = []
                 network.reset()
+                #activate net fully
                 for n in range(1, self.hd+1):
                     out = network.activate(active[self.hd-n])
+                for x in range(len(out)):
+                    sym = self.hs.coin_dict[x]
+                    end_prices[sym] = self.hs.currentHists[sym]['close_price'][z]
+                    if(out[x] > .5):
+                        buy_signals.append(out[x])
+                        buy_syms.append(sym)
+                    if(out[x] < -.5):
+                        sell_signals.append(out[x])
+                        sell_syms.append(sym)
+                sorted_buys = np.argsort(buy_signals)[::-1]
+                sorted_sells = np.argsort(sell_signals)
+                #print(len(sorted_shit), len(key_list))
+                for x in sorted_sells:
+                    sym = sell_syms[x]
+                    portfolio.sell_coin(sym, self.hs.currentHists[sym]['close_price'][z])
+                for x in sorted_buys:
+                    sym = buy_syms[x]
+                    portfolio.buy_coin(sym, self.hs.currentHists[sym]['close_price'][z])
                 for x in range(len(out)):
                     sym = self.hs.coin_dict[x]
                     if (out[x] > .5):
@@ -161,14 +180,22 @@ class PurpleTrader:
                 out = network.activate(active[self.hd-n])
             for x in range(len(out)):
                 sym = self.hs.coin_dict[x]
-                if (out[x] > .5):
-                    #print("buying " + sym)
-                    portfolio.buy_coin(sym, self.hs.currentHists[sym]['open_price'][z])
-                if (out[x] < -.5):
-                    #print("selling " + sym)
-                    portfolio.sell_coin(sym, self.hs.currentHists[sym]['open_price'][z])
-                
-                end_prices[sym] = self.hs.currentHists[sym]['open_price'][z]
+                end_prices[sym] = self.hs.currentHists[sym]['close_price'][z]
+                if(out[x] > .5):
+                    buy_signals.append(out[x])
+                    buy_syms.append(sym)
+                if(out[x] < -.5):
+                    sell_signals.append(out[x])
+                    sell_syms.append(sym)
+            sorted_buys = np.argsort(buy_signals)[::-1]
+            sorted_sells = np.argsort(sell_signals)
+            #print(len(sorted_shit), len(key_list))
+            for x in sorted_sells:
+                sym = sell_syms[x]
+                portfolio.sell_coin(sym, self.hs.currentHists[sym]['close_price'][z])
+            for x in sorted_buys:
+                sym = buy_syms[x]
+                portfolio.buy_coin(sym, self.hs.currentHists[sym]['close_price'][z])
             bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0]
             ft += bal_now - last_val 
             last_val = bal_now
@@ -223,9 +250,9 @@ class PurpleTrader:
         self.epoch_len = 40
         print(self.end_idx)
         champ_fit = 0
-        for f in os.listdir("./champ_data"):
+        for f in os.listdir("./champ_data/stonks"):
             if(f != "lastest_greatest.pkl"):
-                champ_file = open("./champ_data/"+f,'rb')
+                champ_file = open("./champ_data/stonks/"+f,'rb')
                 g = pickle.load(champ_file)
                 champ_file.close()
                 cppn = neat.nn.FeedForwardNetwork.create(g, self.config)
@@ -233,7 +260,7 @@ class PurpleTrader:
                 net = network.create_phenotype_network_nd()
                 g.fitness = self.evaluate_champ(net, network, r_start, g)
                 if (g.fitness > champ_fit):
-                    with open("./champ_data/latest_greatest.pkl", 'wb') as output:
+                    with open("./champ_data/stonks/latest_greatest.pkl", 'wb') as output:
                         pickle.dump(g, output)
         print(champ_fit)
         return
@@ -289,9 +316,9 @@ class PurpleTrader:
         self.validate_fitness()
         
 
-pt = PurpleTrader(5, 144, 1)
+pt = PurpleTrader(5, 144, 5)
 pt.compare_champs()
-#pt.run_training()
+#pt.run_training("5")
 
 
 #run_validation()
