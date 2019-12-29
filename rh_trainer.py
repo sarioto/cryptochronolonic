@@ -81,11 +81,7 @@ class PurpleTrader:
             #print(self.outputs)
             for y in range(0, self.outputs):
                 try:
-<<<<<<< HEAD
-                    sym_data = self.hs.hist_shaped[y][end_idx + x]
-=======
                     sym_data = self.hs.hist_shaped[y][end_idx+x]
->>>>>>> bbb5e3575f5c6ccc439630bc7d4f5954140a5248
                     #print(len(sym_data))
                     active += sym_data.tolist()
                 except:
@@ -293,15 +289,9 @@ class PurpleTrader:
         self.validate_fitness()
         
 
-<<<<<<< HEAD
-pt = PurpleTrader(5, 144, 21)
-#pt.compare_champs()
-pt.run_training("21")
-=======
 pt = PurpleTrader(5, 144, 1)
 pt.compare_champs()
 #pt.run_training()
->>>>>>> bbb5e3575f5c6ccc439630bc7d4f5954140a5248
 
 
 #run_validation()
