@@ -61,7 +61,8 @@ class PurpleTrader:
         self.end_idx = len(self.hs.hist_shaped[0])
         self.but_target = 1.0
         self.inputs = self.hs.hist_shaped.shape[0]*(self.hs.hist_shaped[0].shape[1])
-        self.outputs = self.hs.hist_shaped.shape[0]
+        self.outputs = 1
+        self.num_syms = self.hs.hist_shaped.shape[0]
         sign = 1
         for ix in range(1,self.outputs+1):
             sign = sign *-1
@@ -79,7 +80,7 @@ class PurpleTrader:
         for x in range(1, self.hd+1):
             active = []
             #print(self.outputs)
-            for y in range(0, self.outputs):
+            for y in range(0, self.num_syms):
                 try:
                     sym_data = self.hs.hist_shaped[y][end_idx + x]
                     #print(len(sym_data))
@@ -118,27 +119,8 @@ class PurpleTrader:
                 sell_syms = []
                 sell_signals = []
                 network.reset()
-                #activate net fully
                 for n in range(1, self.hd+1):
                     out = network.activate(active[self.hd-n])
-                for x in range(len(out)):
-                    sym = self.hs.coin_dict[x]
-                    end_prices[sym] = self.hs.currentHists[sym]['close_price'][z]
-                    if(out[x] > .5):
-                        buy_signals.append(out[x])
-                        buy_syms.append(sym)
-                    if(out[x] < -.5):
-                        sell_signals.append(out[x])
-                        sell_syms.append(sym)
-                sorted_buys = np.argsort(buy_signals)[::-1]
-                sorted_sells = np.argsort(sell_signals)
-                #print(len(sorted_shit), len(key_list))
-                for x in sorted_sells:
-                    sym = sell_syms[x]
-                    portfolio.sell_coin(sym, self.hs.currentHists[sym]['close_price'][z])
-                for x in sorted_buys:
-                    sym = buy_syms[x]
-                    portfolio.buy_coin(sym, self.hs.currentHists[sym]['close_price'][z])
                 for x in range(len(out)):
                     sym = self.hs.coin_dict[x]
                     if (out[x] > .5):
@@ -178,32 +160,29 @@ class PurpleTrader:
             network.reset()
             for n in range(1, self.hd+1):
                 out = network.activate(active[self.hd-n])
-            for x in range(len(out)):
-                sym = self.hs.coin_dict[x]
-                end_prices[sym] = self.hs.currentHists[sym]['close_price'][z]
-                if(out[x] > .5):
-                    buy_signals.append(out[x])
-                    buy_syms.append(sym)
-                if(out[x] < -.5):
-                    sell_signals.append(out[x])
-                    sell_syms.append(sym)
-            sorted_buys = np.argsort(buy_signals)[::-1]
-            sorted_sells = np.argsort(sell_signals)
-            #print(len(sorted_shit), len(key_list))
-            for x in sorted_sells:
-                sym = sell_syms[x]
-                portfolio.sell_coin(sym, self.hs.currentHists[sym]['close_price'][z])
-            for x in sorted_buys:
-                sym = buy_syms[x]
-                portfolio.buy_coin(sym, self.hs.currentHists[sym]['close_price'][z])
+            if (out[0] > .5):
+                #print("buying " + sym)
+                portfolio.buy_coin("SPXL", self.hs.currentHists["SPXL"]['close_price'][z])
+            if (out[0] < -.5):
+                #print("selling " + sym)
+                portfolio.buy_coin("SPXS", self.hs.currentHists["SPXS"]['close_price'][z])
+            if (out[0] > -.5 and out[0] < .5):
+                portfolio.sell_coin("SPXL", self.hs.currentHists["SPXL"]['close_price'][z])
+                portfolio.sell_coin("SPXS", self.hs.currentHists["SPXS"]['close_price'][z])
+            end_prices["SPXS"] = self.hs.currentHists["SPXS"]['close_price'][z]
+            end_prices["SPXL"] = self.hs.currentHists["SPXL"]['close_price'][z]
             bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0]
             ft += bal_now - last_val 
             last_val = bal_now
         result_val = portfolio.get_total_btc_value(end_prices)
         print("genome id ", g.key, " : ")
         print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
-        if result_val[0] == portfolio_start:
-            ft = ft*.9
+        '''
+        if result_val[1] == 0:
+            ft = .5
+        else:
+            ft = result_val[0] - loss_factor
+        '''
         return ft
 
     def trial_run(self):
@@ -217,7 +196,7 @@ class PurpleTrader:
 
     def eval_fitness(self, genomes, config):
         r_start = randint(20,self.hs.hist_full_size - self.hd)
-        self.epoch_len = randint(5,20)
+        self.epoch_len = randint(10,40)
         best_g_fit = 0.0
         champ_counter = self.gen_count % 10
         #print(champ_counter) 
