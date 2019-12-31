@@ -216,8 +216,8 @@ class PurpleTrader:
         return fitness
 
     def eval_fitness(self, genomes, config):
-        r_start = randint(20,self.hs.hist_full_size - self.hd)
-        self.epoch_len = randint(5,20)
+        r_start = randint(55,self.hs.hist_full_size - self.hd)
+        self.epoch_len = randint(21,55)
         best_g_fit = 0.0
         champ_counter = self.gen_count % 10
         #print(champ_counter) 
@@ -312,9 +312,9 @@ class PurpleTrader:
         self.validate_fitness()
         
 
-pt = PurpleTrader(5, 144, 5)
+pt = PurpleTrader(5, 144, 1)
+
 pt.compare_champs()
-#pt.run_training("5")
 
 
 #run_validation()
