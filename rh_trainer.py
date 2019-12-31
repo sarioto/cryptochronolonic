@@ -202,8 +202,8 @@ class PurpleTrader:
         result_val = portfolio.get_total_btc_value(end_prices)
         print("genome id ", g.key, " : ")
         print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
-        if result_val[0] == portfolio_start:
-            ft = ft*.9
+        if result_val[0] == 0.0:
+            ft = -455
         return ft
 
     def trial_run(self):
@@ -313,7 +313,7 @@ class PurpleTrader:
         
 
 pt = PurpleTrader(5, 144, 1)
-pt.compare_champs()
+pt.run_training()
 #pt.run_training()
 
 
