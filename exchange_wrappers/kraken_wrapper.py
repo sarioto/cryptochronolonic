@@ -130,3 +130,5 @@ class KrakenWrapper(object):
         return coin_dict, currentHists, hist_shaped, hist_full_size
 
 
+kw = KrakenWrapper()
+kw.load_hist_files()
