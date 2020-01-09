@@ -79,9 +79,10 @@ class KrakenWrapper(object):
             frame["roc_13"] = frame.close.pct_change(periods=13)
             frame['std_close'] = frame['open']/frame['close']
             frame['std_high'] = frame['low']/frame['close']
-            #frame.dropna(inplace=True)
+            frame.dropna(inplace=True)
             #frame = frame[(frame != 0).all(1)]
-            print(frame.tail())
+            #print(frame.head())
+            frame = frame.iloc[::-1].reset_index()
             df_dict[sym] = frame
         return df_dict
 
@@ -119,8 +120,8 @@ class KrakenWrapper(object):
         vollist = np.argsort(vollist)[::-1]
         for ix in vollist:
             print(prefixes[ix])
-            df['vol'] = (df['vol'] - df['vol'].mean())/(df['vol'].max() - df['vol'].min())
-            df = currentHists[prefixes[ix]][['vol', 'std_high', 'std_close', 'avg_vol_3', 'avg_close_3', 'avg_close_13', 'avg_close_34']].copy()
+            #df['vol'] = (df['vol'] - df['vol'].mean())/(df['vol'].max() - df['vol'].min())
+            df = currentHists[prefixes[ix]][['vol_feat', 'std_high', 'std_close', 'roc_13']].copy()
             #norm_df = (df - df.mean()) / (df.max() - df.min())
             as_array=np.array(df)
             hist_shaped[coin_and_hist_index] = as_array

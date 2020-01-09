@@ -49,6 +49,7 @@ class RobinHoodWrapper(object):
         df_dict["SPXS"] = df
         for x in df_dict:
             frame = df_dict[x]
+            print(frame.head())
             frame = frame.iloc[::-1].reset_index()
             frame["close_price"] = pd.to_numeric(frame["close_price"])
             frame["low_price"] = pd.to_numeric(frame["low_price"])
@@ -103,7 +104,6 @@ class RobinHoodWrapper(object):
         #print(hist_shaped[0][1])
         return coin_dict, currentHists, hist_shaped, hist_full_sized
 
-
-#rh = RobinHoodWrapper()
-#rh.get_spxl_spxs_hist()
+rh = RobinHoodWrapper()
+rh.get_spxl_spxs_hist()
 #print(rh.load_train_data()[1]["SPXL"])
