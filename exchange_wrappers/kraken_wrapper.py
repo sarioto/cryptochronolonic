@@ -72,10 +72,11 @@ class KrakenWrapper(object):
         for sym in histFiles:
             frame = pd.DataFrame().from_csv(self.endpoints["files_path"]+sym)
             frame.fillna(value=0.0, inplace=True)
-            frame['avg_vol_34'] = pd.Series(np.where(frame.vol.rolling(3).mean() / frame.vol, 1, 0),frame.index)
+            frame['vol_feat'] = frame.vol.rolling(3).mean() / frame.vol
             #frame['avg_close_3'] = pd.Series(np.where(frame.close.rolling(3).mean() / frame.close, 1, 0),frame.index)
             #frame['avg_close_13'] = pd.Series(np.where(frame.close.rolling(21).mean() / frame.close.rolling(3).mean(), 1, 0),frame.index)
-            frame['avg_close_34'] = pd.Series(np.where(frame.close.rolling(55).mean() / frame.close.rolling(8).mean(), 1, 0),frame.index)
+            #frame['short_long_cross'] = frame.close.rolling(55).mean() / frame.close.rolling(8)
+            frame["roc_13"] = frame.close.pct_change(periods=13)
             frame['std_close'] = frame['open']/frame['close']
             frame['std_high'] = frame['low']/frame['close']
             #frame.dropna(inplace=True)
