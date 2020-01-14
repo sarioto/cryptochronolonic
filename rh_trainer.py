@@ -313,13 +313,8 @@ class PurpleTrader:
         
 
 pt = PurpleTrader(5, 144, 1)
-<<<<<<< HEAD
-
-pt.compare_champs()
-=======
 pt.run_training()
 #pt.run_training()
->>>>>>> 80818e40bebdf0a8992e8d8c894577a7ae06ba53
 
 
 #run_validation()
