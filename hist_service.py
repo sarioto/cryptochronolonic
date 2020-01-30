@@ -35,7 +35,7 @@ class HistWorker:
         self.hist_full_size = self.look_back * 12
         #self.binance_client = Client("", "")
         self.kw = kraken_wrapper.KrakenWrapper()
-        self.rh = robinhood_wrapper.RobinHoodWrapper()
+        #self.rh = robinhood_wrapper.RobinHoodWrapper()
         return
 
     def get_hist_files(self):

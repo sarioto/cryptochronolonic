@@ -181,7 +181,7 @@ class PurpleTrader:
         print(g.key, " : ")
         print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
         if result_val[0] == portfolio_start:
-            ft = ft*.9
+            ft = -.5
         return ft
 
     def solve(self, network):
@@ -197,7 +197,7 @@ class PurpleTrader:
         return fitness
 
     def eval_fitness(self, genomes, config):
-        self.epoch_len = randint(42, 42*4)
+        self.epoch_len = 24 
         r_start = randint(0+self.epoch_len, self.hs.hist_full_size - self.hd)
         #r_start_2 = self.hs.hist_full_size - self.epoch_len-1
         best_g_fit = 0.0
@@ -297,5 +297,5 @@ class PurpleTrader:
         self.validate_fitness()
 
 pt = PurpleTrader(8, 144, 1)
+#pt.compare_champs()
 pt.run_training()
-#run_validation()

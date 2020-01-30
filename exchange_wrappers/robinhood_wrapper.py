@@ -104,6 +104,6 @@ class RobinHoodWrapper(object):
         #print(hist_shaped[0][1])
         return coin_dict, currentHists, hist_shaped, hist_full_sized
 
-rh = RobinHoodWrapper()
-rh.get_spxl_spxs_hist()
+#rh = RobinHoodWrapper()
+#rh.get_spxl_spxs_hist()
 #print(rh.load_train_data()[1]["SPXL"])

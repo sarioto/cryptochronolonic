@@ -87,7 +87,7 @@ class KrakenWrapper(object):
         return df_dict
 
 
-    def get_train_frames(self, restrict_val = 0):
+    def get_train_frames(self, restrict_val = 3):
         df_dict = self.load_hist_files()
         coin_and_hist_index = 0
         file_lens = []
@@ -131,5 +131,5 @@ class KrakenWrapper(object):
         return coin_dict, currentHists, hist_shaped, hist_full_size
 
 
-kw = KrakenWrapper()
-kw.load_hist_files()
+#kw = KrakenWrapper()
+#kw.load_hist_files()
