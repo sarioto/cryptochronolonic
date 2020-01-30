@@ -196,8 +196,13 @@ class PurpleTrader:
         fitness = self.evaluate(net, network, r_start)
         return fitness
 
+<<<<<<< HEAD
     def eval_fitness(self, genomes, config):
         self.epoch_len = 24 
+=======
+    def eval_fitness(self, genome, config):
+        self.epoch_len = randint(42, 42*4)
+>>>>>>> e8afdcb65e3c9a9426ae6cd0b1c1d76f18fa1348
         r_start = randint(0+self.epoch_len, self.hs.hist_full_size - self.hd)
         #r_start_2 = self.hs.hist_full_size - self.epoch_len-1
         best_g_fit = 0.0
@@ -274,8 +279,8 @@ class PurpleTrader:
         pop.add_reporter(stats)
         pop.add_reporter(checkpoints)
         pop.add_reporter(neat.reporting.StdOutReporter(True))
-
-        winner = pop.run(self.eval_fitness, self.num_gens)
+        pe = neat.ThreadedEvaluator(4, self.eval_fitness)
+        winner = pop.run(pe.evaluate, self.num_gens)
         return winner, stats
 
 
