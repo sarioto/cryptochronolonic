@@ -29,7 +29,7 @@ class PurpleTrader:
             "band_threshold": 0.3,
             "iteration_level": 1,
             "division_threshold": 0.5,
-            "max_weight": 8.0,
+            "max_weight": 30.0,
             "activation": "tanh"}
 
     # Config for CPPN.
@@ -203,7 +203,7 @@ class PurpleTrader:
         print("genome id ", g.key, " : ")
         print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
         if result_val[0] == 0.0:
-            ft = -455
+            ft = 7000
         return ft
 
     def trial_run(self):
