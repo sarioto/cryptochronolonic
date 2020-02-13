@@ -57,7 +57,9 @@ class PurpleTrader:
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
         self.but_target = .1
-        self.inputs = self.hs.hist_shaped.shape[1]
+        print(self.hs.hist_shaped.shape)
+        self.num_syms = self.hs.hist_shaped.shape[0]
+        self.inputs = self.hs.hist_shaped[0].shape[1]
         self.outputs = 1
         sign = 1
         for ix in range(1,self.outputs+1):
@@ -83,6 +85,17 @@ class PurpleTrader:
 
             master_active.append(active)
         #print(active)
+        return master_active
+
+    def get_single_symbol_epoch_recurrent(self, end_idx, symbol_idx):
+        master_active = []
+        for x in range(0, self.hd):
+            try:
+                sym_data = self.hs.hist_shaped[symbol_idx][end_idx-x]
+                #print(len(sym_data))
+                master_active.append(sym_data.tolist())
+            except:
+                print('error')
         return master_active
 
     def evaluate_champ(self, network, es, rand_start, g, verbose=False):
@@ -143,40 +156,42 @@ class PurpleTrader:
         last_val = portfolio_start
         ft = 0.0
         for z_minus in range(0, self.epoch_len):
-            #TODO add comments to clarify all the 
-            #shit im doing here
-            z = rand_start - z_minus
-            active = self.get_one_epoch_input(z)
-            buy_signals = []
-            buy_syms = []
-            sell_syms = []
-            sell_signals = []
-            network.reset()
-            for n in range(1, self.hd+1):
-                network.activate(active[self.hd-n])
-            out = network.activate(active[0])
-            for x in range(len(out)):
+            for x in range(self.num_syms):
+                #TODO add comments to clarify all the 
+                #shit im doing here
                 sym = self.hs.coin_dict[x]
-                end_prices[sym] = self.hs.currentHists[sym]['close'][z]
-                if(out[x] > .5):
-                    buy_signals.append(out[x])
-                    buy_syms.append(sym)
-                if(out[x] < -.5):
-                    sell_signals.append(out[x])
-                    sell_syms.append(sym)
-            #rng = iter(shuffle(rng))
-            sorted_buys = np.argsort(buy_signals)[::-1]
-            sorted_sells = np.argsort(sell_signals)
-            #print(len(sorted_shit), len(key_list))
-            for x in sorted_sells:
-                sym = sell_syms[x]
-                portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
-            for x in sorted_buys:
-                sym = buy_syms[x]
-                portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
-            bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0] 
-            ft += bal_now - last_val
-            last_val = bal_now
+                z = rand_start - z_minus
+                active = self.get_single_symbol_epoch_recurrent(z, x)
+                buy_signals = []
+                buy_syms = []
+                sell_syms = []
+                sell_signals = []
+                network.reset()
+                for n in range(1, self.hd+1):
+                    network.activate(active[self.hd-n])
+                out = network.activate(active[0])
+                for x in range(len(out)):
+                    sym = self.hs.coin_dict[x]
+                    end_prices[sym] = self.hs.currentHists[sym]['close'][z]
+                    if(out[x] > .5):
+                        buy_signals.append(out[x])
+                        buy_syms.append(sym)
+                    if(out[x] < -.5):
+                        sell_signals.append(out[x])
+                        sell_syms.append(sym)
+                #rng = iter(shuffle(rng))
+                sorted_buys = np.argsort(buy_signals)[::-1]
+                sorted_sells = np.argsort(sell_signals)
+                #print(len(sorted_shit), len(key_list))
+                for x in sorted_sells:
+                    sym = sell_syms[x]
+                    portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
+                for x in sorted_buys:
+                    sym = buy_syms[x]
+                    portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
+                bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0] 
+                ft += bal_now - last_val
+                last_val = bal_now
         result_val = portfolio.get_total_btc_value(end_prices)
         print(g.key, " : ")
         print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
