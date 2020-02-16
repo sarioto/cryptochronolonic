@@ -83,6 +83,11 @@ class PurpleTrader:
     def set_portfolio_keys(self, folio):
         for k in self.hs.currentHists.keys():
             folio.ledger[k] = 0
+            
+    def set_leaf_names(self):
+        for l in range(len(self.in_shapes[0])):
+            self.leaf_names.append('leaf_one_'+str(l))
+            self.leaf_names.append('leaf_two_'+str(l))
 
     def get_one_epoch_input(self,end_idx):
         master_active = []
@@ -158,7 +163,7 @@ class PurpleTrader:
                 ft = result_val[0]
             return ft
 
-    def evaluate(self, network, rand_start, g, verbose=False):
+    def evaluate(self, builder, rand_start, g, verbose=False):
         portfolio_start = 1.0
         portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USDT")
         end_prices = {}
@@ -174,7 +179,9 @@ class PurpleTrader:
                 z = rand_start - z_minus
                 active = self.get_single_symbol_epoch_recurrent(z, x)
                 if(self.epoch_len//(z_minus + 1) == 2 or z_minus == 0):
-                    net = network.create_phenotype_network_nd()
+                    self.reset_substrate(active[0])
+                    builder.reset_substrate()
+                    net = builder.create_phenotype_network_nd()
                 buy_signals = []
                 buy_syms = []
                 sell_syms = []
