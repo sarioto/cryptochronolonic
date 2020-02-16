@@ -15,7 +15,7 @@ import neat
 import _pickle as pickle
 from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
-from pureples.es_hyperneat.es_hyperneat import ESNetwork
+#from pureples.es_hyperneat.es_hyperneat import ESNetwork
 from pytorch_neat.cppn create_cppn
 from pytorch_neat.substrate import Substrate
 from pytorch_neat.es_hyperneat import ESNetwork
@@ -158,7 +158,7 @@ class PurpleTrader:
                 ft = result_val[0]
             return ft
 
-    def evaluate(self, network, es, rand_start, g, verbose=False):
+    def evaluate(self, network, rand_start, g, verbose=False):
         portfolio_start = 1.0
         portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USDT")
         end_prices = {}
@@ -173,6 +173,8 @@ class PurpleTrader:
                 sym = self.hs.coin_dict[x]
                 z = rand_start - z_minus
                 active = self.get_single_symbol_epoch_recurrent(z, x)
+                if(self.epoch_len//(z_minus + 1) == 2 or z_minus == 0):
+                    net = network.create_phenotype_network_nd()
                 buy_signals = []
                 buy_syms = []
                 sell_syms = []
@@ -219,10 +221,12 @@ class PurpleTrader:
         champ_counter = self.gen_count % 10 
         #img_count = 0
         for idx, g in genomes:
-            cppn = neat.nn.FeedForwardNetwork.create(g, config)
-            network = ESNetwork(self.subStrate, cppn, self.params, self.hd)
-            net = network.create_phenotype_network_nd()
-            train_ft = self.evaluate(net, network, r_start, g)
+            [cppn] = create_cppn(g, config, self.leaf_names, ["cppn_out"])
+            net_builder = ESNetwork(self.substrate, cppn, self.params)
+            #cppn = neat.nn.FeedForwardNetwork.create(g, config)
+            #network = ESNetwork(self.subStrate, cppn, self.params, self.hd)
+            #net = network.create_phenotype_network_nd()
+            train_ft = self.evaluate(net_builder, r_start, g)
             g.fitness = train_ft
             if(g.fitness > best_g_fit):
                 best_g_fit = g.fitness
