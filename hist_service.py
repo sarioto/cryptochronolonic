@@ -8,7 +8,7 @@ from binance.client import Client
 from datetime import date, timedelta, datetime
 import os
 from statistics import mode
-from exchange_wrappers import kraken_wrapper, robinhood_wrapper
+from exchange_wrappers import kraken_wrapper
 #from ephemGravityWrapper import gravity as gbaby
 '''
 As can be expected by this point, you will notice that
@@ -35,7 +35,7 @@ class HistWorker:
         self.hist_full_size = self.look_back * 12
         #self.binance_client = Client("", "")
         self.kw = kraken_wrapper.KrakenWrapper()
-        self.rh = robinhood_wrapper.RobinHoodWrapper()
+        #self.rh = robinhood_wrapper.RobinHoodWrapper()
         return
 
     def get_hist_files(self):
@@ -229,36 +229,6 @@ class HistWorker:
                 frame['std_close'] = frame['open']/frame['close']
                 frame['std_high'] = frame['high']/frame['low']
                 frame.dropna()
-                print(coin + " written")
-                frame.to_csv("./usd_live/"+coin+"_hist.txt", encoding="utf-8")
-
-    def pull_kraken_hist(self, lb):
-        polo = Poloniex()
-        coins = polo.returnTicker()
-        tickLen = '7200'
-        start = datetime.today() - timedelta(lb)
-        start = str(int(start.timestamp()))
-        for coin in coins:
-            if coin[:4] == 'USDT':
-                #print(coin)
-                hist = requests.get('https://poloniex.com/public?command=returnChartData&currencyPair='+coin+'&start='+start+'&end=9999999999&period='+tickLen)
-                h_frame = pd.DataFrame(hist.json())
-                frame = h_frame.copy()
-                '''
-                frame['avg_vol_3'] = frame['volume'].rolling(3).mean()
-                frame['avg_vol_13'] = frame['volume'].rolling(13).mean()
-                frame['avg_vol_34'] = frame['volume'].rolling(34).mean()
-                frame['avg_close_3'] = frame['close'].rolling(3).mean()
-                frame['avg_close_13'] = frame['close'].rolling(13).mean()
-                frame['avg_close_34'] = frame['close'].rolling(34).mean()
-                '''
-                frame['avg_vol_3'] = pd.Series(np.where(frame.volume.rolling(3).mean() / frame.volume, 1, 0),frame.index)
-                frame['avg_close_3'] = pd.Series(np.where(frame.close.rolling(3).mean() / frame.close, 1, 0),frame.index)
-                frame['avg_close_13'] = pd.Series(np.where(frame.close.rolling(21).mean() / frame.close.rolling(3).mean(), 1, 0),frame.index)
-                frame['avg_close_34'] = pd.Series(np.where(frame.volume.rolling(55).mean() / frame.close.rolling(21).mean(), 1, 0),frame.index)
-                frame['std_close'] = frame['open']/frame['close']
-                frame['std_high'] = frame['high']/frame['low']
-                frame.fillna(value=0.0, inplace=True)
                 print(coin + " written")
                 frame.to_csv("./usd_live/"+coin+"_hist.txt", encoding="utf-8")
 
@@ -555,26 +525,6 @@ class HistWorker:
     def pull_kraken_hist(self):
         self.kw.pull_kraken_hist_usd()
 
-    def get_kraken_train(self):
-        self.coin_dict, self.currentHists, self.hist_shaped, self.hist_full_size = self.kw.get_train_frames()
+    def get_kraken_train(self, num_symbols=3):
+        self.coin_dict, self.currentHists, self.hist_shaped, self.hist_full_size = self.kw.get_train_frames(num_symbols)
         return
-
-#hs = HistWorker()
-#hs.get_kraken_train()
-#print(hs.coin_dict)
-#hs.rh.get_spxl_spxs_hist()
-#hs.pull_robinhood_train_data()
-
-#hs.pull_polo_usd(144)
-#hs.pull_polo_usd_live(60)
-'''
-hs.combine_polo_frames_vol_sorted()
-
-frame_len = len(hs.currentHists["LTC"])
-
-end_date = datetime.utcfromtimestamp(hs.currentHists["XMR"]['date'][frame_len-1]).strftime('%Y-%m-%d %H:%M:%S')
-daytoday = datetime.utcfromtimestamp(1568887200).strftime('%Y-%m-%d %H:%M:%S')
-
-print(end_date)
-print(daytoday)
-'''

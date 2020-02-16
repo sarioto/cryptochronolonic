@@ -16,6 +16,9 @@ import _pickle as pickle
 from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
 from pureples.es_hyperneat.es_hyperneat import ESNetwork
+from pytorch_neat.cppn create_cppn
+from pytorch_neat.substrate import Substrate
+from pytorch_neat.es_hyperneat import ESNetwork
 # Local
 class PurpleTrader:
 
@@ -51,7 +54,7 @@ class PurpleTrader:
 
     def refresh(self):
         self.in_shapes = []
-        self.out_shapes = []
+        self.out_shapes = [(0.0, -1.0, -1.0)]
         self.hs = HistWorker()
         self.hs.get_kraken_train()
         print(self.hs.currentHists.keys())
@@ -62,13 +65,21 @@ class PurpleTrader:
         self.inputs = self.hs.hist_shaped[0].shape[1]
         self.outputs = 1
         sign = 1
-        for ix in range(1,self.outputs+1):
-            sign = sign *-1
-            self.out_shapes.append((0.0-(sign*.005*ix), 0.0, -1.0))
-            for ix2 in range(1,(self.inputs//self.outputs)+1):
-                self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0))
+        for ix2 in range(1,self.inputs+1):
+            sign *= -1
+            self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0))
         self.subStrate = Substrate(self.in_shapes, self.out_shapes)
-        #self.leaf_names.append('bias')
+
+    # informing the substrate
+    def reset_substrate(self, input_row):
+        current_inputs = self.subStrate.input_coordinates
+        new_input = []
+        for ix,t in enumerate(current_inputs):
+            t = list(t)
+            offset = input_row[ix] * .5
+            t[2] = t[2] + .5
+            new_input.append(tuple(t))
+
     def set_portfolio_keys(self, folio):
         for k in self.hs.currentHists.keys():
             folio.ledger[k] = 0
@@ -170,25 +181,15 @@ class PurpleTrader:
                 for n in range(1, self.hd+1):
                     network.activate(active[self.hd-n])
                 out = network.activate(active[0])
-                for x in range(len(out)):
-                    sym = self.hs.coin_dict[x]
-                    end_prices[sym] = self.hs.currentHists[sym]['close'][z]
-                    if(out[x] > .5):
-                        buy_signals.append(out[x])
-                        buy_syms.append(sym)
-                    if(out[x] < -.5):
-                        sell_signals.append(out[x])
-                        sell_syms.append(sym)
-                #rng = iter(shuffle(rng))
-                sorted_buys = np.argsort(buy_signals)[::-1]
-                sorted_sells = np.argsort(sell_signals)
-                #print(len(sorted_shit), len(key_list))
-                for x in sorted_sells:
-                    sym = sell_syms[x]
+                if(out[0] < -.5):
+                    #print("selling")
                     portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
-                for x in sorted_buys:
-                    sym = buy_syms[x]
+                    #print("bought ", sym)
+                elif(out[0] > .5):
+                    #print("buying")
                     portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
+                #rng = iter(shuffle(rng))
+                end_prices[sym] = self.hs.currentHists[sym]['close'][z]
                 bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0] 
                 ft += bal_now - last_val
                 last_val = bal_now
@@ -196,7 +197,7 @@ class PurpleTrader:
         print(g.key, " : ")
         print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
         if result_val[0] == portfolio_start:
-            ft = ft*.9
+            ft = ft*.89
         return ft
 
     def solve(self, network):
@@ -211,10 +212,9 @@ class PurpleTrader:
         fitness = self.evaluate(net, network, r_start)
         return fitness
 
-    def eval_fitness(self, genome, config):
-        self.epoch_len = randint(42, 42*4)
+    def eval_fitness(self, genomes, config):
+        self.epoch_len = 8
         r_start = randint(0+self.epoch_len, self.hs.hist_full_size - self.hd)
-        #r_start_2 = self.hs.hist_full_size - self.epoch_len-1
         best_g_fit = 0.0
         champ_counter = self.gen_count % 10 
         #img_count = 0
@@ -223,7 +223,6 @@ class PurpleTrader:
             network = ESNetwork(self.subStrate, cppn, self.params, self.hd)
             net = network.create_phenotype_network_nd()
             train_ft = self.evaluate(net, network, r_start, g)
-            #validate_ft = self.evaluate(net, network, r_start_2, g)
             g.fitness = train_ft
             if(g.fitness > best_g_fit):
                 best_g_fit = g.fitness
@@ -289,8 +288,8 @@ class PurpleTrader:
         pop.add_reporter(stats)
         pop.add_reporter(checkpoints)
         pop.add_reporter(neat.reporting.StdOutReporter(True))
-        pe = neat.ThreadedEvaluator(4, self.eval_fitness)
-        winner = pop.run(pe.evaluate, self.num_gens)
+        print(self.num_gens)
+        winner = pop.run(self.eval_fitness, self.num_gens)
         return winner, stats
 
 

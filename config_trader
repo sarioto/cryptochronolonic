@@ -3,13 +3,13 @@
 [NEAT]
 fitness_criterion     = max
 fitness_threshold     = 3069466
-pop_size              = 144
+pop_size              = 55
 reset_on_extinction   = True
 
 
 [DefaultGenome]
 # node activation options
-activation_default      = tanh
+activation_default      = random
 activation_mutate_rate  = 0.55
 activation_options      = sin tanh sigmoid gauss
 
