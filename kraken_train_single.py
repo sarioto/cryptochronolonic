@@ -16,7 +16,7 @@ import _pickle as pickle
 from pureples.shared.substrate import Substrate
 from pureples.shared.visualize import draw_net
 #from pureples.es_hyperneat.es_hyperneat import ESNetwork
-from pytorch_neat.cppn create_cppn
+from pytorch_neat.cppn import create_cppn
 from pytorch_neat.substrate import Substrate
 from pytorch_neat.es_hyperneat import ESNetwork
 # Local
@@ -27,10 +27,10 @@ class PurpleTrader:
     # ES-HyperNEAT specific parameters.
     params = {"initial_depth": 1,
             "max_depth": 3,
-            "variance_threshold": 0.5,
-            "band_threshold": 0.3,
+            "variance_threshold": 0.55,
+            "band_threshold": 0.34,
             "iteration_level": 3,
-            "division_threshold": 0.2,
+            "division_threshold": 0.21,
             "max_weight": 8.0,
             "activation": "tanh"}
 
@@ -43,6 +43,7 @@ class PurpleTrader:
     start_idx = 0
     highest_returns = 0
     portfolio_list = []
+    leaf_names = []
     def __init__(self, hist_depth, num_gens, gen_count = 1):
         self.hd = hist_depth
         if gen_count != 1:
@@ -68,26 +69,30 @@ class PurpleTrader:
         for ix2 in range(1,self.inputs+1):
             sign *= -1
             self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0))
-        self.subStrate = Substrate(self.in_shapes, self.out_shapes)
+        self.substrate = Substrate(self.in_shapes, self.out_shapes)
+        self.set_leaf_names()
 
     # informing the substrate
     def reset_substrate(self, input_row):
-        current_inputs = self.subStrate.input_coordinates
+        current_inputs = self.substrate.input_coordinates
         new_input = []
         for ix,t in enumerate(current_inputs):
             t = list(t)
             offset = input_row[ix] * .5
             t[2] = t[2] + .5
             new_input.append(tuple(t))
+        #self.in_shapes = new_input
+        self.substrate = Substrate(new_input, self.out_shapes)
 
     def set_portfolio_keys(self, folio):
         for k in self.hs.currentHists.keys():
             folio.ledger[k] = 0
-            
-    def set_leaf_names(self):
+
+    def set_leaf_names(self):   
         for l in range(len(self.in_shapes[0])):
             self.leaf_names.append('leaf_one_'+str(l))
             self.leaf_names.append('leaf_two_'+str(l))
+        print(self.leaf_names)
 
     def get_one_epoch_input(self,end_idx):
         master_active = []
@@ -123,6 +128,7 @@ class PurpleTrader:
         with open("./trade_hists/kraken/" + str(g.key) + "_hist.txt", "w") as ft:
             ft.write('date,current_balance \n')
             for z_minus in range(0, self.epoch_len - 1):
+                for x in range(len(self.num_syms)):
                 z = rand_start - z_minus
                 active = self.get_one_epoch_input(z)
                 buy_signals = []
@@ -130,6 +136,7 @@ class PurpleTrader:
                 sell_syms = []
                 sell_signals = []
                 network.reset()
+                print(active[0])
                 for n in range(1, self.hd+1):
                     network.activate(active[self.hd-n])
                 out = network.activate(active[0])
@@ -178,23 +185,24 @@ class PurpleTrader:
                 sym = self.hs.coin_dict[x]
                 z = rand_start - z_minus
                 active = self.get_single_symbol_epoch_recurrent(z, x)
-                if(self.epoch_len//(z_minus + 1) == 2 or z_minus == 0):
+                if(z_minus == 0):
                     self.reset_substrate(active[0])
-                    builder.reset_substrate()
-                    net = builder.create_phenotype_network_nd()
+                    builder.substrate = self.substrate
+                    network = builder.create_phenotype_network_nd()
                 buy_signals = []
                 buy_syms = []
                 sell_syms = []
                 sell_signals = []
                 network.reset()
                 for n in range(1, self.hd+1):
-                    network.activate(active[self.hd-n])
-                out = network.activate(active[0])
-                if(out[0] < -.5):
+                    network.activate([active[self.hd-n]])
+                out = network.activate([active[0]])
+                #print(out[0])
+                if(out[0] < 0.5):
                     #print("selling")
                     portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
                     #print("bought ", sym)
-                elif(out[0] > .5):
+                elif(out[0] > 0.5):
                     #print("buying")
                     portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
                 #rng = iter(shuffle(rng))
@@ -206,7 +214,7 @@ class PurpleTrader:
         print(g.key, " : ")
         print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
         if result_val[0] == portfolio_start:
-            ft = ft*.89
+            ft = -.2
         return ft
 
     def solve(self, network):
@@ -240,9 +248,11 @@ class PurpleTrader:
                 with open("./champ_data/kraken/latest_greatest"+str(champ_counter)+".pkl", 'wb') as output:
                     pickle.dump(g, output)
             #img_count += 1
+        '''
         if(champ_counter == 0):
             self.refresh()
             self.compare_champs()
+        '''
         self.gen_count += 1
         return
 
