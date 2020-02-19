@@ -108,13 +108,13 @@ class PurpleTrader:
         #print(active)
         return master_active
 
-    def get_single_symbol_epoch_recurrent(self, end_idx, symbol_idx):
+    def get_single_symbol_epoch_recurrent(self, end_idx, symbol_idx, current_position):
         master_active = []
         for x in range(0, self.hd):
             try:
                 sym_data = self.hs.hist_shaped[symbol_idx][end_idx-x]
                 #print(len(sym_data))
-                master_active.append(sym_data.tolist())
+                master_active.append(sym_data.tolist().append(current_position))
             except:
                 print('error')
         return master_active
@@ -127,8 +127,8 @@ class PurpleTrader:
         sells = 0
         with open("./trade_hists/kraken/" + str(g.key) + "_hist.txt", "w") as ft:
             ft.write('date,current_balance \n')
-            for z_minus in range(0, self.epoch_len - 1):
-                for x in range(len(self.num_syms)):
+            #for z_minus in range(0, self.epoch_len - 1):
+            for x in range(len(self.num_syms)):
                 z = rand_start - z_minus
                 active = self.get_one_epoch_input(z)
                 buy_signals = []
@@ -174,6 +174,7 @@ class PurpleTrader:
         portfolio_start = 1.0
         portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USDT")
         end_prices = {}
+        phenotypes = {}
         buys = 0
         sells = 0
         last_val = portfolio_start
@@ -185,10 +186,11 @@ class PurpleTrader:
                 sym = self.hs.coin_dict[x]
                 z = rand_start - z_minus
                 active = self.get_single_symbol_epoch_recurrent(z, x)
-                if(z_minus == 0):
+                if(z_minus == 0 or (z_minus + 1) % 8 == 0):
                     self.reset_substrate(active[0])
                     builder.substrate = self.substrate
-                    network = builder.create_phenotype_network_nd()
+                    phenotypes[sym] = builder.create_phenotype_network_nd()
+                    network = phenotypes[sym]
                 buy_signals = []
                 buy_syms = []
                 sell_syms = []
@@ -230,7 +232,7 @@ class PurpleTrader:
         return fitness
 
     def eval_fitness(self, genomes, config):
-        self.epoch_len = 8
+        self.epoch_len = 16
         r_start = randint(0+self.epoch_len, self.hs.hist_full_size - self.hd)
         best_g_fit = 0.0
         champ_counter = self.gen_count % 10 
