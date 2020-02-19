@@ -63,7 +63,9 @@ class PurpleTrader:
         self.but_target = .1
         print(self.hs.hist_shaped.shape)
         self.num_syms = self.hs.hist_shaped.shape[0]
-        self.inputs = self.hs.hist_shaped[0].shape[1]
+        # add one to number of symbols to account for current position size
+        # input we pass for context
+        self.inputs = self.hs.hist_shaped[0].shape[1] + 1
         self.outputs = 1
         sign = 1
         for ix2 in range(1,self.inputs+1):
@@ -108,7 +110,18 @@ class PurpleTrader:
         #print(active)
         return master_active
 
-    def get_single_symbol_epoch_recurrent(self, end_idx, symbol_idx, current_position):
+    def get_single_symbol_epoch_recurrent(self, end_idx, symbol_idx):
+        master_active = []
+        for x in range(0, self.hd):
+            try:
+                sym_data = self.hs.hist_shaped[symbol_idx][end_idx-x]
+                #print(len(sym_data))
+                master_active.append(sym_data.tolist())
+            except:
+                print('error')
+        return master_active
+        
+    def get_single_symbol_epoch_recurrent_with_position_size(self, end_idx, symbol_idx, current_position):
         master_active = []
         for x in range(0, self.hd):
             try:
@@ -120,47 +133,44 @@ class PurpleTrader:
         return master_active
 
     def evaluate_champ(self, network, es, rand_start, g, verbose=False):
-        portfolio_start = 10000.0
+        portfolio_start = 1.0
         portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USDT")
         end_prices = {}
         buys = 0
         sells = 0
         with open("./trade_hists/kraken/" + str(g.key) + "_hist.txt", "w") as ft:
             ft.write('date,current_balance \n')
-            #for z_minus in range(0, self.epoch_len - 1):
-            for x in range(len(self.num_syms)):
-                z = rand_start - z_minus
-                active = self.get_one_epoch_input(z)
-                buy_signals = []
-                buy_syms = []
-                sell_syms = []
-                sell_signals = []
-                network.reset()
-                print(active[0])
-                for n in range(1, self.hd+1):
-                    network.activate(active[self.hd-n])
-                out = network.activate(active[0])
-                for x in range(len(out)):
+            for z_minus in range(0, self.epoch_len - 1):
+                for x in range(len(self.num_syms)):
+                    z = rand_start - z_minus
                     sym = self.hs.coin_dict[x]
-                    end_prices[sym] = self.hs.currentHists[sym]['close'][z]
-                    if(out[x] > .5):
-                        buy_signals.append(out[x])
-                        buy_syms.append(sym)
-                    if(out[x] < -.5):
-                        sell_signals.append(out[x])
-                        sell_syms.append(sym)
-                #rng = iter(shuffle(rng))
-                sorted_buys = np.argsort(buy_signals)[::-1]
-                sorted_sells = np.argsort(sell_signals)
-                #print(len(sorted_shit), len(key_list))
-                for x in sorted_sells:
-                    sym = sell_syms[x]
-                    portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
-                for x in sorted_buys:
-                    sym = buy_syms[x]
-                    portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
-                ft.write(str(self.hs.currentHists[sym]['time'][z]) + ",")
-                ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[0])+ " \n")
+                    z = rand_start - z_minus
+                    #pos_size = portfolio.ledger[sym]
+                    active = self.get_single_symbol_epoch_recurrent(z, x)
+                    for n in range(1, self.hd+1):
+                        network.activate(active[self.hd-n])
+                    out = network.activate(active[0])
+                    for x in range(len(out)):
+                        sym = self.hs.coin_dict[x]
+                        end_prices[sym] = self.hs.currentHists[sym]['close'][z]
+                        if(out[x] > .5):
+                            buy_signals.append(out[x])
+                            buy_syms.append(sym)
+                        if(out[x] < -.5):
+                            sell_signals.append(out[x])
+                            sell_syms.append(sym)
+                    #rng = iter(shuffle(rng))
+                    sorted_buys = np.argsort(buy_signals)[::-1]
+                    sorted_sells = np.argsort(sell_signals)
+                    #print(len(sorted_shit), len(key_list))
+                    for x in sorted_sells:
+                        sym = sell_syms[x]
+                        portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
+                    for x in sorted_buys:
+                        sym = buy_syms[x]
+                        portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
+                    ft.write(str(self.hs.currentHists[sym]['time'][z]) + ",")
+                    ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[0])+ " \n")
             result_val = portfolio.get_total_btc_value(end_prices)
             print("genome id ", g.key, " : ")
             print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
@@ -185,7 +195,8 @@ class PurpleTrader:
                 #shit im doing here
                 sym = self.hs.coin_dict[x]
                 z = rand_start - z_minus
-                active = self.get_single_symbol_epoch_recurrent(z, x)
+                pos_size = portfolio.ledger[sym]
+                active = self.get_single_symbol_epoch_recurrent(z, x, pos_size)
                 if(z_minus == 0 or (z_minus + 1) % 8 == 0):
                     self.reset_substrate(active[0])
                     builder.substrate = self.substrate
