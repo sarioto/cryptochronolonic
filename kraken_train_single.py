@@ -148,8 +148,8 @@ class PurpleTrader:
                     z = rand_start - z_minus
                     sym = self.hs.coin_dict[x]
                     z = rand_start - z_minus
-                    #pos_size = portfolio.ledger[sym]
-                    active = self.get_single_symbol_epoch_recurrent(z, x)
+                    pos_size = portfolio.ledger[sym]
+                    active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_size)
                     if(z_minus == 0 or (z_minus + 1) % 8 == 0):
                         self.reset_substrate(active[0])
                         builder.substrate = self.substrate
