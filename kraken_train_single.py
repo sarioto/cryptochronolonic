@@ -65,7 +65,7 @@ class PurpleTrader:
         self.num_syms = self.hs.hist_shaped.shape[0]
         # add one to number of symbols to account for current position size
         # input we pass for context
-        self.inputs = self.hs.hist_shaped[0].shape[1]
+        self.inputs = self.hs.hist_shaped[0].shape[1] + 1
         self.outputs = 1
         sign = 1
         for ix2 in range(1,self.inputs+1):
@@ -127,7 +127,9 @@ class PurpleTrader:
             try:
                 sym_data = self.hs.hist_shaped[symbol_idx][end_idx-x]
                 #print(len(sym_data))
-                master_active.append(sym_data.tolist().append(current_position))
+                sym_data = sym_data.tolist()
+                sym_data.append(current_position)
+                master_active.append(sym_data)
             except:
                 print('error')
         return master_active
@@ -186,7 +188,7 @@ class PurpleTrader:
                 sym = self.hs.coin_dict[x]
                 z = rand_start - z_minus
                 pos_size = portfolio.ledger[sym]
-                active = self.get_single_symbol_epoch_recurrent(z, x, pos_size)
+                active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_size)
                 if(z_minus == 0 or (z_minus + 1) % 8 == 0):
                     self.reset_substrate(active[0])
                     builder.substrate = self.substrate
@@ -329,6 +331,6 @@ class PurpleTrader:
         self.validate_fitness()
 
 pt = PurpleTrader(8, 144, 1)
-#pt.run_training()
-pt.compare_champs()
+pt.run_training()
+#pt.compare_champs()
 #run_validation()
