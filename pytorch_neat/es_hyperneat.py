@@ -6,6 +6,7 @@ from math import factorial
 from pytorch_neat.recurrent_net import RecurrentNet
 from pytorch_neat.cppn import get_nd_coord_inputs
 import torch
+from pytorch_neat.activations import str_to_activation
 #encodes a substrate of input and output coords with a cppn, adding 
 #hidden coords along the 
 
@@ -22,9 +23,7 @@ class ESNetwork:
         self.division_threshold = params["division_threshold"]
         self.max_weight = params["max_weight"]
         self.connections = set()
-        self.activations = 2 ** params["max_depth"] + 1  # Number of layers in the network.
-        activation_functions = neat.activations.ActivationFunctionSet()
-        self.activation = activation_functions.get(params["activation"])
+        self.activation_string = params["activation"]
         self.width = len(substrate.output_coordinates)
         self.root_x = self.width/2
         self.root_y = (len(substrate.input_coordinates)/self.width)/2
@@ -47,7 +46,8 @@ class ESNetwork:
             hidden_responses = rnn_params["hidden_responses"],
             output_responses = rnn_params["output_responses"],
             hidden_biases = rnn_params["hidden_biases"],
-            output_biases = rnn_params["output_biases"]
+            output_biases = rnn_params["output_biases"],
+            activation= str_to_activation[self.activation_string]
         )
 
     def division_initialization_nd_tensors(self, coords, outgoing):
