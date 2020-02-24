@@ -22,6 +22,7 @@ class MexWrapper(object):
         hist = mex.client.fetch_ohlcv(self.xbit, timeframe="1d", since=self.client.parse8601(lb_date.strftime('%Y-%m-%dT%H:%M:%S')))
         df = pd.DataFrame(hist)
         df.columns = ["date", "open", "high", "low", "close", "volume"]
+        df["ewma"] = pd
         df.to_csv("../hist_data/mex/" + self.xbit.split("/")[0] + ".txt")
         return df
     def read_data_file(self):
