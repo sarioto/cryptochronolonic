@@ -13,7 +13,7 @@ class BinanceUsWrapper(object):
 
     def get_info(self):
         response = requests.get(self.base_endpoint + self.info_endpoint)
-        print(response)
+        print(len(response.json()["symbols"]))
 
 biwrap = BinanceUsWrapper()
 biwrap.get_info()
