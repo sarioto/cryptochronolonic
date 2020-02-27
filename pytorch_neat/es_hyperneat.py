@@ -107,7 +107,7 @@ class ESNetwork:
                     mins = torch.min(grouped, dim=1)
                     #print("mins: ")
                     #print(mins[0])
-                    if( torch.max(mins[0]) > self.band_threshold):
+                    if(torch.max(mins[0]) > self.band_threshold):
                         if outgoing:
                             con = nd_Connection(coords[x], c.coord, c.w[x])
                         else:

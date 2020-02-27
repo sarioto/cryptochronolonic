@@ -27,11 +27,11 @@ class PurpleTrader:
     # ES-HyperNEAT specific parameters.
     params = {"initial_depth": 1,
             "max_depth": 3,
-            "variance_threshold": 0.055,
-            "band_threshold": 0.034,
+            "variance_threshold": 0.089,
+            "band_threshold": 0.055,
             "iteration_level": 3,
             "division_threshold": 0.021,
-            "max_weight": 8.0,
+            "max_weight": 34.0,
             "activation": "tanh"}
 
 
@@ -160,7 +160,7 @@ class PurpleTrader:
                         network.activate([active[self.hd-n]])
                     out = network.activate([active[0]])
                     end_prices[sym] = self.hs.currentHists[sym]['close'][z]
-                    if(out[0] < .5 or (z_minus+1) % 16 == 0):
+                    if(out[0] < .5):
                         portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
                     else:
                         portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
@@ -208,14 +208,18 @@ class PurpleTrader:
                     portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
                 #rng = iter(shuffle(rng))
                 end_prices[sym] = self.hs.currentHists[sym]['close'][z]
+                
                 bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0] 
                 ft += bal_now - last_val
                 last_val = bal_now
+                
         result_val = portfolio.get_total_btc_value(end_prices)
         print(g.key, " : ")
         print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
+        '''
         if result_val[0] == portfolio_start:
             ft = -.2
+        '''
         return ft
 
     def solve(self, network):
@@ -231,7 +235,7 @@ class PurpleTrader:
         return fitness
 
     def eval_fitness(self, genomes, config):
-        self.epoch_len = 16
+        self.epoch_len = randint(64, self.hs.hist_full_size/2)
         r_start = randint(0+self.epoch_len, self.hs.hist_full_size - self.hd)
         best_g_fit = 0.0
         champ_counter = self.gen_count % 10 
@@ -330,7 +334,7 @@ class PurpleTrader:
     def run_validation(self):
         self.validate_fitness()
 
-pt = PurpleTrader(8, 144, 1)
-#pt.run_training()
-pt.compare_champs()
+pt = PurpleTrader(21, 144, 51)
+pt.run_training()
+#pt.compare_champs()
 #run_validation()
