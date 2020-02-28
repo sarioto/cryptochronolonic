@@ -1,7 +1,9 @@
 import requests
 import json
 import pandas as pd
-
+import os
+import numpy as np
+from statistics import mode
 
 class BinanceUsWrapper(object):
 
@@ -15,6 +17,10 @@ class BinanceUsWrapper(object):
         response = requests.get(self.base_endpoint + self.info_endpoint)
         return response.json()["symbols"]
 
+    def get_file_symbol(self, sym_full):
+        stripped = sym_full.split(".")[0][:-3]
+        return stripped
+
     def get_symbol_hist(self, symbol):
         print("fetching data for: ", symbol)
         resp = requests.get(self.base_endpoint + self.candlestick_endpoint.format(symbol, "1h", 1000))
@@ -27,6 +33,14 @@ class BinanceUsWrapper(object):
             if x["symbol"][-3:] == "USD":
                 usds.append(x["symbol"])
         return usds
+
+    def load_hist_files(self):
+        histFiles = os.listdir(os.path.join(os.path.dirname(__file__), "../hist_data/binance"))
+        df_dict = {}
+        for sym in histFiles:
+            frame = pd.DataFrame().from_csv("../hist_data/binance/" +sym)
+            df_dict[sym] = frame
+        return df_dict
 
     def store_usd_histories(self):
         syms = self.get_usd_symbols()
@@ -42,9 +56,57 @@ class BinanceUsWrapper(object):
             #df["rolling_spread"] = df["oc_spread"].rolling(34).mean() / df["oc_spread"]
             df["volume_feature"] = df["volume"].rolling(34).mean() / df["volume"]
             df = df.dropna()
+            df = df.reset_index()
             df.to_csv("../hist_data/binance/" + s + ".txt")
+
+    def get_train_frames(self, restrict_val = 0, feature_columns = ['volume_feature', 'rolling_close', 'oc_spread', 'hl_spread']):
+        df_dict = self.load_hist_files()
+        coin_and_hist_index = 0
+        file_lens = []
+        currentHists = {}
+        hist_shaped = {}
+        coin_dict = {}
+        vollist = []
+        prefixes = []
+        for y in df_dict:
+            df = df_dict[y]
+            df_len = len(df)
+            #print(df.head())
+            file_lens.append(df_len)
+        mode_len = mode(file_lens)
+        print(mode_len)
+        hist_full_size = mode_len
+        vollist = []
+        prefixes = []
+        for x in df_dict:
+            df = df_dict[x]
+            col_prefix = self.get_file_symbol(x)
+            #as_array = np.array(df)
+            if(len(df) == mode_len):
+                #print(as_array)
+                prefixes.append(col_prefix)
+                currentHists[col_prefix] = df
+                print(len(df["volume"]))
+                print(col_prefix)
+                vollist.append(df['volume'][0])
+        if restrict_val != 0:
+            vollist = np.argsort(vollist)[-restrict_val:][::-1]
+        vollist = np.argsort(vollist)[::-1]
+        for ix in vollist:
+            print(prefixes[ix])
+            #df['vol'] = (df['vol'] - df['vol'].mean())/(df['vol'].max() - df['vol'].min())
+            df = currentHists[prefixes[ix]][feature_columns].copy()
+            #norm_df = (df - df.mean()) / (df.max() - df.min())
+            as_array=np.array(df)
+            hist_shaped[coin_and_hist_index] = as_array
+            coin_dict[coin_and_hist_index] = prefixes[ix]
+            coin_and_hist_index += 1
+        hist_shaped = pd.Series(hist_shaped)
+        return coin_dict, currentHists, hist_shaped, hist_full_size
 
 
 biwrap = BinanceUsWrapper()
-biwrap.store_usd_histories()
+#biwrap.store_usd_histories()
+coins, currentHists, hist_shaped, hist_size = biwrap.get_train_frames()
+print(currentHists)
     
