@@ -131,7 +131,7 @@ class PurpleTrader:
         return master_active
 
     def evaluate_champ(self, builder, rand_start, g, verbose=False):
-        portfolio_start = 1.0
+        portfolio_start = 1000.0
         portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USDT")
         end_prices = {}
         phenotypes = {}
@@ -169,7 +169,7 @@ class PurpleTrader:
             return ft
 
     def evaluate(self, builder, rand_start, g, verbose=False):
-        portfolio_start = 1.0
+        portfolio_start = 1000.0
         portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USD")
         end_prices = {}
         phenotypes = {}
@@ -179,8 +179,6 @@ class PurpleTrader:
         ft = 0.0
         for z_minus in range(0, self.epoch_len):
             for x in range(self.num_syms):
-                #TODO add comments to clarify all the 
-                #shit im doing here
                 sym = self.hs.coin_dict[x]
                 z = rand_start - z_minus
                 pos_size = portfolio.ledger[sym]
