@@ -531,6 +531,7 @@ class HistWorker:
         return
 
     def get_binance_train(self, num_symbols=0):
+        self.binance.fetch_usd_histories()
         self.coin_dict, self.currentHists, self.hist_shaped, self.hist_full_size = self.binance.get_train_frames(num_symbols)
         return
 
