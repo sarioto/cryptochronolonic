@@ -189,6 +189,7 @@ class PurpleTrader:
                 z = rand_start - z_minus
                 pos_size = portfolio.ledger[sym]
                 active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_size)
+                #print(active)
                 if(z_minus == 0 or (z_minus + 1) % 8 == 0):
                     self.reset_substrate(active[0])
                     builder.substrate = self.substrate
@@ -334,7 +335,13 @@ class PurpleTrader:
     def run_validation(self):
         self.validate_fitness()
 
+<<<<<<< HEAD
 pt = PurpleTrader(21, 144, 49)
 #pt.run_training()
 pt.compare_champs()
+=======
+pt = PurpleTrader(8, 144, 1)
+pt.run_training()
+#pt.compare_champs()
+>>>>>>> a7af5fe4ec358c60eb2eadbc3f39a4ed53b35c0c
 #run_validation()

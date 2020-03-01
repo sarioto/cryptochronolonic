@@ -8,7 +8,7 @@ from binance.client import Client
 from datetime import date, timedelta, datetime
 import os
 from statistics import mode
-from exchange_wrappers import kraken_wrapper
+from exchange_wrappers import kraken_wrapper, binance_wrapper
 #from ephemGravityWrapper import gravity as gbaby
 '''
 As can be expected by this point, you will notice that
@@ -35,6 +35,7 @@ class HistWorker:
         self.hist_full_size = self.look_back * 12
         #self.binance_client = Client("", "")
         self.kw = kraken_wrapper.KrakenWrapper()
+        self.binance = binance_wrapper.BinanceUsWrapper()
         #self.rh = robinhood_wrapper.RobinHoodWrapper()
         return
 
@@ -527,4 +528,8 @@ class HistWorker:
 
     def get_kraken_train(self, num_symbols=3):
         self.coin_dict, self.currentHists, self.hist_shaped, self.hist_full_size = self.kw.get_train_frames(num_symbols)
+        return
+
+    def get_binance_train(self, num_symbols=0):
+        self.coin_dict, self.currentHists, self.hist_shaped, self.hist_full_size = self.binance.get_train_frames(num_symbols)
         return

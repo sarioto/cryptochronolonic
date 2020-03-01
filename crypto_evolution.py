@@ -34,6 +34,7 @@ class CryptoFolio:
 
     def buy_coin(self, c_name, price):
         amount = self.start * self.target_amount
+        #print(amount, self.ledger[self.base_sym])
         if(amount > self.ledger[self.base_sym]):
             return False
         else:

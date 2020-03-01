@@ -22,8 +22,6 @@ from pytorch_neat.es_hyperneat import ESNetwork
 # Local
 class PurpleTrader:
 
-    #needs to be initialized so as to allow for 62 outputs that return a coordinate
-
     # ES-HyperNEAT specific parameters.
     params = {"initial_depth": 1,
             "max_depth": 3,
@@ -31,7 +29,7 @@ class PurpleTrader:
             "band_threshold": 0.034,
             "iteration_level": 3,
             "division_threshold": 0.021,
-            "max_weight": 8.0,
+            "max_weight": 34.55,
             "activation": "tanh"}
 
 
@@ -57,14 +55,12 @@ class PurpleTrader:
         self.in_shapes = []
         self.out_shapes = [(0.0, -1.0, -1.0)]
         self.hs = HistWorker()
-        self.hs.get_kraken_train()
+        self.hs.get_binance_train()
         print(self.hs.currentHists.keys())
         self.end_idx = len(self.hs.hist_shaped[0])
         self.but_target = .1
         print(self.hs.hist_shaped.shape)
         self.num_syms = self.hs.hist_shaped.shape[0]
-        # add one to number of symbols to account for current position size
-        # input we pass for context
         self.inputs = self.hs.hist_shaped[0].shape[1] + 1
         self.outputs = 1
         sign = 1
@@ -135,7 +131,7 @@ class PurpleTrader:
         return master_active
 
     def evaluate_champ(self, builder, rand_start, g, verbose=False):
-        portfolio_start = 1.0
+        portfolio_start = 1000.0
         portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USDT")
         end_prices = {}
         phenotypes = {}
@@ -173,8 +169,8 @@ class PurpleTrader:
             return ft
 
     def evaluate(self, builder, rand_start, g, verbose=False):
-        portfolio_start = 1.0
-        portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USDT")
+        portfolio_start = 1000.0
+        portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USD")
         end_prices = {}
         phenotypes = {}
         buys = 0
@@ -183,12 +179,11 @@ class PurpleTrader:
         ft = 0.0
         for z_minus in range(0, self.epoch_len):
             for x in range(self.num_syms):
-                #TODO add comments to clarify all the 
-                #shit im doing here
                 sym = self.hs.coin_dict[x]
                 z = rand_start - z_minus
                 pos_size = portfolio.ledger[sym]
                 active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_size)
+                #print(active)
                 if(z_minus == 0 or (z_minus + 1) % 8 == 0):
                     self.reset_substrate(active[0])
                     builder.substrate = self.substrate
@@ -198,14 +193,11 @@ class PurpleTrader:
                 for n in range(1, self.hd+1):
                     network.activate([active[self.hd-n]])
                 out = network.activate([active[0]])
-                #print(out[0])
-                if(out[0] < 0.5):
-                    #print("selling")
+                if(out[0] < -0.5):
                     portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
                     #print("bought ", sym)
                 elif(out[0] > 0.5):
-                    #print("buying")
-                    portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
+                    did_buy = portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
                 #rng = iter(shuffle(rng))
                 end_prices[sym] = self.hs.currentHists[sym]['close'][z]
                 bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0] 
@@ -260,22 +252,22 @@ class PurpleTrader:
     def compare_champs(self):
         self.epoch_len = self.hs.hist_full_size - (self.hd+1)
         r_start = self.epoch_len
-        champ_current = open("./champ_data/kraken/latest_greatest.pkl",'rb')
+        champ_current = open("./champ_data/binance/latest_greatest.pkl",'rb')
         g = pickle.load(champ_current)
         champ_current.close()
         [cppn] = create_cppn(g, self.config, self.leaf_names, ["cppn_out"])
         net_builder = ESNetwork(self.substrate, cppn, self.params)
         champ_fit = self.evaluate_champ(net_builder, r_start, g)
-        for f in os.listdir("./champ_data/kraken"):
+        for f in os.listdir("./champ_data/binance"):
             if(f != "lastest_greatest.pkl"):
-                champ_file = open("./champ_data/kraken/"+f,'rb')
+                champ_file = open("./champ_data/binance/"+f,'rb')
                 g = pickle.load(champ_file)
                 champ_file.close()
                 [cppn] = create_cppn(g, self.config, self.leaf_names, ["cppn_out"])
                 net_builder = ESNetwork(self.substrate, cppn, self.params)
                 g.fitness = self.evaluate_champ(net_builder, r_start, g)
                 if (g.fitness > champ_fit):
-                    with open("./champ_data/kraken/latest_greatest.pkl", 'wb') as output:
+                    with open("./champ_data/binance/latest_greatest.pkl", 'wb') as output:
                         pickle.dump(g, output)
         return
 
@@ -293,7 +285,7 @@ class PurpleTrader:
             g.fitness = self.evaluate(net, network, r_start, g)
             if(g.fitness > best_g_fit):
                 best_g_fit = g.fitness
-                with open('./champ_data/kraken/latest_greatest.pkl', 'wb') as output:
+                with open('./champ_data/binance/latest_greatest.pkl', 'wb') as output:
                     pickle.dump(g, output)
         return
 
@@ -302,8 +294,8 @@ class PurpleTrader:
         if(checkpoint == ""):
             pop = neat.population.Population(self.config)
         else:
-            pop = neat.Checkpointer.restore_checkpoint("./pkl_pops/kraken/pop-checkpoint-" + checkpoint)
-        checkpoints = neat.Checkpointer(generation_interval=2, time_interval_seconds=None, filename_prefix='./pkl_pops/kraken/pop-checkpoint-')
+            pop = neat.Checkpointer.restore_checkpoint("./pkl_pops/binance/pop-checkpoint-" + checkpoint)
+        checkpoints = neat.Checkpointer(generation_interval=2, time_interval_seconds=None, filename_prefix='./pkl_pops/binance/pop-checkpoint-')
         stats = neat.statistics.StatisticsReporter()
         pop.add_reporter(stats)
         pop.add_reporter(checkpoints)
@@ -330,7 +322,7 @@ class PurpleTrader:
     def run_validation(self):
         self.validate_fitness()
 
-pt = PurpleTrader(8, 144, 1)
-#pt.run_training()
-pt.compare_champs()
+pt = PurpleTrader(16, 144, 1)
+pt.run_training()
+#pt.compare_champs()
 #run_validation()

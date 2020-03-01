@@ -7,7 +7,7 @@ from datetime import date, timedelta, datetime
 import os
 from statistics import mode
 
-class KrakenWrapper(object):
+class BaseApiWrapper(object):
     endpoints = {
         "trade_assets": "https://api.kraken.com/0/public/AssetPairs",
         "ohlc_bars": "https://api.kraken.com/0/public/OHLC?pair={0}&since={1}&interval={2}",
@@ -26,7 +26,7 @@ class KrakenWrapper(object):
         return stripped
 
     def load_hist_files(self):
-        histFiles = os.listdir(os.path.join(os.path.dirname(__file__), '../hist_data/kraken_data'))
+        histFiles = os.listdir(os.path.join(os.path.dirname(__file__), self.hist_dir))
         df_dict = {}
         for sym in histFiles:
             frame = pd.DataFrame().from_csv(self.endpoints["files_path"]+sym)
