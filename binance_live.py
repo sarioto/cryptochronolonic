@@ -130,14 +130,14 @@ class PurpleTrader:
                 print('error')
         return master_active
 
-    def evaluate_champ(self, builder, rand_start, g, champ_num, verbose=False):
+    def evaluate_champ(self, builder, rand_start, g, verbose=False):
         portfolio_start = 1000.0
-        portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USD")
+        portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USDT")
         end_prices = {}
         phenotypes = {}
         buys = 0
         sells = 0
-        with open("./trade_hists/binance/" + str(champ_num) + "_hist.txt", "w") as ft:
+        with open("./trade_hists/kraken/" + str(g.key) + "_hist.txt", "w") as ft:
             ft.write('date,current_balance \n')
             for z_minus in range(0, self.epoch_len - 1):
                 for x in range(self.num_syms):
@@ -156,11 +156,11 @@ class PurpleTrader:
                         network.activate([active[self.hd-n]])
                     out = network.activate([active[0]])
                     end_prices[sym] = self.hs.currentHists[sym]['close'][z]
-                    if(out[0] < -.5):
+                    if(out[0] < .5 or (z_minus+1) % 16 == 0):
                         portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
-                    if(out[0] > .5):
+                    else:
                         portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
-                    ft.write(str(self.hs.currentHists[sym]['date'][z]) + ",")
+                    ft.write(str(self.hs.currentHists[sym]['time'][z]) + ",")
                     ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[0])+ " \n")
             result_val = portfolio.get_total_btc_value(end_prices)
             print("genome id ", g.key, " : ")
@@ -210,18 +210,6 @@ class PurpleTrader:
             ft = -.2
         return ft
 
-    def solve(self, network):
-        return self.evaluate(network) >= self.highest_returns
-
-    def trial_run(self):
-        r_start = 0
-        file = open("es_trade_god_cppn_3d.pkl",'rb')
-        [cppn] = pickle.load(file)
-        network = ESNetwork(self.subStrate, cppn, self.params)
-        net = network.create_phenotype_network_nd()
-        fitness = self.evaluate(net, network, r_start)
-        return fitness
-
     def eval_fitness(self, genomes, config):
         self.epoch_len = 16
         r_start = randint(0+self.epoch_len, self.hs.hist_full_size - self.hd)
@@ -249,7 +237,7 @@ class PurpleTrader:
         self.gen_count += 1
         return
 
-    def compare_champs(self):
+    def write_hists(self):
         self.epoch_len = self.hs.hist_full_size - (self.hd+1)
         r_start = self.epoch_len
         champ_current = open("./champ_data/binance/latest_greatest.pkl",'rb')
@@ -323,6 +311,3 @@ class PurpleTrader:
         self.validate_fitness()
 
 pt = PurpleTrader(16, 144, 1)
-pt.run_training()
-#pt.compare_champs()
-#run_validation()

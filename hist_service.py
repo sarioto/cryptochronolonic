@@ -533,3 +533,7 @@ class HistWorker:
     def get_binance_train(self, num_symbols=0):
         self.coin_dict, self.currentHists, self.hist_shaped, self.hist_full_size = self.binance.get_train_frames(num_symbols)
         return
+
+    def get_binance_live(self, num_symbols=0):
+        self.binance.fetch_usd_histories(live=True)
+        self.coin_dict, self.currentHists, self.hist_shaped, self.hist_full_size = self.binance.get_train_frames(num_symbols, live=True)
