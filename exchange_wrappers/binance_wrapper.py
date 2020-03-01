@@ -26,7 +26,7 @@ class BinanceUsWrapper(object):
 
     def get_symbol_hist(self, symbol):
         print("fetching data for: ", symbol)
-        resp = requests.get(self.base_endpoint + self.candlestick_endpoint.format(symbol, "1d", 1000))
+        resp = requests.get(self.base_endpoint + self.candlestick_endpoint.format(symbol, "4h", 800))
         return resp.json()
     
     def get_usd_symbols(self):
@@ -64,8 +64,7 @@ class BinanceUsWrapper(object):
             df = df[df.columns[:6]]
             df.columns = ["date", "open", "high", "low", "close", "volume"]
             df = df.convert_objects(convert_numeric=True)
-            df.dropna(inplace=True)
-            
+            df = df.fillna(method='ffill')
             df["hl_spread"] = df["high"] - df["low"]
             df["oc_spread"] = df["close"] - df["open"]
             df["rolling_close"] = df["close"].rolling(34).mean() / df["close"]
@@ -86,8 +85,9 @@ class BinanceUsWrapper(object):
             df['avg_vol_3'] = pd.Series(np.where(df.volume.rolling(3).mean() > df.volume, 1, 0), df.index)
             '''
             df.dropna(inplace=True)
-            df = df.reset_index()
-            df.to_csv("./hist_data/binance/" + s + ".txt")
+            df = df.iloc[::-1].reset_index()
+            if len(df) > 0:
+                df.to_csv("./hist_data/binance/" + s + ".txt")
 
     def get_train_frames(self, restrict_val = 0, feature_columns = ['hl_spread', 'oc_spread', 'rolling_close', 'volume_feature']):
         df_dict = self.load_hist_files()
@@ -104,7 +104,6 @@ class BinanceUsWrapper(object):
             #print(df.head())
             file_lens.append(df_len)
         mode_len = mode(file_lens)
-        print(mode_len)
         hist_full_size = mode_len
         vollist = []
         prefixes = []
