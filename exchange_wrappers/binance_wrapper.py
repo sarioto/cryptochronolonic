@@ -10,6 +10,9 @@ class BinanceUsWrapper(object):
     candlestick_endpoint = "/api/v3/klines?symbol={}&interval={}&limit={}"
     base_endpoint = "https://api.binance.us"
     info_endpoint = "/api/v3/exchangeInfo"
+    live_dir = "./live_data/binance/"
+    train_dir = "./hist_data/binance/"
+    
     def __init__(self):
         return
 
@@ -23,7 +26,7 @@ class BinanceUsWrapper(object):
 
     def get_symbol_hist(self, symbol):
         print("fetching data for: ", symbol)
-        resp = requests.get(self.base_endpoint + self.candlestick_endpoint.format(symbol, "1h", 1000))
+        resp = requests.get(self.base_endpoint + self.candlestick_endpoint.format(symbol, "1d", 1000))
         return resp.json()
     
     def get_usd_symbols(self):
@@ -41,9 +44,20 @@ class BinanceUsWrapper(object):
             frame = pd.DataFrame().from_csv("./hist_data/binance/" +sym)
             df_dict[sym] = frame
         return df_dict
+    
+    def load_live_files(self):
+        histFiles = os.listdir(os.path.join(os.path.dirname(__file__), "../hist_data/binance"))
+        df_dict = {}
+        for sym in histFiles:
+            frame = pd.DataFrame().from_csv("./hist_data/binance/" +sym)
+            df_dict[sym] = frame
+        return df_dict
 
-    def store_usd_histories(self):
+    def fetch_usd_histories(self, live=False):
         syms = self.get_usd_symbols()
+        store_dir = self.train_dir
+        if live:
+            self.live_dir
         for s in syms:
             data = self.get_symbol_hist(s)
             df = pd.DataFrame(data)
@@ -51,7 +65,7 @@ class BinanceUsWrapper(object):
             df.columns = ["date", "open", "high", "low", "close", "volume"]
             df = df.convert_objects(convert_numeric=True)
             df.dropna(inplace=True)
-            '''
+            
             df["hl_spread"] = df["high"] - df["low"]
             df["oc_spread"] = df["close"] - df["open"]
             df["rolling_close"] = df["close"].rolling(34).mean() / df["close"]
@@ -64,7 +78,7 @@ class BinanceUsWrapper(object):
             df["roc_13"] = df.close.pct_change(periods=13)
             df['std_close'] = df['open']/df['close']
             df['std_high'] = df['low']/df['close']
-            '''
+
             df['std_close'] = df['close']/df['high']
             df['std_high'] = df['high']/df['high']
             df['std_low'] = df['low']/df['high']
@@ -75,7 +89,7 @@ class BinanceUsWrapper(object):
             df = df.reset_index()
             df.to_csv("./hist_data/binance/" + s + ".txt")
 
-    def get_train_frames(self, restrict_val = 0, feature_columns = ['std_close', 'std_high', 'std_low', 'std_open', 'avg_vol_3']):
+    def get_train_frames(self, restrict_val = 0, feature_columns = ['hl_spread', 'oc_spread', 'rolling_close', 'volume_feature']):
         df_dict = self.load_hist_files()
         coin_and_hist_index = 0
         file_lens = []

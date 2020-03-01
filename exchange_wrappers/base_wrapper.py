@@ -25,7 +25,7 @@ class BaseApiWrapper(object):
         stripped = sym_full.split(".")[0][:-3]
         return stripped
 
-    def load_hist_files(self):
+    def load_hist_files(self, live=False):
         histFiles = os.listdir(os.path.join(os.path.dirname(__file__), self.hist_dir))
         df_dict = {}
         for sym in histFiles:
@@ -34,8 +34,8 @@ class BaseApiWrapper(object):
         return df_dict
 
 
-    def get_train_frames(self, restrict_val = 0, feature_columns = ['vol_feat', 'std_high', 'std_close', 'roc_13']):
-        df_dict = self.load_hist_files()
+    def get_train_frames(self, restrict_val = 0, feature_columns = ['vol_feat', 'std_high', 'std_close', 'roc_13'], live=False):
+        df_dict = self.load_hist_files(live=live)
         coin_and_hist_index = 0
         file_lens = []
         currentHists = {}
