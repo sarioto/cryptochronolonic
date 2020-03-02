@@ -1,5 +1,5 @@
 from flask import request
-from flask import Flask, url_for
+from flask import Flask, url_for, render_template
 import json
 import pandas as pd
 import random
@@ -15,13 +15,13 @@ from random import randint, shuffle
 import neat.nn
 import _pickle as pickle
 
-app = Flask(__name__, static_url_path='')
+app = Flask(__name__)
 peer_data = {}
 config = {}
 
-@app.route("/", methods=["GET"])
+@app.route('/')
 def root():
-    return app.send_static_file('index.html')
+    return render_template("trade_hist.html")
     
 @app.route("/trade_hist")
 def get_trade_hist(request):

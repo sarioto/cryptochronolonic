@@ -1,0 +1,42 @@
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+<canvas id="myChart" width="400" height="400"></canvas>
+<script>
+
+function get_trade_hist()
+{
+    $.ajax({
+    url: "http://127.0.0.1:5000/test_net_balance",
+    context: document.body,
+    type: 'GET',
+    success: function(res){
+      res = JSON.parse(res);
+      console.log(res);
+      build_chart(res);
+    }
+    });
+}
+
+function build_chart(data_dict){
+    var ctx = document.getElementById('myChart').getContext('2d');
+    var myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: Object.values(data_dict["date"]),
+            datasets: [{
+                label: 'Portfolio Balance',
+                data: Object.values(data_dict["current_balance "]),
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: false
+        }
+    });
+}
+
+get_trade_hist()
+</script>
