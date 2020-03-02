@@ -238,7 +238,7 @@ class PurpleTrader:
             g.fitness = train_ft
             if(g.fitness > best_g_fit):
                 best_g_fit = g.fitness
-                with open("./champ_data/kraken/latest_greatest"+str(champ_counter)+".pkl", 'wb') as output:
+                with open("./champ_data/binance/latest_greatest"+str(champ_counter)+".pkl", 'wb') as output:
                     pickle.dump(g, output)
             #img_count += 1
         '''
@@ -252,20 +252,20 @@ class PurpleTrader:
     def compare_champs(self):
         self.epoch_len = self.hs.hist_full_size - (self.hd+1)
         r_start = self.epoch_len
-        champ_current = open("./champ_data/binance/latest_greatest.pkl",'rb')
+        champ_current = open("./champ_data/kraken/latest_greatest.pkl",'rb')
         g = pickle.load(champ_current)
         champ_current.close()
         [cppn] = create_cppn(g, self.config, self.leaf_names, ["cppn_out"])
         net_builder = ESNetwork(self.substrate, cppn, self.params)
-        champ_fit = self.evaluate_champ(net_builder, r_start, g)
-        for f in os.listdir("./champ_data/binance"):
+        champ_fit = self.evaluate_champ(net_builder, r_start, g, 0)
+        for ix, f in enumerate(os.listdir("./champ_data/kraken")):
             if(f != "lastest_greatest.pkl"):
-                champ_file = open("./champ_data/binance/"+f,'rb')
+                champ_file = open("./champ_data/kraken/"+f,'rb')
                 g = pickle.load(champ_file)
                 champ_file.close()
                 [cppn] = create_cppn(g, self.config, self.leaf_names, ["cppn_out"])
                 net_builder = ESNetwork(self.substrate, cppn, self.params)
-                g.fitness = self.evaluate_champ(net_builder, r_start, g)
+                g.fitness = self.evaluate_champ(net_builder, r_start, g, champ_num = ix)
                 if (g.fitness > champ_fit):
                     with open("./champ_data/binance/latest_greatest.pkl", 'wb') as output:
                         pickle.dump(g, output)
@@ -323,6 +323,6 @@ class PurpleTrader:
         self.validate_fitness()
 
 pt = PurpleTrader(16, 144, 1)
-pt.run_training()
-#pt.compare_champs()
+#pt.run_training()
+pt.compare_champs()
 #run_validation()
