@@ -1,5 +1,5 @@
 from flask import request
-from flask import Flask, url_for
+from flask import Flask, url_for, render_template
 import json
 import pandas as pd
 import random
@@ -8,60 +8,50 @@ import sys, os
 from functools import partial
 from itertools import product
 import socket
-from trading_purples import PurpleTrader
 # Libs
 import numpy as np
-from hist_service import HistWorker
-from crypto_evolution import CryptoFolio
 from random import randint, shuffle
 # Local
 import neat.nn
 import _pickle as pickle
-from pureples.shared.substrate import Substrate
-from pureples.shared.visualize import draw_net
-from pureples.es_hyperneat.es_hyperneat_torch import ESNetwork
 
+app = Flask(__name__)
+peer_data = {}
+config = {}
 
-
-class LiqMaster2000:
-    app = Flask(__name__, static_url_path='champ')
-    peer_data = {}
-    config = {}
+@app.route('/')
+def root():
+    return render_template("trade_hist.html")
     
-    '''
-    def get_ip(self):
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
-            # doesn't even have to be reachable
-            s.connect(('10.255.255.255', 1))
-            IP = s.getsockname()[0]
-        except:
-            IP = '127.0.0.1'
-        finally:
-            s.close()
-        return IP
-    '''
-    @app.route("/trade_hist")
-    def get_trade_hist(self, request):
-        frame = pd.read_csv('./live_hist/latest_hist')
-        return frame.to_json()
-
-    @app.route("/exchanges")
-    def get_exchanges(self):
-        current_exchanges = os.listdir("./trade_hists")
-        return json.dumps(current_exchanges)
+@app.route("/trade_hist")
+def get_trade_hist(request):
+    frame = pd.read_csv('./live_hist/latest_hist')
+    return frame.to_json()
 
 
-    @app.route("/store_champ")
-    def store_net_json(self, request):
-        return 
+@app.route("/test_net_balance")
+def test_trade_hist_chart():
+    frame = pd.read_csv("../trade_hists/8604_hist.txt")
+    print(frame.to_json())
+    return frame.to_json()
+
+@app.route("/exchanges")
+def get_exchanges():
+    current_exchanges = os.listdir("../trade_hists")
+    print(current_exchanges)
+    return json.dumps(current_exchanges)
+
+
+@app.route("/store_champ")
+def store_net_json(request):
+    return 
     
 
 
 # If run as script.
 
 if __name__ == '__main__':
-    cs = LiqMaster2000()
+    app.run()
     '''
     task = PurpleTrader(13)
     winner = run_pop(task, 21)[0]

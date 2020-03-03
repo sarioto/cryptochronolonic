@@ -10,14 +10,14 @@ from statistics import mode
 class BaseApiWrapper(object):
     endpoints = {
         "trade_assets": "https://api.kraken.com/0/public/AssetPairs",
-        "ohlc_bars": "https://api.kraken.com/0/public/OHLC?pair={0}&since={1}&interval={2}",
-        "files_path": "./hist_data/kraken_data/"
+        "ohlc_bars": "https://api.kraken.com/0/public/OHLC?pair={0}&since={1}&interval={2}"
     }
 
     his_dir = "./hists/"
 
-    def __init__(self, hist_directory):
+    def __init__(self, hist_directory, file_path):
         self.hist_dir = hist_directory
+        self.endpoints["files_path"] = file_path
         return
 
     # depending on the pair this may need to be overridden

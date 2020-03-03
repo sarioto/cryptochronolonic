@@ -49,6 +49,9 @@ class LiqMaster2000:
             s.close()
         return IP
     '''
+    @app.route('/')
+    def index():
+        return "hellow there"
     @app.route("/trade_hist")
     def get_trade_hist(self, request):
         frame = pd.read_csv('./live_hist/latest_hist')
