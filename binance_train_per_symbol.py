@@ -180,8 +180,8 @@ class PurpleTrader:
         ft = 0.0
         for x in range(self.num_syms):
             portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USD")
+            sym = self.hs.coin_dict[x]
             for z_minus in range(0, self.epoch_len):
-                sym = self.hs.coin_dict[x]
                 z = rand_start - z_minus
                 pos_size = portfolio.ledger[sym]
                 active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_size)
