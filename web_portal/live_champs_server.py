@@ -31,7 +31,7 @@ def get_trade_hist(request):
 
 @app.route("/test_net_balance")
 def test_trade_hist_chart():
-    frame = pd.read_csv("../trade_hists/8604_hist.txt")
+    frame = pd.read_csv("../trade_hists/binance/6_hist.txt")
     print(frame.to_json())
     return frame.to_json()
 
