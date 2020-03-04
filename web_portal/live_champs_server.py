@@ -1,5 +1,6 @@
 from flask import request
 from flask import Flask, url_for, render_template
+from flask_cors import CORS
 import json
 import pandas as pd
 import random
@@ -16,6 +17,7 @@ import neat.nn
 import _pickle as pickle
 
 app = Flask(__name__)
+cors = CORS(app, resources={r"*": {"origins": "*"}})
 peer_data = {}
 config = {}
 
@@ -31,7 +33,7 @@ def get_trade_hist(request):
 
 @app.route("/test_net_balance")
 def test_trade_hist_chart():
-    frame = pd.read_csv("../trade_hists/binance/6_hist.txt")
+    frame = pd.read_csv("../trade_hists/binance/4_hist.txt")
     print(frame.to_json())
     return frame.to_json()
 
@@ -40,6 +42,12 @@ def get_exchanges():
     current_exchanges = os.listdir("../trade_hists")
     print(current_exchanges)
     return json.dumps(current_exchanges)
+
+@app.route("/exchange")
+def get_exchange(exchange="binance"):
+    hist_files = os.listdir("../trade_hists/binance/")
+    hist_data = []
+    return hist_files
 
 
 @app.route("/store_champ")
