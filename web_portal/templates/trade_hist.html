@@ -33,8 +33,13 @@ function build_chart(data_dict){
             }]
         },
         options: {
-            responsive: false
-        }
+            responsive: false,
+            elements: {
+                    point:{
+                        radius: 0
+                    }
+            }
+        },
     });
 }
 

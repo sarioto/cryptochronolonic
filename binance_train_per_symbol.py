@@ -137,8 +137,8 @@ class PurpleTrader:
         phenotypes = {}
         buys = 0
         sells = 0
-        with open("./trade_hists/binance/" + str(champ_num) + "_hist.txt", "w") as ft:
-            ft.write('date,current_balance \n')
+        with open("./trade_hists/binance_per_symbol/" + str(champ_num) + "_hist.txt", "w") as ft:
+            ft.write('date,current_balance\n')
             for z_minus in range(0, self.epoch_len - 1):
                 for x in range(self.num_syms):
                     z = rand_start - z_minus
@@ -212,9 +212,6 @@ class PurpleTrader:
             ft = -.2
         return ft
 
-    def solve(self, network):
-        return self.evaluate(network) >= self.highest_returns
-
     def trial_run(self):
         r_start = 0
         file = open("es_trade_god_cppn_3d.pkl",'rb')
@@ -240,7 +237,7 @@ class PurpleTrader:
             g.fitness = train_ft
             if(g.fitness > best_g_fit):
                 best_g_fit = g.fitness
-                with open("./champ_data/binance/latest_greatest"+str(champ_counter)+".pkl", 'wb') as output:
+                with open("./champ_data/binance_per_symbol/latest_greatest"+str(champ_counter)+".pkl", 'wb') as output:
                     pickle.dump(g, output)
             #img_count += 1
         '''
@@ -254,22 +251,22 @@ class PurpleTrader:
     def compare_champs(self):
         self.epoch_len = self.hs.hist_full_size - (self.hd+1)
         r_start = self.epoch_len
-        champ_current = open("./champ_data/kraken/latest_greatest.pkl",'rb')
+        champ_current = open("./champ_data/binance/latest_greatest.pkl",'rb')
         g = pickle.load(champ_current)
         champ_current.close()
         [cppn] = create_cppn(g, self.config, self.leaf_names, ["cppn_out"])
         net_builder = ESNetwork(self.substrate, cppn, self.params)
         champ_fit = self.evaluate_champ(net_builder, r_start, g, 0)
-        for ix, f in enumerate(os.listdir("./champ_data/kraken")):
+        for ix, f in enumerate(os.listdir("./champ_data/binance_per_symbol")):
             if(f != "lastest_greatest.pkl"):
-                champ_file = open("./champ_data/kraken/"+f,'rb')
+                champ_file = open("./champ_data/binance_per_symbol/"+f,'rb')
                 g = pickle.load(champ_file)
                 champ_file.close()
                 [cppn] = create_cppn(g, self.config, self.leaf_names, ["cppn_out"])
                 net_builder = ESNetwork(self.substrate, cppn, self.params)
                 g.fitness = self.evaluate_champ(net_builder, r_start, g, champ_num = ix)
                 if (g.fitness > champ_fit):
-                    with open("./champ_data/binance/latest_greatest.pkl", 'wb') as output:
+                    with open("./champ_data/binance_per_symbol/latest_greatest.pkl", 'wb') as output:
                         pickle.dump(g, output)
         return
 
@@ -287,7 +284,7 @@ class PurpleTrader:
             g.fitness = self.evaluate(net, network, r_start, g)
             if(g.fitness > best_g_fit):
                 best_g_fit = g.fitness
-                with open('./champ_data/binance/latest_greatest.pkl', 'wb') as output:
+                with open('./champ_data/binance_per_symbol/latest_greatest.pkl', 'wb') as output:
                     pickle.dump(g, output)
         return
 
