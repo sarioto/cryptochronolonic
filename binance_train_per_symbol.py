@@ -170,7 +170,6 @@ class PurpleTrader:
 
     def evaluate(self, builder, rand_start, g, verbose=False):
         portfolio_start = 1000.0
-        portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USD")
         end_prices = {}
         phenotypes = {}
         balances = []
@@ -180,6 +179,7 @@ class PurpleTrader:
         ft = 0.0
         for x in range(self.num_syms):
             portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USD")
+            portfolio.target_amount = .25
             sym = self.hs.coin_dict[x]
             for z_minus in range(0, self.epoch_len):
                 z = rand_start - z_minus
@@ -205,11 +205,10 @@ class PurpleTrader:
                 bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0] 
                 ft += bal_now - last_val
                 last_val = bal_now
-        result_val = portfolio.get_total_btc_value(end_prices)
+        #result_val = portfolio.get_total_btc_value(end_prices)
         print(g.key, " : ")
-        print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
-        if result_val[0] == portfolio_start:
-            ft = -.2
+        print(ft)
+        #print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
         return ft
 
     def trial_run(self):
@@ -322,6 +321,6 @@ class PurpleTrader:
         self.validate_fitness()
 
 pt = PurpleTrader(16, 144, 1)
-#pt.run_training()
-pt.compare_champs()
+pt.run_training()
+#pt.compare_champs()
 #run_validation()
