@@ -250,7 +250,7 @@ class PurpleTrader:
     def compare_champs(self):
         self.epoch_len = self.hs.hist_full_size - (self.hd+1)
         r_start = self.epoch_len
-        champ_current = open("./champ_data/binance/latest_greatest.pkl",'rb')
+        champ_current = open("./champ_data/binance_per_symbol/latest_greatest.pkl",'rb')
         g = pickle.load(champ_current)
         champ_current.close()
         [cppn] = create_cppn(g, self.config, self.leaf_names, ["cppn_out"])
@@ -321,6 +321,6 @@ class PurpleTrader:
         self.validate_fitness()
 
 pt = PurpleTrader(16, 144, 1)
-pt.run_training()
-#pt.compare_champs()
+#pt.run_training()
+pt.compare_champs()
 #run_validation()
