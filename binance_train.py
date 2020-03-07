@@ -252,15 +252,15 @@ class PurpleTrader:
     def compare_champs(self):
         self.epoch_len = self.hs.hist_full_size - (self.hd+1)
         r_start = self.epoch_len
-        champ_current = open("./champ_data/kraken/latest_greatest.pkl",'rb')
+        champ_current = open("./champ_data/binance/latest_greatest.pkl",'rb')
         g = pickle.load(champ_current)
         champ_current.close()
         [cppn] = create_cppn(g, self.config, self.leaf_names, ["cppn_out"])
         net_builder = ESNetwork(self.substrate, cppn, self.params)
         champ_fit = self.evaluate_champ(net_builder, r_start, g, 0)
-        for ix, f in enumerate(os.listdir("./champ_data/kraken")):
+        for ix, f in enumerate(os.listdir("./champ_data/binance")):
             if(f != "lastest_greatest.pkl"):
-                champ_file = open("./champ_data/kraken/"+f,'rb')
+                champ_file = open("./champ_data/binance/"+f,'rb')
                 g = pickle.load(champ_file)
                 champ_file.close()
                 [cppn] = create_cppn(g, self.config, self.leaf_names, ["cppn_out"])
@@ -322,7 +322,7 @@ class PurpleTrader:
     def run_validation(self):
         self.validate_fitness()
 
-pt = PurpleTrader(16, 144, 267)
-#pt.run_training("267")
+pt = PurpleTrader(16, 144, 405)
+#pt.run_training("405")
 pt.compare_champs()
 #run_validation()
