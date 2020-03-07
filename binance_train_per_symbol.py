@@ -202,8 +202,11 @@ class PurpleTrader:
                     did_buy = portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
                 #rng = iter(shuffle(rng))
                 end_prices[sym] = self.hs.currentHists[sym]['close'][z]
-                bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0] 
-                ft += bal_now - last_val
+                bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0]
+                if bal_now == last_val:
+                    ft += -.01
+                else: 
+                    ft += bal_now - last_val
                 last_val = bal_now
         #result_val = portfolio.get_total_btc_value(end_prices)
         print(g.key, " : ")
@@ -250,12 +253,7 @@ class PurpleTrader:
     def compare_champs(self):
         self.epoch_len = self.hs.hist_full_size - (self.hd+1)
         r_start = self.epoch_len
-        champ_current = open("./champ_data/binance_per_symbol/latest_greatest.pkl",'rb')
-        g = pickle.load(champ_current)
-        champ_current.close()
-        [cppn] = create_cppn(g, self.config, self.leaf_names, ["cppn_out"])
-        net_builder = ESNetwork(self.substrate, cppn, self.params)
-        champ_fit = self.evaluate_champ(net_builder, r_start, g, 0)
+        champ_fit = 0
         for ix, f in enumerate(os.listdir("./champ_data/binance_per_symbol")):
             if(f != "lastest_greatest.pkl"):
                 champ_file = open("./champ_data/binance_per_symbol/"+f,'rb')
@@ -320,13 +318,7 @@ class PurpleTrader:
     def run_validation(self):
         self.validate_fitness()
 
-<<<<<<< HEAD
 pt = PurpleTrader(16, 144, 1)
 #pt.run_training()
 pt.compare_champs()
-=======
-pt = PurpleTrader(16, 144, 47)
-pt.run_training("47")
-#pt.compare_champs()
->>>>>>> 649fdbf516cd5e65b55dd66a1d6ae8c89a768832
 #run_validation()
