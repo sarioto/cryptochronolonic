@@ -42,10 +42,12 @@ def get_trade_hist(request):
 
 @app.route("/test_net_balance")
 def test_trade_hist_chart():
-    frame = pd.read_csv("../trade_hists/binance_per_symbol/champ_10/LTC_hist.txt")
-    data = [list(v.values()) for v in frame.T.to_dict().values()]
-    print()
-    return jsonify(data)
+    hist_files = os.listdir("../trade_hists/binance_per_symbol/champ_10")
+    data_dict = {}
+    for f in hist_files:
+        frame = pd.read_csv("../trade_hists/binance_per_symbol/champ_10/" + f)
+        data_dict[f] = [list(v.values()) for v in frame.T.to_dict().values()]
+    return jsonify(data_dict)
 
 @app.route("/exchanges")
 def get_exchanges():

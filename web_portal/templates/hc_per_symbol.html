@@ -10,7 +10,7 @@
 <script>
   var seriesOptions = [],
   seriesCounter = 0,
-  names = ['btc'];
+  names = [];
 /**
  * Create the chart when all data is loaded
  * @returns {undefined}
@@ -73,18 +73,17 @@ function success(data) {
 function crypto_success(data_dict)
 {
     console.log(data_dict)
-  var name = 'BTC'  
-  seriesOptions[0] = {
-    name: name,
-    data: data_dict
-  };
+    names = data_dict.keys()
+    for (var sym in data_dict)
+    {  
+        seriesOptions[names.indexOf(sym)] = {
+            name: sym,
+            data: data_dict
+        };
+    }
     createChart();
 }
 
-function retrieve_performance_data(symbols)
-{
-    return;
-}
 /*
 Highcharts.getJSON(
   'https://cdn.jsdelivr.net/gh/highcharts/highcharts@v7.0.0/samples/data/msft-c.json',

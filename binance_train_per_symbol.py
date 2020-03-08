@@ -9,12 +9,11 @@ import numpy as np
 from hist_service import HistWorker
 from crypto_evolution import CryptoFolio
 from random import randint, shuffle
+import pathlib
 # Local
 import neat.nn
 import neat
 import _pickle as pickle
-from pureples.shared.substrate import Substrate
-from pureples.shared.visualize import draw_net
 #from pureples.es_hyperneat.es_hyperneat import ESNetwork
 from pytorch_neat.cppn import create_cppn
 from pytorch_neat.substrate import Substrate
@@ -131,18 +130,18 @@ class PurpleTrader:
         return master_active
 
     def evaluate_champ(self, builder, rand_start, g, champ_num, verbose=False):
-        portfolio_start = 1000.0
-        portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USD")
         end_prices = {}
         phenotypes = {}
         buys = 0
         sells = 0
-        with open("./trade_hists/binance_per_symbol/" + str(champ_num) + "_hist.txt", "w") as ft:
-            ft.write('date,current_balance\n')
-            for z_minus in range(0, self.epoch_len - 1):
-                for x in range(self.num_syms):
-                    z = rand_start - z_minus
-                    sym = self.hs.coin_dict[x]
+        pathlib.Path(str(pathlib.Path(__file__).parent.absolute()) + '/trade_hists/binance_per_symbol/champ_' + str(champ_num)).mkdir(exist_ok=True)
+        balances = [] 
+        for x in range(self.num_syms):
+            sym = self.hs.coin_dict[x]
+            portfolio = CryptoFolio(1000.0, self.hs.coin_dict, "USD")
+            with open("./trade_hists/binance_per_symbol/champ_" + str(champ_num) + "/" + sym + "_hist.txt", "w") as ft:
+                ft.write('0,1\n')
+                for z_minus in range(0, self.epoch_len - 1):
                     z = rand_start - z_minus
                     pos_size = portfolio.ledger[sym]
                     active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_size)
@@ -160,13 +159,14 @@ class PurpleTrader:
                         portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
                     if(out[0] > .5):
                         portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
+                    balance = portfolio.get_total_btc_value_no_sell(end_prices)[0]
                     ft.write(str(self.hs.currentHists[sym]['date'][z]) + ",")
-                    ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[0])+ " \n")
+                    ft.write(str(balance)+ " \n")
             result_val = portfolio.get_total_btc_value(end_prices)
+            balances.append(result_val[0])
             print("genome id ", g.key, " : ")
             print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
-            ft = result_val[0]
-            return ft
+        return np.asarray(balances, dtype=np.float32).mean()
 
     def evaluate(self, builder, rand_start, g, verbose=False):
         portfolio_start = 1000.0
@@ -208,7 +208,6 @@ class PurpleTrader:
                 else: 
                     ft += bal_now - last_val
                 last_val = bal_now
-        #result_val = portfolio.get_total_btc_value(end_prices)
         print(g.key, " : ")
         print(ft)
         #print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
