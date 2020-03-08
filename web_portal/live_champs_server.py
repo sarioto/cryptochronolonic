@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, jsonify
 from flask import Flask, url_for, render_template
 from flask_cors import CORS
 import json
@@ -24,7 +24,16 @@ config = {}
 @app.route('/')
 def root():
     return render_template("trade_hist.html")
-    
+
+@app.route('/high_chart')
+def high_chart():
+    return render_template("hc_per_symbol.html")
+
+
+@app.route('/example')
+def example():
+    return render_template("hc_example.html")
+
 @app.route("/trade_hist")
 def get_trade_hist(request):
     frame = pd.read_csv('./live_hist/latest_hist')
@@ -33,9 +42,10 @@ def get_trade_hist(request):
 
 @app.route("/test_net_balance")
 def test_trade_hist_chart():
-    frame = pd.read_csv("../trade_hists/binance/8_hist.txt")
-    print(frame.to_json())
-    return frame.to_json()
+    frame = pd.read_csv("../trade_hists/binance_per_symbol/champ_10/LTC_hist.txt")
+    data = [list(v.values()) for v in frame.T.to_dict().values()]
+    print()
+    return jsonify(data)
 
 @app.route("/exchanges")
 def get_exchanges():

@@ -1,0 +1,26 @@
+
+
+<script>
+    Highcharts.getJSON('http://127.0.0.1:5000/test_net_balance', function (data) {
+  // Create the chart
+  Highcharts.stockChart('container', {
+
+
+    rangeSelector: {
+      selected: 1
+    },
+
+    title: {
+      text: 'AAPL Stock Price'
+    },
+
+    series: [{
+      name: 'AAPL',
+      data: data,
+      tooltip: {
+        valueDecimals: 2
+      }
+    }]
+  });
+});
+</script>
