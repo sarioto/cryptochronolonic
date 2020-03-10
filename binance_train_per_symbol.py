@@ -223,7 +223,7 @@ class PurpleTrader:
         return fitness
 
     def eval_fitness(self, genomes, config):
-        self.epoch_len = 16
+        self.epoch_len = 44
         r_start = randint(0+self.epoch_len, self.hs.hist_full_size - self.hd)
         best_g_fit = 0.0
         champ_counter = self.gen_count % 10 
@@ -254,16 +254,17 @@ class PurpleTrader:
         r_start = self.epoch_len
         champ_fit = 0
         for ix, f in enumerate(os.listdir("./champ_data/binance_per_symbol")):
-            if(f != "lastest_greatest.pkl"):
-                champ_file = open("./champ_data/binance_per_symbol/"+f,'rb')
-                g = pickle.load(champ_file)
-                champ_file.close()
-                [cppn] = create_cppn(g, self.config, self.leaf_names, ["cppn_out"])
-                net_builder = ESNetwork(self.substrate, cppn, self.params)
-                g.fitness = self.evaluate_champ(net_builder, r_start, g, champ_num = ix)
-                if (g.fitness > champ_fit):
-                    with open("./champ_data/binance_per_symbol/latest_greatest.pkl", 'wb') as output:
-                        pickle.dump(g, output)
+            champ_file = open("./champ_data/binance_per_symbol/"+f,'rb')
+            g = pickle.load(champ_file)
+            champ_file.close()
+            [cppn] = create_cppn(g, self.config, self.leaf_names, ["cppn_out"])
+            net_builder = ESNetwork(self.substrate, cppn, self.params)
+            g.fitness = self.evaluate_champ(net_builder, r_start, g, champ_num = ix)
+            '''
+            if (g.fitness > champ_fit):
+                with open("./champ_data/binance_per_symbol/latest_greatest.pkl", 'wb') as output:
+                    pickle.dump(g, output)
+            '''
         return
 
     def validate_fitness(self):
