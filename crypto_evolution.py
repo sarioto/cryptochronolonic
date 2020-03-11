@@ -21,17 +21,7 @@ class CryptoFolio:
         #print(self.ledger)
         self.start = start_amount
         self.save_trades = save_trades
-    '''
-    def __init__(self, start_amount, coins, base, save_trades=False):
-        self.ledger[self.base_sym] = start_amount
-        self.base_sym = base
-        for ix in range(len(coins)):
-            self.ledger[coins[ix]] = 0.0
-        self.start = start_amount
-        self.hs = hs.HistWorker()
-        self.save_trades = save_trades
-    '''
-
+        
     def buy_coin(self, c_name, price):
         amount = self.start * self.target_amount
         if(amount > self.ledger[self.base_sym]):

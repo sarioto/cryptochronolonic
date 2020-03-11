@@ -37,7 +37,7 @@ def get_trade_hist(request):
 
 @app.route("/trade_hist/<genome>/all")
 def get_all_trade_hist_genome(genome):
-    return jsonify(get_trade_hist(genome))
+    return jsonify(get_genome_performance(genome))
 
 @app.route("/test_net_balance")
 def test_trade_hist_chart():
@@ -66,7 +66,7 @@ def store_net_json(request):
     return 
     
 
-def get_trade_hist(g_name):
+def get_genome_performance(g_name):
     hist_files = os.listdir("../trade_hists/binance_per_symbol/" + g_name)
     data_dict = {}
     for f in hist_files:

@@ -4,7 +4,7 @@
 <script src="https://code.highcharts.com/stock/modules/export-data.js"></script>
 
 <div>
-    <select name="genome_filename">
+    <select name="genome_filename" onchange="get_data(this.value);">
         {% for f in data %}
         <option value="{{f}}" {% if f == "list_status" %} selected {% endif %}>{{f}}</option>
 
@@ -89,8 +89,11 @@ Highcharts.getJSON(
   success
 );
 */
-Highcharts.getJSON(
-    'http://127.0.0.1:5000/test_net_balance',
+function get_data(genome_name)
+{
+    Highcharts.getJSON(
+    'http://127.0.0.1:5000/trade_hist/'+genome_name+'/all',
     crypto_success
-);
+    );
+}
 </script>
