@@ -151,13 +151,14 @@ class PurpleTrader:
                         phenotypes[sym] = builder.create_phenotype_network_nd()
                         network = phenotypes[sym]
                     network.reset()
+                    
                     for n in range(1, self.hd+1):
                         network.activate([active[self.hd-n]])
                     out = network.activate([active[0]])
                     end_prices[sym] = self.hs.currentHists[sym]['close'][z]
-                    if(out[0] < -.5):
+                    if(out[0] < 0.0):
                         portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
-                    if(out[0] > .5):
+                    if(out[0] > 0.0):
                         portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
                     balance = portfolio.get_total_btc_value_no_sell(end_prices)[0]
                     ft.write(str(self.hs.currentHists[sym]['date'][z]) + ",")
@@ -192,13 +193,15 @@ class PurpleTrader:
                     phenotypes[sym] = builder.create_phenotype_network_nd()
                     network = phenotypes[sym]
                 network.reset()
+                
                 for n in range(1, self.hd+1):
                     network.activate([active[self.hd-n]])
+                
                 out = network.activate([active[0]])
-                if(out[0] < -0.5):
+                if(out[0] < 0.0):
                     portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
                     #print("bought ", sym)
-                elif(out[0] > 0.5):
+                elif(out[0] > 0.0):
                     did_buy = portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
                 #rng = iter(shuffle(rng))
                 end_prices[sym] = self.hs.currentHists[sym]['close'][z]
@@ -223,7 +226,7 @@ class PurpleTrader:
         return fitness
 
     def eval_fitness(self, genomes, config):
-        self.epoch_len = 44
+        self.epoch_len = 7
         r_start = randint(0+self.epoch_len, self.hs.hist_full_size - self.hd)
         best_g_fit = 0.0
         champ_counter = self.gen_count % 10 
@@ -318,7 +321,7 @@ class PurpleTrader:
     def run_validation(self):
         self.validate_fitness()
 
-pt = PurpleTrader(16, 144, 1)
+pt = PurpleTrader(55, 144, 1)
 #pt.run_training()
 pt.compare_champs()
 #run_validation()

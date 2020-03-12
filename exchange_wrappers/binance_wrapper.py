@@ -67,8 +67,9 @@ class BinanceUsWrapper(object):
             df = df.fillna(method='ffill')
             df["hl_spread"] = df["high"] - df["low"]
             df["oc_spread"] = df["close"] - df["open"]
-            df["rolling_close"] = df["close"].rolling(34).mean() / df["close"]
-            #df["rolling_spread"] = df["oc_spread"].rolling(34).mean() / df["oc_spread"]
+            df["roc_55"] = df.close.pct_change(periods=55)
+            df["roc_21"] = df.close.pct_change(periods=21)
+            df["roc_8"] = df.close.pct_change(periods=8)
             df["volume_feature"] = df["volume"].rolling(34).mean() / df["volume"]
             '''
             df['vol_feat'] = df.vol.rolling(3).mean() / df.vol
@@ -89,7 +90,7 @@ class BinanceUsWrapper(object):
             if len(df) > 0:
                 df.to_csv("./hist_data/binance/" + s + ".txt")
 
-    def get_train_frames(self, restrict_val = 0, feature_columns = ['hl_spread', 'oc_spread', 'rolling_close', 'volume_feature']):
+    def get_train_frames(self, restrict_val = 0, feature_columns = ['hl_spread', 'oc_spread', 'volume_feature', 'roc_55', 'roc_21', 'roc_8']):
         df_dict = self.load_hist_files()
         coin_and_hist_index = 0
         file_lens = []
@@ -132,3 +133,4 @@ class BinanceUsWrapper(object):
             coin_and_hist_index += 1
         hist_shaped = pd.Series(hist_shaped)
         return coin_dict, currentHists, hist_shaped, hist_full_size
+
