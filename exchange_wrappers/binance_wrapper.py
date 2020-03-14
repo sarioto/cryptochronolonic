@@ -132,3 +132,5 @@ class BinanceUsWrapper(object):
             coin_and_hist_index += 1
         hist_shaped = pd.Series(hist_shaped)
         return coin_dict, currentHists, hist_shaped, hist_full_size
+bw = BinanceUsWrapper()
+bw.fetch_usd_histories()
