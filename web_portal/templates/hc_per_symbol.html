@@ -73,7 +73,7 @@ function success(data) {
 function crypto_success(data_dict)
 {
     console.log(data_dict)
-    names = data_dict.keys()
+    names = Object.keys(data_dict)
     for (var sym in data_dict)
     {  
         seriesOptions[names.indexOf(sym)] = {
