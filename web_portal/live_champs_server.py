@@ -37,7 +37,7 @@ def get_trade_hist(request):
 
 @app.route("/trade_hist/<genome>/all")
 def get_all_trade_hist_genome(genome):
-    return jsonify(get_genome_performance(genome))  
+    return jsonify(get_genome_performance(genome))
 
 @app.route("/test_net_balance")
 def test_trade_hist_chart():
@@ -45,8 +45,7 @@ def test_trade_hist_chart():
     data_dict = {}
     for f in hist_files:
         frame = pd.read_csv("../trade_hists/binance_per_symbol/champ_0/" + f)
-        if (frame["1"][0] *1.5) < frame["1"][len(frame) - 1]: 
-            data_dict[f] = [list(v.values()) for v in frame.T.to_dict().values()]
+        data_dict[f] = [list(v.values()) for v in frame.T.to_dict().values()]
     return jsonify(data_dict)
 
 @app.route("/exchanges")
@@ -72,10 +71,19 @@ def get_genome_performance(g_name):
     data_dict = {}
     for f in hist_files:
         frame = pd.read_csv("../trade_hists/binance_per_symbol/"+ g_name +"/" + f)
-        print(frame["1"][0], frame["1"][len(frame)])
-        if (frame["1"][0] *1.5) < frame["1"][len(frame)]: 
+        print(frame["1"][0], frame["1"][len(frame) - 1])
+        if (frame["1"][0] *1.5) < frame["1"][len(frame) - 1]: 
             data_dict[f] = [list(v.values()) for v in frame.T.to_dict().values()]
     return data_dict
+
+
+'''def get_genome_performance(g_name):
+    hist_files = os.listdir("../trade_hists/binance_per_symbol/" + g_name)
+    data_dict = {}
+    for f in hist_files:
+        frame = pd.read_csv("../trade_hists/binance_per_symbol/"+ g_name +"/" + f)
+        data_dict[f] = [list(v.values()) for v in frame.T.to_dict().values()]
+    return data_dict'''
 
 
 # If run as script.
