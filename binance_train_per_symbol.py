@@ -25,14 +25,15 @@ import torch
 class PurpleTrader:
 
     # ES-HyperNEAT specific parameters.
-    params = {"initial_depth": 1,
+    params = {"initial_depth": 2,
             "max_depth": 3,
             "variance_threshold": 0.055,
-            "band_threshold": 0.034,
+            "band_threshold": 0.013,
             "iteration_level": 3,
             "division_threshold": 0.021,
             "max_weight": 34.55,
             "activation": "relu"}
+
 
 
     # Config for CPPN.
@@ -191,10 +192,13 @@ class PurpleTrader:
                         phenotypes[sym] = builder.create_phenotype_network_nd()
                         network = phenotypes[sym]
                     network.reset()
+                    print(active[0], active)
                     for n in range(1, self.hd):
                         network.activate([active[self.hd-n]])
-                    out = F.softmax(network.activate([active[0]]), dim=1)
-                    max_output = torch.max(out, 1)[1]
+                    out = network.activate([active[0]])
+                    out = F.softmax(out[0], dim=0)
+                    #print(out)
+                    max_output = torch.max(out, 0)[1]
                     end_prices[sym] = self.hs.currentHists[sym]['close'][z]
                     if(max_output == 2):
                         portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
@@ -271,7 +275,6 @@ class PurpleTrader:
                 z = rand_start - z_minus
                 pos_size = portfolio.ledger[sym]
                 active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_size)
-                #print(active)
                 if(z_minus == 0 or (z_minus + 1) % 8 == 0):
                     self.reset_substrate(active[0])
                     builder.substrate = self.substrate

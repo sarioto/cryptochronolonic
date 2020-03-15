@@ -25,10 +25,10 @@ import torch
 class PurpleTrader:
 
     # ES-HyperNEAT specific parameters.
-    params = {"initial_depth": 1,
+    params = {"initial_depth": 2,
             "max_depth": 3,
             "variance_threshold": 0.055,
-            "band_threshold": 0.034,
+            "band_threshold": 0.013,
             "iteration_level": 3,
             "division_threshold": 0.021,
             "max_weight": 34.55,
@@ -151,7 +151,8 @@ class PurpleTrader:
                     if(z_minus == 0 or (z_minus + 1) % 8 == 0):
                         self.reset_substrate(active[0])
                         builder.substrate = self.substrate
-                        phenotypes[sym] = builder.create_phenotype_network_nd()
+                        es_builder = ESNetwork(self.substrate, builder, self.params)
+                        phenotypes[sym] = es_builder.create_phenotype_network_nd()
                         network = phenotypes[sym]
                     network.reset()
                     for n in range(1, self.hd):
@@ -195,7 +196,8 @@ class PurpleTrader:
                 network.reset()
                 for n in range(1, self.hd):
                     network.activate([active[self.hd-n]])
-                out = F.softmax(network.activate([active[0]])[0], dim=0)
+                out = network.activate([active[0]])
+                out = F.softmax(out[0], dim=0)
                 max_output = torch.max(out, 0)[1]
                 if(max_output == 2):
                     portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
@@ -260,16 +262,16 @@ class PurpleTrader:
         g = pickle.load(champ_current)
         champ_current.close()
         [cppn] = create_cppn(g, self.config, self.leaf_names, ["cppn_out"])
-        net_builder = ESNetwork(self.substrate, cppn, self.params)
-        champ_fit = self.evaluate_champ(net_builder, r_start, g, 0)
+        #net_builder = ESNetwork(self.substrate, cppn, self.params)
+        champ_fit = self.evaluate_champ(cppn, r_start, g, 0)
         for ix, f in enumerate(os.listdir("./champ_data/binance")):
             if(f != "lastest_greatest.pkl"):
                 champ_file = open("./champ_data/binance/"+f,'rb')
                 g = pickle.load(champ_file)
                 champ_file.close()
                 [cppn] = create_cppn(g, self.config, self.leaf_names, ["cppn_out"])
-                net_builder = ESNetwork(self.substrate, cppn, self.params)
-                g.fitness = self.evaluate_champ(net_builder, r_start, g, champ_num = ix)
+                #net_builder = ESNetwork(self.substrate, cppn, self.params)
+                g.fitness = self.evaluate_champ(cppn, r_start, g, champ_num = ix)
                 if (g.fitness > champ_fit):
                     with open("./champ_data/binance/latest_greatest.pkl", 'wb') as output:
                         pickle.dump(g, output)
@@ -284,7 +286,7 @@ class PurpleTrader:
         for idx in genomes:
             g = genomes[idx]
             cppn = neat.nn.FeedForwardNetwork.create(g, config)
-            network = ESNetwork(self.subStrate, cppn, self.params, self.hd)
+            network = ESNetwork(self.subStrate, cppn, self.params)
             net = network.create_phenotype_network_nd()
             g.fitness = self.evaluate(net, network, r_start, g)
             if(g.fitness > best_g_fit):
