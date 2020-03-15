@@ -3,14 +3,21 @@
 <script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
 <script src="https://code.highcharts.com/stock/modules/export-data.js"></script>
 
+<div>
+    <select name="genome_filename" onchange="get_data(this.value);">
+        {% for f in data %}
+        <option value="{{f}}" {% if f == "list_status" %} selected {% endif %}>{{f}}</option>
+
+        {% endfor %}
+    </select>
+</div>
 
 <div id="container" style="height: 400px; min-width: 310px"></div>
 
 
 <script>
   var seriesOptions = [],
-  seriesCounter = 0,
-  names = [];
+  seriesCounter = 0;
 /**
  * Create the chart when all data is loaded
  * @returns {undefined}
@@ -53,32 +60,16 @@ function createChart() {
   });
 }
 
-function success(data) {
-  var name = this.url.match(/(msft|aapl|goog)/)[0].toUpperCase();
-  var i = names.indexOf(name);
-  seriesOptions[i] = {
-    name: name,
-    data: data
-  };
-
-  // As we're loading the data asynchronously, we don't know what order it
-  // will arrive. So we keep a counter and create the chart when all the data is loaded.
-  seriesCounter += 1;
-
-  if (seriesCounter === names.length) {
-    createChart();
-  }
-}
 
 function crypto_success(data_dict)
 {
     console.log(data_dict)
-    names = Object.keys(data_dict)
+    var names = Object.keys(data_dict);
     for (var sym in data_dict)
     {  
         seriesOptions[names.indexOf(sym)] = {
             name: sym,
-            data: data_dict
+            data: data_dict[sym]
         };
     }
     createChart();
@@ -98,8 +89,11 @@ Highcharts.getJSON(
   success
 );
 */
-Highcharts.getJSON(
-    'http://127.0.0.1:5000/test_net_balance',
+function get_data(genome_name)
+{
+    Highcharts.getJSON(
+    'http://127.0.0.1:5000/trade_hist/'+genome_name+'/all',
     crypto_success
-);
+    );
+}
 </script>

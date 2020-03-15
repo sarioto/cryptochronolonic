@@ -27,25 +27,24 @@ def root():
 
 @app.route('/high_chart')
 def high_chart():
-    return render_template("hc_per_symbol.html")
-
-
-@app.route('/example')
-def example():
-    return render_template("hc_example.html")
+    hist_files = os.listdir("../trade_hists/binance_per_symbol/")
+    return render_template("hc_per_symbol.html", data=hist_files)
 
 @app.route("/trade_hist")
 def get_trade_hist(request):
     frame = pd.read_csv('./live_hist/latest_hist')
     return frame.to_json()
 
+@app.route("/trade_hist/<genome>/all")
+def get_all_trade_hist_genome(genome):
+    return jsonify(get_genome_performance(genome))
 
 @app.route("/test_net_balance")
 def test_trade_hist_chart():
     hist_files = os.listdir("../trade_hists/binance_per_symbol/champ_10")
     data_dict = {}
     for f in hist_files:
-        frame = pd.read_csv("../trade_hists/binance_per_symbol/champ_10/" + f)
+        frame = pd.read_csv("../trade_hists/binance_per_symbol/champ_0/" + f)
         data_dict[f] = [list(v.values()) for v in frame.T.to_dict().values()]
     return jsonify(data_dict)
 
@@ -66,6 +65,25 @@ def get_exchange(exchange="binance"):
 def store_net_json(request):
     return 
     
+
+def get_genome_performance(g_name):
+    hist_files = os.listdir("../trade_hists/binance_per_symbol/" + g_name)
+    data_dict = {}
+    for f in hist_files:
+        frame = pd.read_csv("../trade_hists/binance_per_symbol/"+ g_name +"/" + f)
+        print(frame["1"][0], frame["1"][len(frame) - 1])
+        if (frame["1"][0] *1.5) < frame["1"][len(frame) - 1]: 
+            data_dict[f] = [list(v.values()) for v in frame.T.to_dict().values()]
+    return data_dict
+
+
+'''def get_genome_performance(g_name):
+    hist_files = os.listdir("../trade_hists/binance_per_symbol/" + g_name)
+    data_dict = {}
+    for f in hist_files:
+        frame = pd.read_csv("../trade_hists/binance_per_symbol/"+ g_name +"/" + f)
+        data_dict[f] = [list(v.values()) for v in frame.T.to_dict().values()]
+    return data_dict'''
 
 
 # If run as script.
