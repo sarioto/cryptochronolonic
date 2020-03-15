@@ -19,6 +19,8 @@ from pureples.shared.visualize import draw_net
 from pytorch_neat.cppn import create_cppn
 from pytorch_neat.substrate import Substrate
 from pytorch_neat.es_hyperneat import ESNetwork
+import torch.nn.functional as F
+import torch
 # Local
 class PurpleTrader:
 
@@ -30,7 +32,7 @@ class PurpleTrader:
             "iteration_level": 3,
             "division_threshold": 0.021,
             "max_weight": 34.55,
-            "activation": "tanh"}
+            "activation": "relu"}
 
 
     # Config for CPPN.
@@ -53,7 +55,7 @@ class PurpleTrader:
 
     def refresh(self):
         self.in_shapes = []
-        self.out_shapes = [(0.0, -1.0, -1.0)]
+        self.out_shapes = [(0.0, -1.0, 1.0), (0.0, -1.0, 0.0), (0.0, -1.0, -1.0)]
         self.hs = HistWorker()
         self.hs.get_binance_train()
         print(self.hs.currentHists.keys())
@@ -62,7 +64,7 @@ class PurpleTrader:
         print(self.hs.hist_shaped.shape)
         self.num_syms = self.hs.hist_shaped.shape[0]
         self.inputs = self.hs.hist_shaped[0].shape[1] + 1
-        self.outputs = 1
+        self.outputs = len(self.out_shapes)
         sign = 1
         for ix2 in range(1,self.inputs+1):
             sign *= -1
@@ -152,13 +154,14 @@ class PurpleTrader:
                         phenotypes[sym] = builder.create_phenotype_network_nd()
                         network = phenotypes[sym]
                     network.reset()
-                    for n in range(1, self.hd+1):
+                    for n in range(1, self.hd):
                         network.activate([active[self.hd-n]])
-                    out = network.activate([active[0]])
+                    out = F.softmax(network.activate([active[0]]), dim=1)
+                    max_output = torch.max(out, 1)[1]
                     end_prices[sym] = self.hs.currentHists[sym]['close'][z]
-                    if(out[0] < -.5):
+                    if(max_output == 2):
                         portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
-                    if(out[0] > .5):
+                    if(max_output == 0):
                         portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
                     ft.write(str(self.hs.currentHists[sym]['date'][z]) + ",")
                     ft.write(str(portfolio.get_total_btc_value_no_sell(end_prices)[0])+ " \n")
@@ -190,13 +193,14 @@ class PurpleTrader:
                     phenotypes[sym] = builder.create_phenotype_network_nd()
                     network = phenotypes[sym]
                 network.reset()
-                for n in range(1, self.hd+1):
+                for n in range(1, self.hd):
                     network.activate([active[self.hd-n]])
-                out = network.activate([active[0]])
-                if(out[0] < -0.5):
+                out = F.softmax(network.activate([active[0]])[0], dim=0)
+                max_output = torch.max(out, 0)[1]
+                if(max_output == 2):
                     portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
                     #print("bought ", sym)
-                elif(out[0] > 0.5):
+                elif(max_output == 0):
                     did_buy = portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
                 #rng = iter(shuffle(rng))
                 end_prices[sym] = self.hs.currentHists[sym]['close'][z]
@@ -273,7 +277,7 @@ class PurpleTrader:
 
     def validate_fitness(self):
         config = self.config
-        genomes = neat.Checkpointer.restore_checkpoint("./pkl_pops/pop-checkpoint-27").population
+        genomes = neat.Checkpointer.restore_checkpoint("./pkl_pops/binance_full_market/pop-checkpoint-27").population
         self.epoch_len = 233
         r_start = self.hs.hist_full_size - self.epoch_len-1
         best_g_fit = 1.0
@@ -294,7 +298,7 @@ class PurpleTrader:
         if(checkpoint == ""):
             pop = neat.population.Population(self.config)
         else:
-            pop = neat.Checkpointer.restore_checkpoint("./pkl_pops/binance/pop-checkpoint-" + checkpoint)
+            pop = neat.Checkpointer.restore_checkpoint("./pkl_pops/binance_full_market/pop-checkpoint-" + checkpoint)
         checkpoints = neat.Checkpointer(generation_interval=2, time_interval_seconds=None, filename_prefix='./pkl_pops/binance/pop-checkpoint-')
         stats = neat.statistics.StatisticsReporter()
         pop.add_reporter(stats)
@@ -322,7 +326,7 @@ class PurpleTrader:
     def run_validation(self):
         self.validate_fitness()
 
-pt = PurpleTrader(16, 144, 405)
-#pt.run_training("405")
-pt.compare_champs()
+pt = PurpleTrader(24, 144, 1)
+pt.run_training()
+#pt.compare_champs()
 #run_validation()

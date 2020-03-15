@@ -122,7 +122,6 @@ class BinanceUsWrapper(object):
             vollist = np.argsort(vollist)[-restrict_val:][::-1]
         vollist = np.argsort(vollist)[::-1]
         for ix in vollist:
-            print(prefixes[ix])
             #df['vol'] = (df['vol'] - df['vol'].mean())/(df['vol'].max() - df['vol'].min())
             df = currentHists[prefixes[ix]][feature_columns].copy()
             #norm_df = (df - df.mean()) / (df.max() - df.min())
