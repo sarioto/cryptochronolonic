@@ -20,8 +20,8 @@ class DeribitWrapper(object):
     def __init__(self):
         return
 
-    def fetch_chart_data(self, instrument="BTC-PERPETUAL", interval=1):
-        start, end = self.get_start_end(60)
+    def fetch_chart_data(self, instrument="BTC-PERPETUAL", interval=1, days_lookback=60):
+        start, end = self.get_start_end(days_lookback)
         print(start, end)
         response = requests.get(self.base_endpoint + self.candlestick_endpoint.format(int(end),instrument,interval,int(start))).json()["result"]
         df = pd.DataFrame(response)
