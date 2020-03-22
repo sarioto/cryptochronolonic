@@ -43,6 +43,7 @@ class PurpleTrader:
     highest_returns = 0
     portfolio_list = []
     leaf_names = []
+
     def __init__(self, hist_depth, num_gens, gen_count = 1):
         self.hd = hist_depth
         if gen_count != 1:
@@ -311,7 +312,8 @@ class PurpleTrader:
         self.epoch_len = 6
         r_start = randint(0+self.epoch_len, self.hs.hist_full_size - self.hd)
         best_g_fit = 0.0
-        champ_counter = self.gen_count % 10 
+        champ_counter = self.gen_count % 10
+        actions_dict = {} 
         #img_count = 0
         for idx, g in genomes:
             [cppn] = create_cppn(g, config, self.leaf_names, ["cppn_out"])
@@ -321,6 +323,7 @@ class PurpleTrader:
             #net = network.create_phenotype_network_nd()
             train_ft = self.evaluate_relu(net_builder, r_start, g)
             g.fitness = train_ft
+            actions_dict[g.id] = train_ft
             if(g.fitness > best_g_fit):
                 best_g_fit = g.fitness
                 with open("./champ_data/binance_per_symbol/latest_greatest"+str(champ_counter)+".pkl", 'wb') as output:
