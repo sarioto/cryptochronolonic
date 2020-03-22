@@ -1,26 +1,96 @@
 
+<script src="https://code.highcharts.com/stock/highstock.js"></script>
+<script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/stock/modules/export-data.js"></script>
+
+<div>
+
+</div>
+
+<div id="container" style="height: 400px; min-width: 310px"></div>
+
 
 <script>
-    Highcharts.getJSON('http://127.0.0.1:5000/test_net_balance', function (data) {
-  // Create the chart
+  var seriesOptions = [],
+  seriesCounter = 0;
+/**
+ * Create the chart when all data is loaded
+ * @returns {undefined}
+ */
+function createChart() {
+
   Highcharts.stockChart('container', {
 
-
     rangeSelector: {
-      selected: 1
+      selected: 4
     },
 
-    title: {
-      text: 'AAPL Stock Price'
+    yAxis: {
+      labels: {
+        formatter: function () {
+          return (this.value > 0 ? ' + ' : '') + this.value + '%';
+        }
+      },
+      plotLines: [{
+        value: 0,
+        width: 2,
+        color: 'silver'
+      }]
     },
 
-    series: [{
-      name: 'AAPL',
-      data: data,
-      tooltip: {
-        valueDecimals: 2
+    plotOptions: {
+      series: {
+        compare: 'percent',
+        showInNavigator: true
       }
-    }]
+    },
+
+    tooltip: {
+      pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.change}%)<br/>',
+      valueDecimals: 2,
+      split: true
+    },
+
+    series: seriesOptions
   });
-});
+}
+
+
+function crypto_success(data_dict)
+{
+    console.log(data_dict)
+    var names = Object.keys(data_dict);
+    for (var sym in data_dict)
+    {  
+        seriesOptions[names.indexOf(sym)] = {
+            name: sym,
+            data: data_dict[sym]
+        };
+    }
+    createChart();
+}
+
+/*
+Highcharts.getJSON(
+  'https://cdn.jsdelivr.net/gh/highcharts/highcharts@v7.0.0/samples/data/msft-c.json',
+  success
+);
+Highcharts.getJSON(
+  'https://cdn.jsdelivr.net/gh/highcharts/highcharts@v7.0.0/samples/data/aapl-c.json',
+  success
+);
+Highcharts.getJSON(
+  'https://cdn.jsdelivr.net/gh/highcharts/highcharts@v7.0.0/samples/data/goog-c.json',
+  success
+);
+*/
+function get_data()
+{
+    Highcharts.getJSON(
+    'http://127.0.0.1:5000/test_single_portfolio',
+    crypto_success
+    );
+}
+
+get_data();
 </script>

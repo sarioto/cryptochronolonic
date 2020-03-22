@@ -212,8 +212,6 @@ class PurpleTrader:
         result_val = portfolio.get_total_btc_value(end_prices)
         print(g.key, " : ")
         print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
-        if result_val[0] == portfolio_start:
-            ft = -.2
         return ft
 
     def solve(self, network):
@@ -229,7 +227,7 @@ class PurpleTrader:
         return fitness
 
     def eval_fitness(self, genomes, config):
-        self.epoch_len = 34
+        self.epoch_len = 6
         r_start = randint(0+self.epoch_len, self.hs.hist_full_size - self.hd)
         best_g_fit = 0.0
         champ_counter = self.gen_count % 10 
@@ -301,7 +299,7 @@ class PurpleTrader:
             pop = neat.population.Population(self.config)
         else:
             pop = neat.Checkpointer.restore_checkpoint("./pkl_pops/binance_full_market/pop-checkpoint-" + checkpoint)
-        checkpoints = neat.Checkpointer(generation_interval=2, time_interval_seconds=None, filename_prefix='./pkl_pops/binance/pop-checkpoint-')
+        checkpoints = neat.Checkpointer(generation_interval=2, time_interval_seconds=None, filename_prefix='./pkl_pops/binance_full_market/pop-checkpoint-')
         stats = neat.statistics.StatisticsReporter()
         pop.add_reporter(stats)
         pop.add_reporter(checkpoints)
@@ -328,7 +326,7 @@ class PurpleTrader:
     def run_validation(self):
         self.validate_fitness()
 
-pt = PurpleTrader(24, 144, 1)
-pt.run_training()
+pt = PurpleTrader(16, 144, 1)
+pt.run_training("")
 #pt.compare_champs()
 #run_validation()

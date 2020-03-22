@@ -186,13 +186,12 @@ class PurpleTrader:
                     z = rand_start - z_minus
                     pos_size = portfolio.ledger[sym]
                     active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_size)
-                    if(z_minus == 0 or (z_minus + 1) % 8 == 0):
+                    if(z_minus == 0 or (z_minus + 1) % 4 == 0):
                         self.reset_substrate(active[0])
                         builder.substrate = self.substrate
                         phenotypes[sym] = builder.create_phenotype_network_nd()
                         network = phenotypes[sym]
                     network.reset()
-                    print(active[0], active)
                     for n in range(1, self.hd):
                         network.activate([active[self.hd-n]])
                     out = network.activate([active[0]])
@@ -231,7 +230,7 @@ class PurpleTrader:
                 pos_size = portfolio.ledger[sym]
                 active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_size)
                 #print(active)
-                if(z_minus == 0 or (z_minus + 1) % 8 == 0):
+                if(z_minus == 0 or (z_minus + 1) % 4 == 0):
                     self.reset_substrate(active[0])
                     builder.substrate = self.substrate
                     phenotypes[sym] = builder.create_phenotype_network_nd()
@@ -293,21 +292,15 @@ class PurpleTrader:
                     did_buy = portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
                 #rng = iter(shuffle(rng))
                 end_prices[sym] = self.hs.currentHists[sym]['close'][z]
-                '''
                 bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0]
-                if bal_now == last_val:
-                    ft += -.01
-                else: 
-                    ft += bal_now - last_val
+                ft += bal_now - last_val
                 last_val = bal_now
-                '''
-            bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0]
-            balances.append(bal_now)
+                
+            #bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0]
+            #balances.append(bal_now)
             #print("sym ", sym, " end balance: ", bal_now)
         print(g.key, " : ")
-        ft = statistics.mean(balances)
         print(ft)
-        #print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
         return ft       
 
     def trial_run(self):
@@ -320,7 +313,7 @@ class PurpleTrader:
         return fitness
 
     def eval_fitness(self, genomes, config):
-        self.epoch_len = 16
+        self.epoch_len = 55
         r_start = randint(0+self.epoch_len, self.hs.hist_full_size - self.hd)
         best_g_fit = 0.0
         champ_counter = self.gen_count % 10 
@@ -335,7 +328,7 @@ class PurpleTrader:
             g.fitness = train_ft
             if(g.fitness > best_g_fit):
                 best_g_fit = g.fitness
-                with open("./champ_data/binance_per_symbol/latest_greatest"+str(champ_counter)+".pkl", 'wb') as output:
+                with open("./champ_data/binance_per_symbol_new/latest_greatest"+str(champ_counter)+".pkl", 'wb') as output:
                     pickle.dump(g, output)
             #img_count += 1
         '''
@@ -350,7 +343,7 @@ class PurpleTrader:
         self.epoch_len = self.hs.hist_full_size - (self.hd+1)
         r_start = self.epoch_len
         champ_fit = 0
-        for ix, f in enumerate(os.listdir("./champ_data/binance_per_symbol")):
+        for ix, f in enumerate(os.listdir("./champ_data/binance_per_symbol_new")):
             if f != ".DS_Store":
                 champ_file = open("./champ_data/binance_per_symbol/"+f,'rb')
                 g = pickle.load(champ_file)
@@ -379,7 +372,7 @@ class PurpleTrader:
             g.fitness = self.evaluate(net, network, r_start, g)
             if(g.fitness > best_g_fit):
                 best_g_fit = g.fitness
-                with open('./champ_data/binance_per_symbol/latest_greatest.pkl', 'wb') as output:
+                with open('./champ_data/binance_per_symbol_new/latest_greatest.pkl', 'wb') as output:
                     pickle.dump(g, output)
         return
 
@@ -417,6 +410,6 @@ class PurpleTrader:
         self.validate_fitness()
 
 pt = PurpleTrader(16, 144, 1)
-pt.run_training()
+pt.run_training("")
 #pt.compare_champs()
 #run_validation()
