@@ -276,6 +276,7 @@ class PurpleTrader:
         end_prices = {}
         phenotypes = {}
         balances = []
+        actions = []
         buys = 0
         sells = 0
         last_val = portfolio_start
@@ -299,6 +300,7 @@ class PurpleTrader:
                 network.activate([active[self.hd-n]])
             out = network.activate([active[0]])
             out = F.softmax(out[0], dim=0)
+            actions.append(out)
             max_output = torch.max(out, 0)[1]
             if(max_output == 2):
                 portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
@@ -316,7 +318,7 @@ class PurpleTrader:
             #print("sym ", sym, " end balance: ", bal_now)
         print(g.key, " : ")
         print(ft)
-        return ft       
+        return ft, actions, phenotypes[sym]       
 
     def trial_run(self):
         r_start = 0
@@ -339,7 +341,7 @@ class PurpleTrader:
         for idx, g in genomes:
             [cppn] = create_cppn(g, config, self.leaf_names, ["cppn_out"])
             net_builder = ESNetwork(self.substrate, cppn, self.params)
-            train_ft = self.evaluate_relu(net_builder, r_start, g, sym_idx)
+            train_ft, actions, rnn = self.evaluate_relu(net_builder, r_start, g, sym_idx)
             g.fitness = train_ft
             if(g.fitness > best_g_fit):
                 best_g_fit = g.fitness
