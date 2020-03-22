@@ -27,8 +27,13 @@ def root():
 
 @app.route('/high_chart')
 def high_chart():
-    hist_files = os.listdir("../trade_hists/binance_per_symbol/")
+    hist_files = os.listdir("../trade_hists/binance_per_symbol_new/")
+    print(hist_files)
     return render_template("hc_per_symbol.html", data=hist_files)
+
+@app.route('/high_chart_single')
+def high_chart_single():
+    return render_template("hc_single.html")
 
 @app.route("/trade_hist")
 def get_trade_hist(request):
@@ -39,12 +44,13 @@ def get_trade_hist(request):
 def get_all_trade_hist_genome(genome):
     return jsonify(get_genome_performance(genome))
 
-@app.route("/test_net_balance")
+
+@app.route("/test_single_portfolio")
 def test_trade_hist_chart():
-    hist_files = os.listdir("../trade_hists/binance_per_symbol/champ_10")
+    hist_files = os.listdir("../trade_hists/binance")
     data_dict = {}
     for f in hist_files:
-        frame = pd.read_csv("../trade_hists/binance_per_symbol/champ_0/" + f)
+        frame = pd.read_csv("../trade_hists/binance/" + f)
         data_dict[f] = [list(v.values()) for v in frame.T.to_dict().values()]
     return jsonify(data_dict)
 
@@ -59,21 +65,17 @@ def get_exchange(exchange="binance"):
     hist_files = os.listdir("../trade_hists/binance/")
     hist_data = []
     return hist_files
-
-
-@app.route("/store_champ")
-def store_net_json(request):
-    return 
     
 
 def get_genome_performance(g_name):
-    hist_files = os.listdir("../trade_hists/binance_per_symbol/" + g_name)
+    hist_files = os.listdir("../trade_hists/binance_per_symbol_new/" + g_name)
     data_dict = {}
     for f in hist_files:
-        frame = pd.read_csv("../trade_hists/binance_per_symbol/"+ g_name +"/" + f)
-        print(frame["1"][0], frame["1"][len(frame) - 1])
-        if (frame["1"][0] *1.5) < frame["1"][len(frame) - 1]: 
-            data_dict[f] = [list(v.values()) for v in frame.T.to_dict().values()]
+        frame = pd.read_csv("../trade_hists/binance_per_symbol_new/"+ g_name +"/" + f)
+        if (frame["1"][0]) < frame["1"][len(frame) - 1]:
+            print(f, " ", frame["1"][0], frame["1"][len(frame) - 1])
+        
+        data_dict[f] = [list(v.values()) for v in frame.T.to_dict().values()]
     return data_dict
 
 

@@ -65,11 +65,12 @@ class BinanceUsWrapper(object):
             df.columns = ["date", "open", "high", "low", "close", "volume"]
             df = df.convert_objects(convert_numeric=True)
             df = df.fillna(method='ffill')
-            df["hl_spread"] = df["high"] - df["low"]
-            df["oc_spread"] = df["close"] - df["open"]
-            df["rolling_close"] = df["close"].rolling(34).mean() / df["close"]
+            df["hl_spread"] = df["low"] / df["high"] 
+            df["oc_spread"] = df["close"] / df["open"]
+            df["roc_close"] = df["close"].pct_change(periods=8)
+            df["roc_volume"] = df["volume"].pct_change(periods=16)
             #df["rolling_spread"] = df["oc_spread"].rolling(34).mean() / df["oc_spread"]
-            df["volume_feature"] = df["volume"].rolling(34).mean() / df["volume"]
+            df["volume_feature"] = pd.Series(np.where(df.volume.rolling(3).mean() > df.volume, 1, -1), df.index)
             '''
             df['vol_feat'] = df.vol.rolling(3).mean() / df.vol
             df['avg_close_3'] = pd.Series(np.where(df.close.rolling(3).mean() / df.close, 1, -1),df.index)
@@ -89,7 +90,7 @@ class BinanceUsWrapper(object):
             if len(df) > 0:
                 df.to_csv("./hist_data/binance/" + s + ".txt")
 
-    def get_train_frames(self, restrict_val = 0, feature_columns = ['hl_spread', 'oc_spread', 'rolling_close', 'volume_feature']):
+    def get_train_frames(self, restrict_val = 0, feature_columns = ['hl_spread', 'oc_spread', 'roc_close', 'roc_volume', 'volume_feature']):
         df_dict = self.load_hist_files()
         coin_and_hist_index = 0
         file_lens = []
@@ -122,7 +123,6 @@ class BinanceUsWrapper(object):
             vollist = np.argsort(vollist)[-restrict_val:][::-1]
         vollist = np.argsort(vollist)[::-1]
         for ix in vollist:
-            print(prefixes[ix])
             #df['vol'] = (df['vol'] - df['vol'].mean())/(df['vol'].max() - df['vol'].min())
             df = currentHists[prefixes[ix]][feature_columns].copy()
             #norm_df = (df - df.mean()) / (df.max() - df.min())
@@ -132,3 +132,4 @@ class BinanceUsWrapper(object):
             coin_and_hist_index += 1
         hist_shaped = pd.Series(hist_shaped)
         return coin_dict, currentHists, hist_shaped, hist_full_size
+
