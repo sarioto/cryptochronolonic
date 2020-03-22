@@ -225,52 +225,7 @@ class PurpleTrader:
             print("genome id ", g.key, " : ")
             print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
         return np.asarray(balances, dtype=np.float32).mean()
-
-    def evaluate(self, builder, rand_start, g, verbose=False):
-        portfolio_start = 1000.0
-        end_prices = {}
-        phenotypes = {}
-        balances = []
-        buys = 0
-        sells = 0
-        last_val = portfolio_start
-        ft = 0.0
-        for x in range(self.num_syms):
-            portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USD")
-            portfolio.target_amount = .25
-            sym = self.hs.coin_dict[x]
-            for z_minus in range(0, self.epoch_len):
-                z = rand_start - z_minus
-                pos_size = portfolio.ledger[sym]
-                active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_size)
-                #print(active)
-                if(z_minus == 0 or (z_minus + 1) % 8 == 0):
-                    self.reset_substrate(active[0])
-                    builder.substrate = self.substrate
-                    phenotypes[sym] = builder.create_phenotype_network_nd()
-                    network = phenotypes[sym]
-                network.reset()
-                for n in range(1, self.hd+1):
-                    network.activate([active[self.hd-n]])
-                out = network.activate([active[0]])
-                if(out[0] < -0.5):
-                    portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
-                    #print("bought ", sym)
-                elif(out[0] > 0.5):
-                    did_buy = portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
-                #rng = iter(shuffle(rng))
-                end_prices[sym] = self.hs.currentHists[sym]['close'][z]
-                bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0]
-                if bal_now == last_val:
-                    ft += -.01
-                else: 
-                    ft += bal_now - last_val
-                last_val = bal_now
-        print(g.key, " : ")
-        result_val = portfolio.get_total_btc_value(end_prices)
-        print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
-        return ft
-
+        
     def evaluate_relu(self, builder, rand_start, g, sym_index, verbose=False):
         portfolio_start = 1000.0
         end_prices = {}
