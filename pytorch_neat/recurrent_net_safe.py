@@ -44,7 +44,7 @@ def dense_from_coo(shape, conns, dtype=torch.float64, safe=True):
     mat[torch.LongTensor(rows), torch.LongTensor(cols)] = w
     return mat
 
-class RecurrentNet():
+class RecurrentNet(torch.nn.Module):
     def __init__(self, n_inputs, n_hidden, n_outputs,
                  input_to_hidden, hidden_to_hidden, output_to_hidden,
                  input_to_output, hidden_to_output, output_to_output,

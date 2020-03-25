@@ -19,7 +19,7 @@ from .activations import str_to_activation
 from .aggregations import str_to_aggregation
 
 
-class Node:
+class Node(torch.nn.Module):
     def __init__(
         self,
         children,
@@ -31,6 +31,7 @@ class Node:
         name=None,
         leaves=None,
     ):
+    
         """
         children: list of Nodes
         weights: list of floats
