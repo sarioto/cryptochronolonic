@@ -41,7 +41,7 @@ class BinanceUsWrapper(object):
         histFiles = os.listdir(os.path.join(os.path.dirname(__file__), "../hist_data/binance"))
         df_dict = {}
         for sym in histFiles:
-            frame = pd.DataFrame().from_csv("./hist_data/binance/" +sym)
+            frame = pd.read_csv("./hist_data/binance/" +sym)
             df_dict[sym] = frame
         return df_dict
     
@@ -49,7 +49,7 @@ class BinanceUsWrapper(object):
         histFiles = os.listdir(os.path.join(os.path.dirname(__file__), "../hist_data/binance"))
         df_dict = {}
         for sym in histFiles:
-            frame = pd.DataFrame().from_csv("./hist_data/binance/" +sym)
+            frame = pd.read_csv("./hist_data/binance/" +sym)
             df_dict[sym] = frame
         return df_dict
 

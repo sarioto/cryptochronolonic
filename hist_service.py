@@ -3,7 +3,7 @@ import time
 import pandas as pd
 import requests
 import numpy as np
-from poloniex import Poloniex
+#from poloniex import Poloniex
 from binance.client import Client
 from datetime import date, timedelta, datetime
 import os

@@ -27,10 +27,10 @@ class PurpleTrader:
     # ES-HyperNEAT specific parameters.
     params = {"initial_depth": 2,
             "max_depth": 3,
-            "variance_threshold": 0.055,
-            "band_threshold": 0.013,
+            "variance_threshold": 0.55,
+            "band_threshold": 0.13,
             "iteration_level": 3,
-            "division_threshold": 0.021,
+            "division_threshold": 0.21,
             "max_weight": 34.55,
             "activation": "relu"}
 
@@ -225,7 +225,7 @@ class PurpleTrader:
             print("genome id ", g.key, " : ")
             print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
         return np.asarray(balances, dtype=np.float32).mean()
-        
+
     def evaluate_relu(self, builder, rand_start, g, sym_index, verbose=False):
         portfolio_start = 1000.0
         end_prices = {}
@@ -241,21 +241,20 @@ class PurpleTrader:
         portfolio.target_amount = .25
         sym = self.hs.coin_dict[x]
         port_hist = {}
+        active = self.get_single_symbol_epoch_recurrent_with_position_size(rand_start, x, 0.0, port_hist)
+        self.reset_substrate(active[0])
+        builder.substrate = self.substrate
+        phenotypes[sym] = builder.create_phenotype_network_nd()
+        network = phenotypes[sym]
         for z_minus in range(0, self.epoch_len):
             z = rand_start - z_minus
             pos_size = portfolio.ledger[sym]
             active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_size, port_hist)
-            if(z_minus == 0 or (z_minus + 1) % 8 == 0):
-                self.reset_substrate(active[0])
-                builder.substrate = self.substrate
-                phenotypes[sym] = builder.create_phenotype_network_nd()
-                network = phenotypes[sym]
             network.reset()
             for n in range(1, self.hd):
-                network.activate([active[self.hd-n]])
-            out = network.activate([active[0]])
-            out = F.softmax(out[0], dim=0)
-            actions.append(out)
+                network.activate_with_grad([active[self.hd-n]])
+            out_var = network.activate_with_grad([active[0]])
+            out = F.softmax(out_var[0], dim=0)
             max_output = torch.max(out, 0)[1]
             if(max_output == 2):
                 portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
@@ -273,7 +272,8 @@ class PurpleTrader:
             #print("sym ", sym, " end balance: ", bal_now)
         print(g.key, " : ")
         print(ft)
-        return ft, actions, phenotypes[sym]       
+        #print(actions)
+        return ft, out_var, phenotypes[sym]       
 
     def trial_run(self):
         r_start = 0
@@ -284,31 +284,36 @@ class PurpleTrader:
         fitness = self.evaluate(net, network, r_start)
         return fitness
 
-    def eval_fitness(self, genomes, config):
+    def eval_fitness(self, genomes, config, num_opts = 3):
         self.epoch_len = 89
-        r_start = randint(0+self.epoch_len, self.hs.hist_full_size - self.hd)
-        best_g_fit = 0.0
-        champ_counter = self.gen_count % 10
-        sym_idx = randint(0,self.num_syms - 1)
-        action_dict = {}
-        best_g_id = 0
-        #img_count = 0
-        for idx, g in genomes:
-            [cppn] = create_cppn(g, config, self.leaf_names, ["cppn_out"])
-            net_builder = ESNetwork(self.substrate, cppn, self.params)
-            train_ft, actions, rnn = self.evaluate_relu(net_builder, r_start, g, sym_idx)
-            g.fitness = train_ft
-            if(g.fitness > best_g_fit):
-                best_g_fit = g.fitness
-                best_g_id = g.id
-                with open("./champ_data/binance_per_symbol/latest_greatest"+str(champ_counter)+".pkl", 'wb') as output:
-                    pickle.dump(g, output)
-        '''
-        if(champ_counter == 0):
-            self.refresh()
-            self.compare_champs()
-        '''
-        
+        for x in range(num_opts):
+            r_start = randint(0+self.epoch_len, self.hs.hist_full_size - self.hd)
+            best_g_fit = -1000.0
+            champ_counter = self.gen_count % 10
+            sym_idx = randint(0,self.num_syms - 1)
+            action_dict = {}
+            rnn_dict = {}
+            best_g_id = 0
+            #img_count = 0
+            for idx, g in genomes:
+                [cppn] = create_cppn(g, config, self.leaf_names, ["cppn_out"])
+                net_builder = ESNetwork(self.substrate, cppn, self.params)
+                train_ft, actions, rnn = self.evaluate_relu(net_builder, r_start, g, sym_idx)
+                g.fitness = train_ft
+                action_dict[g.key] = {
+                    "actions": actions,
+                    "rnn": rnn
+                }
+                if(g.fitness > best_g_fit) or idx == 0:
+                    best_g_fit = g.fitness
+                    best_g_id = g.key
+                    with open("./champ_data/binance_per_symbol/latest_greatest"+str(champ_counter)+".pkl", 'wb') as output:
+                        pickle.dump(g, output)
+            for idx, g in genomes:
+                if g.key != best_g_id:
+                    rnn_obj = action_dict[g.key]["rnn"]
+                    cppn_target = rnn_obj.get_gradients_from_loss(action_dict[g.key]["actions"], action_dict[best_g_id]["actions"])
+                    print(cppn_target)
         self.gen_count += 1
         return
 
@@ -383,6 +388,6 @@ class PurpleTrader:
         self.validate_fitness()
 
 pt = PurpleTrader(21, 255, 1)
-#pt.run_training("")
-pt.compare_champs()
+pt.run_training("")
+#pt.compare_champs()
 #run_validation()
