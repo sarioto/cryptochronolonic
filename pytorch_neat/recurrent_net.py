@@ -29,18 +29,14 @@ import json
 #     return mat
 
 
-def dense_from_coo(shape, conns, dtype=torch.float64, safe=True):
+def dense_from_coo(shape, conns, dtype=torch.float64):
     mat = torch.zeros(shape, dtype=dtype)
     idxs, weights = conns
     if len(idxs) == 0:
         return mat
     rows, cols = np.array(idxs).transpose()
-    if safe == True:
-        w = torch.tensor(
-            weights, dtype=dtype, requires_grad=True)
-    else:
-        w = torch.tensor(
-            weights, dtype=dtype)
+    w = torch.tensor(
+        weights, dtype=dtype)
     mat[torch.LongTensor(rows), torch.LongTensor(cols)] = w
     return mat
 

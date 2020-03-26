@@ -13,7 +13,7 @@
 #     limitations under the License.
 
 import torch
-from torch.autograd import Variable
+import torch.nn.functional as F
 import numpy as np
 from .activations import str_to_activation, sigmoid_activation
 import json
@@ -44,7 +44,7 @@ def dense_from_coo(shape, conns, dtype=torch.float64, safe=True):
     mat[torch.LongTensor(rows), torch.LongTensor(cols)] = w
     return mat
 
-class RecurrentNet(torch.nn.Module):
+class SafeRecurrentNet(torch.nn.Module):
     def __init__(self, n_inputs, n_hidden, n_outputs,
                  input_to_hidden, hidden_to_hidden, output_to_hidden,
                  input_to_output, hidden_to_output, output_to_output,
@@ -55,7 +55,7 @@ class RecurrentNet(torch.nn.Module):
                  activation=str_to_activation["sigmoid"],
                  n_internal_steps=1,
                  dtype=torch.float64):
-
+        super(SafeRecurrentNet, self).__init__()
         self.use_current_activs = use_current_activs
         self.activation = activation
         self.n_internal_steps = n_internal_steps
@@ -85,7 +85,8 @@ class RecurrentNet(torch.nn.Module):
         self.output_responses = torch.tensor(
             output_responses, dtype=dtype)
         self.output_biases = torch.tensor(output_biases, dtype=dtype)
-
+        print(self.parameters())
+        self.optimizer = torch.optim.SGD(self.parameters(), lr=1e-4, momentum=0.9)
         self.reset(batch_size)
 
     def reset(self, batch_size=1):
@@ -124,7 +125,7 @@ class RecurrentNet(torch.nn.Module):
                 self.output_responses * output_inputs + self.output_biases)
         return self.outputs
 
-    def activate_with_grad(self, inputs):
+    def forward(self, inputs):
         '''
         inputs: (batch_size, n_inputs)
 
@@ -148,13 +149,14 @@ class RecurrentNet(torch.nn.Module):
                 activs_for_output.t()).t()
         self.outputs = self.activation(
             self.output_responses * output_inputs + self.output_biases)
+        if (self.outputs.requires_grad == False):
+            self.outputs.requires_grad = True
         return self.outputs
 
     def get_gradients_from_loss(self, actions, actions_other):
-        print(actions)
-        print(actions_other)
-        distance = Variable((actions_other - actions).pow(2).sum(), requires_grad=True)
-        distance.mean().backward()
+        distance = F.binary_cross_entropy(actions, actions_other.detach())
+        self.optimizer.zero_grad()
+        distance.backward()
         return distance.grad
 
     @staticmethod

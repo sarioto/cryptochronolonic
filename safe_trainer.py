@@ -27,10 +27,10 @@ class PurpleTrader:
     # ES-HyperNEAT specific parameters.
     params = {"initial_depth": 2,
             "max_depth": 3,
-            "variance_threshold": 0.55,
-            "band_threshold": 0.13,
+            "variance_threshold": 0.89,
+            "band_threshold": 0.013,
             "iteration_level": 3,
-            "division_threshold": 0.21,
+            "division_threshold": 0.021,
             "max_weight": 34.55,
             "activation": "relu"}
 
@@ -160,8 +160,8 @@ class PurpleTrader:
                         network = phenotypes[sym]
                     network.reset()
                     for n in range(1, self.hd+1):
-                        network.activate([active[self.hd-n]])
-                    out = network.activate([active[0]])
+                        network([active[self.hd-n]])
+                    out = network([active[0]])
                     end_prices[sym] = self.hs.currentHists[sym]['close'][z]
                     if(out[0] < -.5):
                         portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
@@ -229,9 +229,9 @@ class PurpleTrader:
     def evaluate_relu(self, builder, rand_start, g, sym_index, verbose=False):
         portfolio_start = 1000.0
         end_prices = {}
-        phenotypes = {}
         balances = []
         actions = []
+        out_var = []
         buys = 0
         sells = 0
         last_val = portfolio_start
@@ -244,17 +244,18 @@ class PurpleTrader:
         active = self.get_single_symbol_epoch_recurrent_with_position_size(rand_start, x, 0.0, port_hist)
         self.reset_substrate(active[0])
         builder.substrate = self.substrate
-        phenotypes[sym] = builder.create_phenotype_network_nd()
-        network = phenotypes[sym]
+        phenotype = builder.create_phenotype_network_nd()
+        network = phenotype
         for z_minus in range(0, self.epoch_len):
             z = rand_start - z_minus
             pos_size = portfolio.ledger[sym]
             active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_size, port_hist)
             network.reset()
             for n in range(1, self.hd):
-                network.activate_with_grad([active[self.hd-n]])
-            out_var = network.activate_with_grad([active[0]])
-            out = F.softmax(out_var[0], dim=0)
+                network([active[self.hd-n]])
+            out = network([active[0]])
+            out = F.softmax(out[0], dim=0)
+            out_var = out
             max_output = torch.max(out, 0)[1]
             if(max_output == 2):
                 portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
@@ -273,7 +274,8 @@ class PurpleTrader:
         print(g.key, " : ")
         print(ft)
         #print(actions)
-        return ft, out_var, phenotypes[sym]       
+        print(out_var)
+        return ft, out_var, phenotype      
 
     def trial_run(self):
         r_start = 0

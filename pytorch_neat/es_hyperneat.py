@@ -3,7 +3,7 @@ import copy
 import numpy as np
 import itertools
 from math import factorial
-from pytorch_neat.recurrent_net import RecurrentNet
+from pytorch_neat.recurrent_net_safe import SafeRecurrentNet
 from pytorch_neat.cppn import get_nd_coord_inputs
 import torch
 from pytorch_neat.activations import str_to_activation
@@ -33,7 +33,7 @@ class ESNetwork:
     def create_phenotype_network_nd(self, filename=None):
         rnn_params = self.es_hyperneat_nd_tensors()
         
-        return RecurrentNet(
+        return SafeRecurrentNet(
             n_inputs = rnn_params["n_inputs"],
             n_outputs = rnn_params["n_outputs"],
             n_hidden = rnn_params["n_hidden"],
