@@ -30,6 +30,7 @@ class Node(torch.nn.Module):
         aggregation,
         name=None,
         leaves=None,
+        gene_idx = 0,
     ):
     
         """
@@ -44,7 +45,7 @@ class Node(torch.nn.Module):
         """
         self.children = children
         self.leaves = leaves
-        self.weights = weights
+        self.weights = torch.nn.Parameter(weights)
         self.response = response
         self.bias = bias
         self.activation = activation
@@ -94,7 +95,7 @@ class Node(torch.nn.Module):
             self.activs = self.activate(xs, shape)
         return self.activs
 
-    def __call__(self, **inputs):
+    def forward(self, **inputs):
         assert self.leaves is not None
         assert inputs
         if "input_dict" in inputs:
