@@ -28,6 +28,7 @@ class Node(torch.nn.Module):
         bias,
         activation,
         aggregation,
+        genome_idx,
         name=None,
         leaves=None,
         gene_idx = 0,
@@ -43,16 +44,19 @@ class Node(torch.nn.Module):
         name: str
         leaves: dict of Leaves
         """
+        super(Node, self).__init__()
         self.children = children
         self.leaves = leaves
-        self.weights = torch.nn.Parameter(weights)
-        self.response = response
-        self.bias = bias
+        #self.neuron = torch.nn.Linear(len(weights), 1)
+        self.weights = torch.nn.Parameter(torch.Tensor(weights))
+        self.response = torch.nn.Parameter(torch.Tensor([response]))
+        self.bias = torch.nn.Parameter(torch.Tensor([bias]))
         self.activation = activation
         self.activation_name = activation
         self.aggregation = aggregation
         self.aggregation_name = aggregation
         self.name = name
+        self.genome_idx = genome_idx
         if leaves is not None:
             assert isinstance(leaves, dict)
         self.leaves = leaves
@@ -79,7 +83,7 @@ class Node(torch.nn.Module):
         xs: list of torch tensors
         """
         if not xs:
-            return torch.full(shape, self.bias)
+            return torch.full(shape, self.bias.data[0])
         inputs = [w * x for w, x in zip(self.weights, xs)]
         try:
             pre_activs = self.aggregation(inputs)
@@ -99,17 +103,31 @@ class Node(torch.nn.Module):
         assert self.leaves is not None
         assert inputs
         if "input_dict" in inputs:
-            inputs = inputs["input_dict"]
+            grad = inputs["input_dict"]["grad"]
+            inputs = inputs["input_dict"]["inputs"]
+        else:
+            grad = False
         shape = list(inputs.values())[0].shape
         self.reset()
-        for name in self.leaves.keys():
-            assert (
-                inputs[name].shape == shape
-            ), "Wrong activs shape for leaf {}, {} != {}".format(
-                name, inputs[name].shape, shape
-            )
-            self.leaves[name].set_activs(torch.Tensor(inputs[name]))
-        return self.get_activs(shape)
+        if grad == False:
+            with torch.no_grad():
+                for name in self.leaves.keys():
+                    assert (
+                        inputs[name].shape == shape
+                    ), "Wrong activs shape for leaf {}, {} != {}".format(
+                        name, inputs[name].shape, shape
+                    )
+                    self.leaves[name].set_activs(torch.Tensor(inputs[name]))
+                return self.get_activs(shape)
+        else:
+            for name in self.leaves.keys():
+                assert (
+                    inputs[name].shape == shape
+                ), "Wrong activs shape for leaf {}, {} != {}".format(
+                    name, inputs[name].shape, shape
+                )
+                self.leaves[name].set_activs(torch.Tensor(inputs[name]))
+            return self.get_activs(shape)
 
     def _prereset(self):
         if self.is_reset is None:
@@ -137,8 +155,9 @@ class Node(torch.nn.Module):
 
 
 class Leaf:
-    def __init__(self, name=None):
+    def __init__(self, genome_idx, name=None):
         self.activs = None
+        self.genome_idx = genome_idx
         self.name = name
 
     def __repr__(self):
@@ -197,7 +216,7 @@ def create_cppn(genome, config, leaf_names, node_names, output_activation=None):
         if i not in node_inputs:
             node_inputs[i] = []
 
-    nodes = {i: Leaf() for i in genome_config.input_keys}
+    nodes = {i: Leaf(i) for i in genome_config.input_keys}
 
     assert len(leaf_names) == len(genome_config.input_keys)
     leaves = {name: nodes[i] for name, i in zip(leaf_names, genome_config.input_keys)}
@@ -221,6 +240,7 @@ def create_cppn(genome, config, leaf_names, node_names, output_activation=None):
             node.bias,
             activation,
             aggregation,
+            genome_idx=idx,
             leaves=leaves,
         )
         return nodes[idx]
@@ -237,6 +257,7 @@ def create_cppn(genome, config, leaf_names, node_names, output_activation=None):
         nodes[i].name = name
 
     return outputs
+
 
 
 def clamp_weights_(weights, weight_threshold=0.2, weight_max=3.0):

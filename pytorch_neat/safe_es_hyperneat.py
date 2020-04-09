@@ -1,12 +1,14 @@
 import neat 
+from neat.graphs import required_for_output
 import copy
 import numpy as np
 import itertools
 from math import factorial
-from pytorch_neat.recurrent_net_safe import SafeRecurrentNet
+from pytorch_neat.recurrent_net import RecurrentNet
 from pytorch_neat.cppn import get_nd_coord_inputs
 import torch
 from pytorch_neat.activations import str_to_activation
+from pytorch_neat.cppn_safe import Leaf, Node
 #encodes a substrate of input and output coords with a cppn, adding 
 #hidden coords along the 
 
@@ -18,6 +20,7 @@ class ESNetwork:
         self.optimizer = torch.optim.Adam(cppn.parameters(), lr=0.0001)
         self.initial_depth = params["initial_depth"]
         self.max_depth = params["max_depth"]
+        self.safe_baseline_depth = params["safe_baseline_depth"]
         self.variance_threshold = params["variance_threshold"]
         self.band_threshold = params["band_threshold"]
         self.iteration_level = params["iteration_level"]
@@ -29,12 +32,15 @@ class ESNetwork:
         self.root_x = self.width/2
         self.root_y = (len(substrate.input_coordinates)/self.width)/2
 
+    def reset_substrate(self, substrate):
+        self.connections = set()
+        self.substrate = substrate
 
     # creates phenotype with n dimensions
     def create_phenotype_network_nd(self, filename=None):
         rnn_params = self.es_hyperneat_nd_tensors()
         
-        return SafeRecurrentNet(
+        return RecurrentNet(
             n_inputs = rnn_params["n_inputs"],
             n_outputs = rnn_params["n_outputs"],
             n_hidden = rnn_params["n_hidden"],
@@ -71,6 +77,22 @@ class ESNetwork:
             if (p.lvl < self.initial_depth) or (p.lvl < self.max_depth and low_var_count != len(coords)):
                     q.extend(p.cs)
         return root
+
+    def safe_division_pass(self, coords, outgoing, with_grad=False):
+        root = BatchednDimensionTree([0.0 for x in range(len(coords[0]))], 1.0, 1)
+        q = [root]
+        out = 0.0
+        while q:
+            p = q.pop(0)
+            # here we will subdivide to 2^coordlength as described above
+            # this allows us to search from +- midpoints on each axis of the input coord
+            p.divide_childrens()
+            #out_coords = []
+            weights = query_torch_cppn_tensors(coords, p.child_coords, outgoing, self.cppn, self.max_weight, with_grad=with_grad)
+            out += weights
+            if (p.lvl < self.safe_baseline_depth):
+                    q.extend(p.cs)
+        return out
 
     def prune_all_the_tensors_aha(self, coords, p, outgoing):
         coord_len = len(coords[0])
@@ -158,6 +180,95 @@ class ESNetwork:
         rnn_params = self.structure_for_rnn(hidden_full, connections1, connections2, connections3)
         return rnn_params
 
+    def safe_baseline(self, with_grad=False):
+        inputs = self.substrate.input_coordinates
+        #print(inputs)
+        outputs = self.substrate.output_coordinates
+
+        root = self.safe_division_pass(inputs, True, with_grad)
+        '''
+        self.prune_all_the_tensors_aha(inputs, root, True)
+        connections1 = connections1.union(self.connections)
+        #print(connections1)
+        for c in connections1:
+            hidden_nodes.append(tuple(c.coord2))
+        hidden_full.extend([c for c in hidden_nodes])
+        self.connections = set()
+        unexplored_hidden_nodes = copy.deepcopy(hidden_nodes)
+        if(len(unexplored_hidden_nodes) != 0):
+            root = self.division_initialization_nd_tensors(unexplored_hidden_nodes, True)
+            self.prune_all_the_tensors_aha(unexplored_hidden_nodes, root, True)
+            connections2 = connections2.union(self.connections)
+            for c in connections2:
+                hidden_nodes.append(tuple(c.coord2))
+            unexplored_hidden_nodes = set(unexplored_hidden_nodes)
+            unexplored_hidden_nodes = set(hidden_nodes) - unexplored_hidden_nodes
+            self.connections = set()
+        hidden_full.extend([c for c in unexplored_hidden_nodes])
+        root = self.division_initialization_nd_tensors(outputs, False)
+        self.prune_all_the_tensors_aha(outputs, root, False)
+        #print(connections1, connections2, connections3)
+        connections3 = connections3.union(self.connections)
+        temp = []
+        for c in connections3:
+            if(c.coord1 in hidden_full):
+                temp.append(c)
+        connections3 = set(temp)
+        self.connections = set()
+        rnn_params = self.structure_for_rnn(hidden_full, connections1, connections2, connections3)
+        '''
+        return root
+
+    def map_back_to_genome(self, genome, config, leaf_names, node_names):
+
+        genome_config = config.genome_config
+        required = required_for_output(
+            genome_config.input_keys, genome_config.output_keys, genome.connections
+        )
+
+        # Gather inputs and expressed connections.
+        node_inputs = {i: {} for i in genome_config.output_keys}
+        for cg in genome.connections.values():
+            if not cg.enabled:
+                continue
+
+            i, o = cg.key
+
+            if o not in required and i not in required:
+                continue
+
+            if i in genome_config.output_keys:
+                continue
+
+            if o not in node_inputs:
+                node_inputs[o] = {}
+            
+            node_inputs[o][i] = cg.weight
+            
+            if i not in node_inputs:
+                node_inputs[i] = {}
+
+        nodes = {i: Leaf(i) for i in genome_config.input_keys}
+
+        assert len(leaf_names) == len(genome_config.input_keys)
+        leaves = {name: nodes[i] for name, i in zip(leaf_names, genome_config.input_keys)}
+
+        def map_back(idx, current_node):
+            if isinstance(current_node, Leaf):
+                return
+            conns = node_inputs[idx]
+            for idx, c in enumerate(current_node.children):
+                conns[c.genome_idx] = list(current_node.weights)[idx]
+                map_back(c.genome_idx, c)
+            return
+        if(type(self.cppn) != list):
+            map_back(self.cppn.genome_idx, self.cppn)
+        else:
+            for o in self.cppn:
+                map_back(o.genome_idx, o)
+        return
+
+
     def structure_for_rnn(self, hidden_node_coords, conns_1, conns_2, conns_3):
         param_dict = {
             "n_inputs": len(self.substrate.input_coordinates),
@@ -242,7 +353,8 @@ class nd_Connection:
     def __hash__(self):
         return hash(self.coords + (self.weight,))
 
-def query_torch_cppn_tensors(coords_in, coords_out, outgoing, cppn, max_weight=5.0):
+def query_torch_cppn_tensors(coords_in, coords_out, outgoing, cppn, max_weight=5.0, with_grad=False):
     inputs = get_nd_coord_inputs(coords_in, coords_out)
-    activs = cppn(inputs)
+    in_dict = {"inputs": inputs, "grad": with_grad}
+    activs = cppn(input_dict = in_dict)
     return activs

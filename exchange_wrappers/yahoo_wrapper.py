@@ -12,6 +12,7 @@ class YahooWrapper(object):
 
     def __init__(self, sym):
         self.sym = sym
+        
         return
 
     def get_year_historical(self):

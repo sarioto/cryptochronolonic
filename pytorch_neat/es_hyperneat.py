@@ -28,6 +28,9 @@ class ESNetwork:
         self.root_x = self.width/2
         self.root_y = (len(substrate.input_coordinates)/self.width)/2
 
+    def rest_substrate(self, substrate):
+        self.connections = set()
+        self.substrate = substrate
 
     # creates phenotype with n dimensions
     def create_phenotype_network_nd(self, filename=None):
