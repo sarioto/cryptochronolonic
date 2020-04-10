@@ -24,7 +24,11 @@ class FtxWrapper(object):
             market_name = mrkt_name, resolution=3600, limit=10000
         )
         response = requests.get(self.base_url + test_params)
-        print(len(response.json()["result"]))
+        his_data = response.json()["result"]
+        df = pd.DataFrame(his_data)
+        file_name = mrkt_name.split("/")[0] + "_" + mrkt_name.split("/")[-1]
+        df.to_csv("./hist_data/ftx/" + file_name + ".txt")
+        print("saved " + mrkt_name + " hist data")
 
 
 ftx = FtxWrapper()
