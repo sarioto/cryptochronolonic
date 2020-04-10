@@ -26,15 +26,16 @@ class PurpleTrader:
 
     # ES-HyperNEAT specific parameters.
 
-PARAMS = {"initial_depth": 2,
-        "max_depth": 3,
-        "variance_threshold": 0.8,
-        "band_threshold": 0.05,
-        "iteration_level": 3,
-        "division_threshold": 0.3,
-        "max_weight": 34.0,
-        "activation": "relu",
-        "safe_baseline_depth": 3}
+    params = {"initial_depth": 2,
+            "max_depth": 3,
+            "variance_threshold": 0.8,
+            "band_threshold": 0.05,
+            "iteration_level": 3,
+            "division_threshold": 0.3,
+            "max_weight": 34.0,
+            "activation": "relu",
+            "safe_baseline_depth": 3,
+            "grad_steps": 2}
 
 
 
@@ -329,14 +330,14 @@ PARAMS = {"initial_depth": 2,
         fitness = self.evaluate(net, network, r_start)
         return fitness
 
-    def eval_fitness(self, genomes, config):
+    def eval_fitness(self, genomes, config, grad_step=0):
         self.epoch_len = 89
         r_start = randint(0+self.epoch_len, self.hs.hist_full_size - self.hd)
-        best_g_fit = 0.0
         champ_counter = self.gen_count % 10
         sym_idx = randint(0,self.num_syms - 1)
         action_dict = {}
         champ_key = 0
+        best_g_fit = 0.0
         #img_count = 0
         for idx, g in genomes:
             [cppn] = create_cppn(g, config, self.leaf_names, ["cppn_out"])
@@ -348,14 +349,14 @@ PARAMS = {"initial_depth": 2,
                 champ_key = g.key
                 with open("./champ_data/binance_per_symbol/latest_greatest"+str(champ_counter)+".pkl", 'wb') as output:
                     pickle.dump(g, output)
-        if grad_steps == total_grad_steps:
+        if grad_steps == self.params["grad_steps"]:
             return
         else:
             execute_back_prop(genome_dict, champ_key, config)
             for _, genome in genomes:
                 genome.fitness = evaluator.eval_genome(genome, config)
             grad_steps += 1
-            eval_genomes(genomes, config, grad_steps)
+            eval_genomes(genomes, config, grad_step)
         self.gen_count += 1
         return
 
