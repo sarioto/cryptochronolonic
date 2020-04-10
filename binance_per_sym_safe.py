@@ -330,6 +330,26 @@ class PurpleTrader:
         fitness = self.evaluate(net, network, r_start)
         return fitness
 
+    def execute_back_prop(self, genome_dict, champ_key, config):
+        input_cords, output_cords, leaf_names = set_initial_coords()
+        [cppn] = create_cppn(genome_dict[champ_key], config, leaf_names, ['cppn_out'])
+        net_builder = ESNetwork(Substrate(input_cords, output_cords), cppn, PARAMS)
+        champ_output = net_builder.safe_baseline(False)
+        for key in genome_dict:
+            if key != champ_key:
+                [cppn_2] = create_cppn(genome_dict[key], config, leaf_names, ['cppn_out'])
+                es_net = ESNetwork(Substrate(input_cords, output_cords), cppn_2, PARAMS)
+                output = es_net.safe_baseline(True)
+                es_net.optimizer.zero_grad()
+                if output.requires_grad == True:
+                    loss_val = (champ_output - output).pow(2).mean()
+                    loss_val.backward()
+                    es_net.optimizer.step()
+                    es_net.map_back_to_genome(genome_dict[key], config, leaf_names, ['cppn_out'])
+                else:
+                    print("error less fit has no grad attached")
+        return
+
     def eval_fitness(self, genomes, config, grad_step=0):
         self.epoch_len = 89
         r_start = randint(0+self.epoch_len, self.hs.hist_full_size - self.hd)
@@ -349,12 +369,10 @@ class PurpleTrader:
                 champ_key = g.key
                 with open("./champ_data/binance_per_symbol/latest_greatest"+str(champ_counter)+".pkl", 'wb') as output:
                     pickle.dump(g, output)
-        if grad_steps == self.params["grad_steps"]:
+        if grad_step== self.params["grad_steps"]:
             return
         else:
-            execute_back_prop(genome_dict, champ_key, config)
-            for _, genome in genomes:
-                genome.fitness = evaluator.eval_genome(genome, config)
+            self.execute_back_prop(genome_dict, champ_key, config)
             grad_steps += 1
             eval_genomes(genomes, config, grad_step)
         self.gen_count += 1
@@ -385,6 +403,7 @@ class PurpleTrader:
         self.epoch_len = 233
         r_start = self.hs.hist_full_size - self.epoch_len-1
         best_g_fit = -100.0
+        best_fit_idx = 0
         for idx in genomes:
             g = genomes[idx]
             cppn = neat.nn.FeedForwardNetwork.create(g, config)
@@ -393,7 +412,7 @@ class PurpleTrader:
             g.fitness = self.evaluate(net, network, r_start, g)
             if(g.fitness > best_g_fit):
                 best_g_fit = g.fitness
-                best_fit_idx = g.key`
+                best_fit_idx = g.key
                 with open('./champ_data/binance_per_symbol/latest_greatest.pkl', 'wb') as output:
                     pickle.dump(g, output)
         
@@ -401,9 +420,9 @@ class PurpleTrader:
 
 # Create the population and run the XOR task by providing the above fitness function.
     def run_pop(self, checkpoint=""):
+        pop = neat.population.Population(self.config)
         stats = neat.statistics.StatisticsReporter()
         pop.add_reporter(stats)
-        pop.add_reporter(checkpoints)
         pop.add_reporter(neat.reporting.StdOutReporter(True))
         print(self.num_gens)
         winner = pop.run(self.eval_fitness, self.num_gens)
