@@ -83,7 +83,7 @@ class BinanceUsWrapper(object):
             df['std_high'] = df['high']/df['high']
             df['std_low'] = df['low']/df['high']
             df['std_open'] = df['open']/df['high']
-            df['avg_vol_3'] = pd.Series(np.where(df.volume.rolling(3).mean() > df.volume, 1, 0), df.index)
+            df['avg_vol_3'] = pd.Series(np.where(df.volume.rolling(3).mean() > df.volume, 1, -1), df.index)
             '''
             df.dropna(inplace=True)
             df = df.iloc[::-1].reset_index()

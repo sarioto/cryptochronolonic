@@ -20,6 +20,18 @@ class BaseApiWrapper(object):
         self.endpoints["files_path"] = file_path
         return
 
+    def get_hist_files(self):
+        histFiles = os.listdir(os.path.join(os.path.dirname(__file__), 'histories'))
+        return histFiles
+        
+    def get_live_files(self):
+        histFiles = os.listdir(os.path.join(os.path.dirname(__file__), 'paper'))
+        return histFiles
+
+    def get_usd_files(self):
+        histfiles = os.listdir(os.path.join(os.path.dirname(__file__), 'usd_histories'))
+        return histfiles
+
     # depending on the pair this may need to be overridden
     def get_file_symbol(self, sym_full):
         stripped = sym_full.split(".")[0][:-3]
