@@ -324,6 +324,9 @@ class PurpleTrader:
             ft += bal_now - last_val
             last_val = bal_now
             port_hist[z] = ft / last_val
+        bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0]
+        balances.append(bal_now)
+        print("sym ", sym, " end balance: ", bal_now)
         return ft       
 
     def trial_run(self):
