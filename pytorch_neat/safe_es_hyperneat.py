@@ -17,7 +17,7 @@ class ESNetwork:
     def __init__(self, substrate, cppn, params):
         self.substrate = substrate
         self.cppn = cppn
-        self.optimizer = torch.optim.Adam(cppn.parameters(), lr=0.0001)
+        self.optimizer = torch.optim.Adam(cppn.parameters(), lr=0.0034)
         self.initial_depth = params["initial_depth"]
         self.max_depth = params["max_depth"]
         self.safe_baseline_depth = params["safe_baseline_depth"]

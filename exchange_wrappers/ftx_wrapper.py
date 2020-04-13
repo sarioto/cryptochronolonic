@@ -46,7 +46,7 @@ class FtxWrapper(object):
         df['avg_vol_3'] = pd.Series(np.where(df.volume.rolling(3).mean() > df.volume, 1, -1), df.index)
         df["roc_close"] = df["close"].pct_change(periods=8)
         df.dropna(inplace=True)
-        print(df["roc_close"])
+        print(df.index[0])
         return df
 
     def load_hist_files(self):
