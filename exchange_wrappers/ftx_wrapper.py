@@ -43,10 +43,13 @@ class FtxWrapper(object):
         df['std_close'] = df['close']/df['high']
         df['std_low'] = df['low']/df['high']
         df['std_open'] = df['open']/df['high']
-        df['avg_vol_3'] = pd.Series(np.where(df.volume.rolling(3).mean() > df.volume, 1, -1), df.index)
-        df["roc_close"] = df["close"].pct_change(periods=8)
+        df['avg_vol_3'] = pd.Series(np.where(df.volume.rolling(34).mean() > df.volume, 1, -1), df.index)
+        df["roc_close_mid"] = df["close"].pct_change(periods=34)
+        df["roc_close_short"] = df["close"].pct_change(periods=13)
+        df["roc_close_daily"] = df["close"].pct_change(periods=1)
+        df["roc_close_long"] = df["close"].pct_change(periods=144)
         df.dropna(inplace=True)
-        print(df.index[0])
+        self.start_idx = df.index[0]
         return df
 
     def load_hist_files(self):
@@ -72,7 +75,7 @@ class FtxWrapper(object):
         df.to_csv("./hist_data/ftx/" + file_name + ".txt")
         print("saved " + mrkt_name + " hist data")
 
-    def get_train_frames(self, restrict_val = 0, feature_columns = ['std_close', 'std_low', 'std_open', 'avg_vol_3', "roc_close"]):
+    def get_train_frames(self, restrict_val = 0, feature_columns = ['std_close', 'std_low', 'std_open', 'avg_vol_3', "roc_close_short", "roc_close_mid", "roc_close_long", "roc_close_daily"]):
         df_dict = self.load_single_df("ALT")
         coin_and_hist_index = 0
         currentHists = df_dict

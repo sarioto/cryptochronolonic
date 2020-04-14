@@ -455,6 +455,6 @@ class PurpleTrader:
         self.validate_fitness()
 
 pt = PurpleTrader(21, 255, 1)
-#pt.run_training("")
-pt.compare_champs()
+pt.run_training("")
+#pt.compare_champs()
 #run_validation()
