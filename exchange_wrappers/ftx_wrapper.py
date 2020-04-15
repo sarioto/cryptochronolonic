@@ -34,6 +34,8 @@ class FtxWrapper(object):
             sym_base = sym.split("_")[0][:-4]
             df = pd.read_csv("./hist_data/ftx/" +sym)
             df = self.apply_features(df)
+            if (len(df) < 3000):
+                continue
             if("BULL" in sym):
                 df_dict["BULL"] = df
             if("BEAR" in sym):
@@ -52,7 +54,7 @@ class FtxWrapper(object):
             if ("BEAR" in sym):
                 df_dict[base_sym]["BEAR"] = df
         return df_dict
-        
+
     def apply_features(self, df):
         df['std_close'] = df['close']/df['high']
         df['std_low'] = df['low']/df['high']
