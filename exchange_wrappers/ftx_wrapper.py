@@ -9,7 +9,7 @@ from statistics import mode
 class FtxWrapper(object):
 
     base_url = "https://ftx.com/api"
-    
+    start_idx = {}
     def __init__(self):
         return
 
@@ -131,6 +131,7 @@ class FtxWrapper(object):
         for s in df_dict:
             df_bull = currentHists[s]["BULL"][feature_columns].copy()
             df_bear = currentHists[s]["BEAR"][feature_columns].copy()
+            self.start_idxs[s] = df_bull.index[0]
             hist_lengths[s] = len(df_bull)
             as_array_bull = np.array(df_bull)
             as_array_bear = np.array(df_bear)

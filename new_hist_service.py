@@ -122,7 +122,7 @@ class HistWorker(object):
         return
 
     def get_wrapper_train_frames_all_syms(self, num_symbols=0):
-        self.coin_dict, self.currentHists, self.hist_shaped, self.hist_full_size = self.wrapper.get_train_frames_all_syms(num_symbols)
+        self.coin_dict, self.currentHists, self.hist_shaped, self.hist_sizes = self.wrapper.get_train_frames_all_syms(num_symbols)
         return
 
     def get_binance_live(self, num_symbols=0):
