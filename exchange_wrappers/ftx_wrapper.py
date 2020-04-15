@@ -47,13 +47,25 @@ class FtxWrapper(object):
         len_list = {}
         for sym in hist_list:
             base_sym = sym.split("_")[0][:-4]
+            if base_sym not in df_dict.keys():
+                df_dict[base_sym] = {}
+            sym_type = sym.split("_")[0][-4:]
             df = pd.read_csv("./hist_data/ftx/"+sym)
             df = self.apply_features(df)
-            if ("BULL" in sym):
+            if ("BULL" == sym_type):
                 df_dict[base_sym]["BULL"] = df
-            if ("BEAR" in sym):
+            if ("BEAR" == sym_type):
                 df_dict[base_sym]["BEAR"] = df
         return df_dict
+
+    def get_matching_dataframes(self):
+        data = self.load_hist_files()
+        new_dict = {}
+        for s in data:
+            if len(data[s]["BULL"]) == len(data[s]["BEAR"]) and len(data[s]["BULL"]) > 3000 and s not in ("", "USDT"):
+                print(s)
+                new_dict[s] = data[s]
+        return new_dict
 
     def apply_features(self, df):
         df['std_close'] = df['close']/df['high']
@@ -70,7 +82,7 @@ class FtxWrapper(object):
 
     def load_hist_files(self):
         histFiles = os.listdir(os.path.join(os.path.dirname(__file__), "../hist_data/ftx"))
-        data = self.load_hist_files_for_list(histFiles)
+        data = self.load_all_hist_files(histFiles)
         return data
 
     def load_single_df(self, base_sym):
@@ -91,7 +103,7 @@ class FtxWrapper(object):
         df.to_csv("./hist_data/ftx/" + file_name + ".txt")
         print("saved " + mrkt_name + " hist data")
 
-    def get_train_frames(self, restrict_val = 0, feature_columns = ['std_close', 'std_low', 'std_open', 'avg_vol_3', "roc_close_short", "roc_close_mid", "roc_close_long", "roc_close_daily"]):
+    def get_train_frames_single_sym(self, restrict_val = 0, feature_columns = ['std_close', 'std_low', 'std_open', 'avg_vol_3', "roc_close_short", "roc_close_mid", "roc_close_long", "roc_close_daily"]):
         df_dict = self.load_single_df("ALT")
         coin_and_hist_index = 0
         currentHists = df_dict
@@ -108,4 +120,27 @@ class FtxWrapper(object):
         hist_shaped = pd.Series(hist_shaped)
         return coin_dict, currentHists, hist_shaped, hist_full_size
 
-    
+    def get_train_frames_all_syms(self, restrict_val = 0, feature_columns = ['std_close', 'std_low', 'std_open', 'avg_vol_3', "roc_close_short", "roc_close_mid", "roc_close_long", "roc_close_daily"]):
+        df_dict = self.get_matching_dataframes()
+        coin_and_hist_index = 0
+        currentHists = df_dict
+        hist_shaped = {}
+        coin_dict = {}
+        prefixes = []
+        hist_lengths = {}
+        for s in df_dict:
+            df_bull = currentHists[s]["BULL"][feature_columns].copy()
+            df_bear = currentHists[s]["BEAR"][feature_columns].copy()
+            hist_lengths[s] = len(df_bull)
+            as_array_bull = np.array(df_bull)
+            as_array_bear = np.array(df_bear)
+            hist_shaped[coin_and_hist_index] = as_array_bull
+            coin_dict[s] = coin_and_hist_index
+            coin_and_hist_index += 1
+            hist_shaped[coin_and_hist_index] = as_array_bear
+            coin_and_hist_index += 1
+        hist_shaped = pd.Series(hist_shaped)
+        return coin_dict, currentHists, hist_shaped, hist_lengths
+
+ftx = FtxWrapper()
+ftx.check_lengths()
