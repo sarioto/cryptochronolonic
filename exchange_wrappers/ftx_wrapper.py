@@ -31,6 +31,7 @@ class FtxWrapper(object):
         df_dict = {}
         len_list = {}
         for sym in histFiles:
+            sym_base = sym.split("_")[0][:-4]
             df = pd.read_csv("./hist_data/ftx/" +sym)
             df = self.apply_features(df)
             if("BULL" in sym):
@@ -39,6 +40,19 @@ class FtxWrapper(object):
                 df_dict["BEAR"] = df
         return df_dict
 
+    def load_all_hist_files(self, hist_list):
+        df_dict = {}
+        len_list = {}
+        for sym in hist_list:
+            base_sym = sym.split("_")[0][:-4]
+            df = pd.read_csv("./hist_data/ftx/"+sym)
+            df = self.apply_features(df)
+            if ("BULL" in sym):
+                df_dict[base_sym]["BULL"] = df
+            if ("BEAR" in sym):
+                df_dict[base_sym]["BEAR"] = df
+        return df_dict
+        
     def apply_features(self, df):
         df['std_close'] = df['close']/df['high']
         df['std_low'] = df['low']/df['high']
