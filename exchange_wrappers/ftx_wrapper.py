@@ -9,7 +9,9 @@ from statistics import mode
 class FtxWrapper(object):
 
     base_url = "https://ftx.com/api"
-    start_idx = {}
+    
+    start_idxs = {}
+
     def __init__(self):
         return
 
@@ -142,6 +144,3 @@ class FtxWrapper(object):
             coin_and_hist_index += 1
         hist_shaped = pd.Series(hist_shaped)
         return coin_dict, currentHists, hist_shaped, hist_lengths
-
-ftx = FtxWrapper()
-ftx.check_lengths()

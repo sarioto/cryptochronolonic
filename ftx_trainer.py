@@ -70,7 +70,7 @@ class PurpleTrader:
         self.end_idx = len(self.hs.hist_shaped[0])
         self.but_target = .1
         self.num_syms = self.hs.hist_shaped.shape[0]
-        self.inputs = self.hs.hist_shaped[0].shape[1] + 3
+        self.inputs = self.hs.hist_shaped[0].shape[1]
         self.outputs = len(self.out_shapes)
         sign = 1
         for ix2 in range(1,self.inputs+1):
@@ -133,12 +133,14 @@ class PurpleTrader:
             sym_data = self.hs.hist_shaped[symbol_idx][next_index]
             #print(len(sym_data))
             sym_data = sym_data.tolist()
+            '''
             sym_data.append(current_positions[0])
             sym_data.append(current_positions[1])
             if next_index in pnl_hist.keys():
                 sym_data.append(pnl_hist[next_index])
             else:
                 sym_data.append(0.0)
+            '''
             master_active.append(sym_data)
         return master_active
     def evaluate_champ_one_balance(self, network, rand_start, g, champ_num, verbose=False):
@@ -290,18 +292,17 @@ class PurpleTrader:
     def evaluate_relu(self, network, sym_index, rand_starts, g, verbose=False):
         portfolio_start = 1000.0
         fits = []
-        end_prices = {}
-        balances = []
         buys = 0
         sells = 0
-        last_val = portfolio_start
-        ft = 0.0
         sym_bull = "BULL"
         sym_bear = "BEAR"
         for s in self.hs.coin_dict:
+            ft = 0.0
+            end_prices = {}
+            last_val = portfolio_start
             rand_start = rand_starts[s]
             x = self.hs.coin_dict[s]
-            portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USD")
+            portfolio = CryptoFolio(portfolio_start, {0: "BULL", 1: "BEAR"}, "USD")
             portfolio.target_amount = .25
             port_hist = {}
             for z_minus in range(rand_start, rand_start + self.epoch_len):
@@ -330,13 +331,13 @@ class PurpleTrader:
                 end_prices[sym_bull] = bull_open
                 end_prices[sym_bear] = bear_open
                 bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0]
-                ft += bal_now - last_val
+                ft += (bal_now - last_val) / last_val
                 last_val = bal_now
                 port_hist[z] = ft / last_val
-        bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0]
-        balances.append(bal_now)
-        print("sym ", "ALT", " end balance: ", bal_now)
-        return ft       
+            fits.append(ft)
+        avg_returns = statistics.mean(fits)
+        print("avg pnl", avg_returns)
+        return avg_returns       
 
     def trial_run(self):
         r_start = 0
@@ -370,7 +371,7 @@ class PurpleTrader:
         self.epoch_len = 55
         r_starts = {}
         for s in self.hs.currentHists:
-            r_starts[s] = randint(self.hs.wrapper.start_idxs[s] + self.hd, self.hs.hist_sizes[s])
+            r_starts[s] = randint(self.hs.wrapper.start_idxs[s] + self.hd, self.hs.hist_sizes[s] - self.epoch_len)
         champ_counter = self.gen_count % 10
         sym_idx = randint(0,self.num_syms - 1)
         genome_dict = {}
@@ -467,7 +468,7 @@ class PurpleTrader:
     def run_validation(self):
         self.validate_fitness()
 
-pt = PurpleTrader(8, 255, 1)
-#pt.run_training("")
-pt.compare_champs()
+pt = PurpleTrader(21, 255, 1)
+pt.run_training("")
+#pt.compare_champs()
 #run_validation()
