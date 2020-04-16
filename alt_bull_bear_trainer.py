@@ -29,8 +29,8 @@ class PurpleTrader:
 
     params = {"initial_depth": 2,
             "max_depth": 3,
-            "variance_threshold": 0.8,
-            "band_threshold": 0.34,
+            "variance_threshold": 0.89,
+            "band_threshold": 0.055,
             "iteration_level": 3,
             "division_threshold": 0.21,
             "max_weight": 34.0,
@@ -49,6 +49,7 @@ class PurpleTrader:
     highest_returns = 0
     portfolio_list = []
     leaf_names = []
+    current_champs = {}
     base_sym = "ALT"
 
     def __init__(self, hist_depth, num_gens, gen_count = 1):
@@ -62,7 +63,7 @@ class PurpleTrader:
 
     def refresh(self):
         self.in_shapes = []
-        self.out_shapes = [(0.0, -1.0, 1.0), (0.0, -1.0, 0.0), (0.0, -1.0, -1.0)]
+        self.out_shapes = [(1.0, -1.0, -1.0), (0.0, -1.0, 0.0), (-1.0, -1.0, 1.0)]
         self.hs = HistWorker(FtxWrapper())
         self.hs.get_wrapper_train_frames()
         print(self.hs.currentHists.keys())
@@ -141,11 +142,12 @@ class PurpleTrader:
                 sym_data.append(0.0)
             master_active.append(sym_data)
         return master_active
-    def evaluate_champ_one_balance(self, network, rand_start, g, champ_num, verbose=False):
+    def evaluate_champ_one_balance(self, builder, rand_start, g, champ_num, verbose=False):
         portfolio_start = 1000.0
         portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USD")
         end_prices = {}
         port_hist = {}
+        phenotypes = {}
         buys = 0
         sells = 0
         last_val = 1000.0
@@ -161,7 +163,12 @@ class PurpleTrader:
                 z = z_minus
                 pos_sizes = (portfolio.ledger[sym_bull], portfolio.ledger[sym_bear])
                 active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_sizes, port_hist)
-                network.reset()
+                if (z == start_index or (z-rand_start) % 34 == 0):
+                    self.reset_substrate(active[0])
+                    builder.substrate = self.substrate
+                    phenotypes[sym_bull] = builder.create_phenotype_network_nd()
+                    network = phenotypes[sym_bull]
+                    network.reset()
                 for n in range(1, self.hd):
                     network.activate([active[self.hd-n]])
                 out = network.activate([active[0]])
@@ -265,7 +272,7 @@ class PurpleTrader:
                     builder.substrate = self.substrate
                     phenotypes[sym] = builder.create_phenotype_network_nd()
                     network = phenotypes[sym]
-                network.reset()
+                    network.reset()
                 for n in range(1, self.hd+1):
                     network.activate([active[self.hd-n]])
                 out = network.activate([active[0]])
@@ -287,10 +294,11 @@ class PurpleTrader:
         print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
         return ft
 
-    def evaluate_relu(self, network, sym_index, rand_start, g, verbose=False):
+    def evaluate_relu(self, builder, sym_index, rand_start, g, verbose=False):
         portfolio_start = 1000.0
         end_prices = {}
         balances = []
+        phenotypes = {}
         buys = 0
         sells = 0
         last_val = portfolio_start
@@ -305,7 +313,12 @@ class PurpleTrader:
             z = z_minus
             pos_sizes = (portfolio.ledger[sym_bull], portfolio.ledger[sym_bear])
             active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_sizes, port_hist)
-            network.reset()
+            if (z == rand_start or (z-rand_start) % 34 == 0):
+                self.reset_substrate(active[0])
+                builder.substrate = self.substrate
+                phenotypes[sym_bull] = builder.create_phenotype_network_nd()
+                network = phenotypes[sym_bull]
+                network.reset()
             for n in range(1, self.hd):
                 network.activate([active[self.hd-n]])
             out = network.activate([active[0]])
@@ -331,7 +344,7 @@ class PurpleTrader:
         bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0]
         balances.append(bal_now)
         print("sym ", "ALT", " end balance: ", bal_now)
-        return ft       
+        return bal_now - portfolio_start       
 
     def trial_run(self):
         r_start = 0
@@ -362,7 +375,7 @@ class PurpleTrader:
         return
 
     def eval_fitness(self, genomes, config, grad_step=0):
-        self.epoch_len = 255
+        self.epoch_len = 144
         r_start = randint(self.hs.wrapper.start_idx + self.hd, self.hs.hist_full_size - self.epoch_len)
         champ_counter = self.gen_count % 10
         sym_idx = randint(0,self.num_syms - 1)
@@ -374,22 +387,24 @@ class PurpleTrader:
             genome_dict[g.key] = g
             [cppn] = create_cppn(g, config, self.leaf_names, ["cppn_out"])
             net_builder = ESNetwork(self.substrate, cppn, self.params)
-            net = net_builder.create_phenotype_network_nd()
-            train_ft = self.evaluate_relu(net, 0, r_start, g, 0)
+            #net = net_builder.create_phenotype_network_nd()
+            train_ft = self.evaluate_relu(net_builder, 0, r_start, g, 0)
             g.fitness = train_ft
             if(g.fitness > best_g_fit):
                 best_g_fit = g.fitness
                 champ_key = g.key
+                '''
                 with open("./champ_data/alt_bull_bear/latest_greatest"+str(champ_counter)+".pkl", 'wb') as output:
                     pickle.dump(g, output)
-        if grad_step== self.params["grad_steps"]:
+                '''
+        if grad_step == self.params["grad_steps"]:
+            self.full_backtest(genome_dict[champ_key])
+            self.gen_count += 1
             return
         else:
             self.execute_back_prop(genome_dict, champ_key, config)
             grad_step += 1
             self.eval_fitness(genomes, config, grad_step)
-        self.gen_count += 1
-        return
 
     def compare_champs(self):
         self.epoch_len = self.hs.hist_full_size - (self.hd+1)
@@ -402,13 +417,32 @@ class PurpleTrader:
                 champ_file.close()
                 [cppn] = create_cppn(g, self.config, self.leaf_names, ["cppn_out"])
                 net_builder = ESNetwork(self.substrate, cppn, self.params)
-                net = net_builder.create_phenotype_network_nd()
-                g.fitness = self.evaluate_champ_one_balance(net, r_start, g, champ_num = ix)
-                '''
-                if (g.fitness > champ_fit):
-                    with open("./champ_data/binance_per_symbol/latest_greatest.pkl", 'wb') as output:
-                        pickle.dump(g, output)
-                '''
+                #net = net_builder.create_phenotype_network_nd()
+                g.fitness = self.evaluate_champ_one_balance(net_builder, r_start, g, champ_num = ix)
+        return
+
+    def full_backtest(self, genome):
+        self.epoch_len = self.hs.hist_full_size - (self.hd+1)
+        r_start = self.hd + 1
+        [cppn] = create_cppn(genome, self.config, self.leaf_names, ["cppn_out"])
+        builder = ESNetwork(self.substrate, cppn, self.params)
+        champ_fit = self.evaluate_champ_one_balance(builder, r_start, genome, 11)
+        for ix, f in enumerate(os.listdir("./champ_data/alt_bull_bear")):
+            if f != ".DS_Store":
+                champ_file = open("./champ_data/alt_bull_bear/"+f,'rb')
+                g = pickle.load(champ_file)
+                champ_file.close()
+                if g.key not in self.current_champs.keys():
+                    [cppn] = create_cppn(g, self.config, self.leaf_names, ["cppn_out"])
+                    net_builder = ESNetwork(self.substrate, cppn, self.params)
+                    g.fitness = self.evaluate_champ_one_balance(net_builder, r_start, g, champ_num = ix)
+                    self.current_champs[g.key] = g.fitness
+                if (self.current_champs[g.key] < champ_fit):
+                    del self.current_champs[g.key]
+                    self.current_champs[genome.key] = champ_fit
+                    with open("./champ_data/alt_bull_bear/" + f, 'wb') as output:
+                        pickle.dump(genome, output)
+                    return
         return
 
     def validate_fitness(self):
@@ -434,9 +468,14 @@ class PurpleTrader:
 
 # Create the population and run the XOR task by providing the above fitness function.
     def run_pop(self, checkpoint=""):
-        pop = neat.population.Population(self.config)
+        if(checkpoint == ""):
+            pop = neat.population.Population(self.config)
+        else:
+            pop = neat.Checkpointer.restore_checkpoint("./pkl_pops/ftx/pop-checkpoint-" + checkpoint)
+        checkpoints = neat.Checkpointer(generation_interval=10, time_interval_seconds=None, filename_prefix='./pkl_pops/ftx/pop-checkpoint-')
         stats = neat.statistics.StatisticsReporter()
         pop.add_reporter(stats)
+        pop.add_reporter(checkpoints)
         pop.add_reporter(neat.reporting.StdOutReporter(True))
         print(self.num_gens)
         winner = pop.run(self.eval_fitness, self.num_gens)
@@ -461,6 +500,6 @@ class PurpleTrader:
         self.validate_fitness()
 
 pt = PurpleTrader(8, 255, 1)
-#pt.run_training("")
-pt.compare_champs()
+pt.run_training("")
+#pt.compare_champs()
 #run_validation()

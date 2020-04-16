@@ -67,25 +67,18 @@ def get_exchange(exchange="binance"):
     return hist_files
     
 
-def get_genome_performance(g_name):
-    hist_files = os.listdir("../trade_hists/binance_per_symbol_new/" + g_name)
-    data_dict = {}
-    for f in hist_files:
-        frame = pd.read_csv("../trade_hists/binance_per_symbol_new/"+ g_name +"/" + f)
-        if (frame["1"][0]) < frame["1"][len(frame) - 1]:
-            print(f, " ", frame["1"][0], frame["1"][len(frame) - 1])
-        
-        data_dict[f] = [list(v.values()) for v in frame.T.to_dict().values()]
-    return data_dict
+
 
 def get_genome_performance(g_name):
     hist_files = os.listdir("../trade_hists/ftx/" + g_name)
     data_dict = {}
     for f in hist_files:
-        frame = pd.read_csv("../trade_hists/ftx/"+ g_name +"/" + f)
-        if (frame["1"][0]) < frame["1"][len(frame) - 1]:
-            print(f, " ", frame["1"][0], frame["1"][len(frame) - 1])
-            data_dict[f] = [list(v.values()) for v in frame.T.to_dict().values()]
+        if f != ".DS_Store":
+            frame = pd.read_csv("../trade_hists/ftx/"+ g_name +"/" + f)
+            print(f)
+            if (frame["1"][0]) < frame["1"][len(frame) - 1]:
+                print(f, " ", frame["1"][0], frame["1"][len(frame) - 1])
+                data_dict[f] = [list(v.values()) for v in frame.T.to_dict().values()]
     return data_dict
 
 
