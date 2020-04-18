@@ -23,10 +23,13 @@ class FtxWrapper(object):
                 usd_ls.append(m["name"])
         return usd_ls
 
-    def get_markets_hist(self):
+    def get_markets_hist(self, bar_limit = -1):
         m_names = self.get_markets()
         for n in m_names:
-            self.get_historical(x)
+            if bar_limit != -1:
+                self.get_historical(n, bar_limit)
+            else:
+                self.get_historical(n)
         return
 
     def load_hist_files_for_list(self, histFiles):
@@ -94,15 +97,18 @@ class FtxWrapper(object):
         dfs = self.load_hist_files_for_list(syms)
         return dfs
         
-    def get_historical(self, mrkt_name = "XTZBULL/USD"):
+    def get_historical(self, mrkt_name = "XTZBULL/USD", bar_limit = 10000, live=False):
         test_params = "/markets/{market_name}/candles?resolution={resolution}&limit={limit}".format(
-            market_name = mrkt_name, resolution=3600, limit=10000
+            market_name = mrkt_name, resolution=3600, limit=bar_limit
         )
         response = requests.get(self.base_url + test_params)
         his_data = response.json()["result"]
         df = pd.DataFrame(his_data)
         file_name = mrkt_name.split("/")[0] + "_" + mrkt_name.split("/")[-1]
-        df.to_csv("./hist_data/ftx/" + file_name + ".txt")
+        if live == False:
+            df.to_csv("./hist_data/ftx/" + file_name + ".txt")
+        else:
+            df.to_csv("./live_data/ftx/" + file_name + ".txt")
         print("saved " + mrkt_name + " hist data")
 
     def get_train_frames_single_sym(self, restrict_val = 0, feature_columns = ['std_close', 'std_low', 'std_open', 'avg_vol_3', "roc_close_short", "roc_close_mid", "roc_close_long", "roc_close_daily"]):
@@ -121,6 +127,29 @@ class FtxWrapper(object):
             coin_and_hist_index += 1
         hist_shaped = pd.Series(hist_shaped)
         return coin_dict, currentHists, hist_shaped, hist_full_size
+
+    def get_live_frames_all_syms(self, restrict_val = 0, feature_columns = ['std_close', 'std_low', 'std_open', 'avg_vol_3', "roc_close_short", "roc_close_mid", "roc_close_long", "roc_close_daily"]):
+        df_dict = self.get_matching_dataframes()
+        coin_and_hist_index = 0
+        currentHists = df_dict
+        hist_shaped = {}
+        coin_dict = {}
+        prefixes = []
+        hist_lengths = {}
+        for s in df_dict:
+            df_bull = currentHists[s]["BULL"][feature_columns].copy()
+            df_bear = currentHists[s]["BEAR"][feature_columns].copy()
+            self.start_idxs[s] = df_bull.index[0]
+            hist_lengths[s] = len(df_bull)
+            as_array_bull = np.array(df_bull)
+            as_array_bear = np.array(df_bear)
+            hist_shaped[coin_and_hist_index] = as_array_bull
+            coin_dict[s] = coin_and_hist_index
+            coin_and_hist_index += 1
+            hist_shaped[coin_and_hist_index] = as_array_bear
+            coin_and_hist_index += 1
+        hist_shaped = pd.Series(hist_shaped)
+        return coin_dict, currentHists, hist_shaped, hist_lengths
 
     def get_train_frames_all_syms(self, restrict_val = 0, feature_columns = ['std_close', 'std_low', 'std_open', 'avg_vol_3', "roc_close_short", "roc_close_mid", "roc_close_long", "roc_close_daily"]):
         df_dict = self.get_matching_dataframes()
