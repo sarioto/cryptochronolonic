@@ -23,11 +23,11 @@ class FtxWrapper(object):
                 usd_ls.append(m["name"])
         return usd_ls
 
-    def get_markets_hist(self, bar_limit = -1):
+    def get_markets_hist(self, bar_limit = -1, live=False):
         m_names = self.get_markets()
         for n in m_names:
             if bar_limit != -1:
-                self.get_historical(n, bar_limit)
+                self.get_historical(n, bar_limit, live)
             else:
                 self.get_historical(n)
         return
@@ -63,8 +63,8 @@ class FtxWrapper(object):
                 df_dict[base_sym]["BEAR"] = df
         return df_dict
 
-    def get_matching_dataframes(self):
-        data = self.load_hist_files()
+    def get_matching_dataframes(self, live=False):
+        data = self.load_hist_files(live)
         new_dict = {}
         for s in data:
             if len(data[s]["BULL"]) == len(data[s]["BEAR"]) and len(data[s]["BULL"]) > 3000 and s not in ("", "USDT"):
@@ -85,10 +85,15 @@ class FtxWrapper(object):
         self.start_idx = df.index[0]
         return df
 
-    def load_hist_files(self):
-        histFiles = os.listdir(os.path.join(os.path.dirname(__file__), "../hist_data/ftx"))
+    def load_hist_files(self, live=False):
+        if live == False:
+            histFiles = os.listdir(os.path.join(os.path.dirname(__file__), "../hist_data/ftx"))
+        else:
+            histFiles = os.listdir(os.path.join(os.path.dirname(__file__), "../live_data/ftx"))
         data = self.load_all_hist_files(histFiles)
         return data
+        
+        
 
     def load_single_df(self, base_sym):
         histFiles = os.listdir(os.path.join(os.path.dirname(__file__), "../hist_data/ftx"))
@@ -129,7 +134,8 @@ class FtxWrapper(object):
         return coin_dict, currentHists, hist_shaped, hist_full_size
 
     def get_live_frames_all_syms(self, restrict_val = 0, feature_columns = ['std_close', 'std_low', 'std_open', 'avg_vol_3', "roc_close_short", "roc_close_mid", "roc_close_long", "roc_close_daily"]):
-        df_dict = self.get_matching_dataframes()
+        self.get_markets_hist(bar_limit=250, live=True)
+        df_dict = self.get_matching_dataframes(live=True)
         coin_and_hist_index = 0
         currentHists = df_dict
         hist_shaped = {}
