@@ -65,7 +65,7 @@ class PurpleTrader:
         self.in_shapes = []
         self.out_shapes = [(0.0, -1.0, 0.0)]
         self.hs = HistWorker(FtxWrapper())
-        self.hs.get_wrapper_train_frames_all_syms()
+        self.hs.get_wrapper_live_frames_all_syms()
         print(self.hs.currentHists.keys())
         hist_lengths = {}
         self.end_idx = len(self.hs.hist_shaped[0])
@@ -109,22 +109,12 @@ class PurpleTrader:
             #print(self.outputs)
             for y in range(0, self.outputs):
                 sym_data = self.hs.hist_shaped[y][end_idx + x]
+                
                 #print(len(sym_data))
                 active += sym_data.tolist()
 
             master_active.append(active)
         #print(active)
-        return master_active
-
-    def get_single_symbol_epoch_recurrent(self, end_idx, symbol_idx):
-        master_active = []
-        for x in range(0, self.hd):
-            try:
-                sym_data = self.hs.hist_shaped[symbol_idx][end_idx-x]
-                #print(len(sym_data))
-                master_active.append(sym_data.tolist())
-            except:
-                print('error')
         return master_active
 
     def get_single_symbol_epoch_recurrent_with_position_size(self, end_idx, symbol_idx, current_positions, pnl_hist):
