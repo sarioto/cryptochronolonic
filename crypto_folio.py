@@ -8,13 +8,13 @@ class CryptoFolio:
     
     #assume we 
     fees = .002
-    buys = 0
-    sells = 0
-    target_amount = 0.1
-    ledger = {}
-    start = 0
-    def __init__(self, start_amount, coins, base="BTC", save_trades=False):
+    def __init__(self, start_amount, coins, base="BTC", save_trades=False, target_amt = .1):
+        self.buys = 0
+        self.sells = 0
+        self.ledger = {}
+        self.start = 0
         self.base_sym = base
+        self.target_amount = target_amt
         self.ledger[self.base_sym] = start_amount
         for ix in range(len(coins)):
             self.ledger[coins[ix]] = 0.0
@@ -47,6 +47,7 @@ class CryptoFolio:
 
     def sell_coin(self, c_name, price):
         if self.ledger[c_name] != 0.0:
+            print("selling ", self.ledger[c_name], " of ", c_name)
             amount = self.ledger[c_name]
             self.ledger[self.base_sym] += ((amount*price) - ((amount * price)*self.fees))
             self.ledger[c_name] = 0.0

@@ -23,6 +23,14 @@ class FtxWrapper(object):
                 usd_ls.append(m["name"])
         return usd_ls
 
+    def get_last_price(self, sym):
+        response = requests.get(self.base_url + "/markets")
+        for m in response.json()["result"]:
+            if m["baseCurrency"] != None and m["baseCurrency"] == sym and m["name"].split("/")[-1] == "USD":
+                print(m["last"])
+                return m["last"]
+        return
+
     def get_markets_hist(self, bar_limit = -1, live=False):
         m_names = self.get_markets()
         for n in m_names:
