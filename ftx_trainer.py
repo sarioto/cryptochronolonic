@@ -36,7 +36,7 @@ class PurpleTrader:
             "max_weight": 34.0,
             "activation": "tanh",
             "safe_baseline_depth": 3,
-            "grad_steps": 3}
+            "grad_steps": 1}
 
 
 
@@ -260,7 +260,7 @@ class PurpleTrader:
                     port_hist[x] = ft / last_val
             result_val = portfolio.get_total_btc_value(end_prices)
             balances.append(result_val[0])
-            print("genome id ", g.key, " : ")
+            print("genome id ", g.key, "genome num ", champ_num, " : ")
             print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
         return np.asarray(balances, dtype=np.float32).mean()
 
@@ -285,7 +285,7 @@ class PurpleTrader:
                 z = z_minus
                 pos_sizes = (portfolio.ledger[sym_bull], portfolio.ledger[sym_bear])
                 active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_sizes, port_hist)
-                if(z_minus == rand_start or (z_minus + 1) % 13 == 0):
+                if(z_minus == rand_start or (z_minus + 1) % 5 == 0):
                     self.reset_substrate(active[0])
                     builder.substrate = self.substrate
                     phenotypes[s] = builder.create_phenotype_network_nd()
@@ -351,7 +351,7 @@ class PurpleTrader:
         return
 
     def eval_fitness(self, genomes, config, grad_step=0):
-        self.epoch_len = 55
+        self.epoch_len = 21
         r_starts = {}
         for s in self.hs.currentHists:
             r_starts[s] = randint(self.hs.wrapper.start_idxs[s] + self.hd, self.hs.hist_sizes[s] - self.epoch_len)
@@ -474,7 +474,7 @@ class PurpleTrader:
     def run_validation(self):
         self.validate_fitness()
 
-pt = PurpleTrader(34, 255, 1)
-#pt.run_training("69")
-pt.compare_champs()
+pt = PurpleTrader(8, 255, 1)
+pt.run_training("")
+#pt.compare_champs()
 #run_validation()
