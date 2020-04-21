@@ -434,6 +434,6 @@ class PurpleTrader:
         time.sleep(3600)
         self.run_live()
 
-pt = PurpleTrader(34, 255, "latest_greatest1.pkl", 1)
+pt = PurpleTrader(34, 255, "latest_greatest3.pkl", 1)
 pt.run_live()
 #pt.run_training("69")

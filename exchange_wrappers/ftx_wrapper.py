@@ -27,8 +27,7 @@ class FtxWrapper(object):
         response = requests.get(self.base_url + "/markets")
         for m in response.json()["result"]:
             if m["baseCurrency"] != None and m["baseCurrency"] == sym and m["name"].split("/")[-1] == "USD":
-                print(m["last"])
-                return m["last"]
+                return m["ask"]
         return
 
     def get_markets_hist(self, bar_limit = -1, live=False):
