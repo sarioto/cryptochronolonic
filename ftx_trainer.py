@@ -166,7 +166,7 @@ class PurpleTrader:
                 z = z_minus
                 pos_sizes = (portfolio.ledger[sym_bull], portfolio.ledger[sym_bear])
                 active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_sizes, port_hist)
-                if (z == start_index or (z-rand_start) % 13 == 0):
+                if (z == start_index or (z-rand_start) % 21 == 0):
                     self.reset_substrate(active[0])
                     builder.substrate = self.substrate
                     phenotypes[sym_bull] = builder.create_phenotype_network_nd()
@@ -229,7 +229,7 @@ class PurpleTrader:
                     z = z_minus
                     pos_size = []
                     active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_size, port_hist)
-                    if(z_minus == start_index or (z_minus + 1) % 13 == 0):
+                    if(z_minus == start_index or (z_minus + 1) % 34 == 0):
                         self.reset_substrate(active[0])
                         builder.substrate = self.substrate
                         phenotypes[sym] = builder.create_phenotype_network_nd()
@@ -285,7 +285,7 @@ class PurpleTrader:
                 z = z_minus
                 pos_sizes = (portfolio.ledger[sym_bull], portfolio.ledger[sym_bear])
                 active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_sizes, port_hist)
-                if(z_minus == rand_start or (z_minus + 1) % 5 == 0):
+                if(z_minus == rand_start or (z_minus + 1) % 21 == 0):
                     self.reset_substrate(active[0])
                     builder.substrate = self.substrate
                     phenotypes[s] = builder.create_phenotype_network_nd()
@@ -298,11 +298,11 @@ class PurpleTrader:
                 #max_output = torch.max(out, 0)[1]
                 bull_open = self.hs.currentHists[s][sym_bull]['open'][z+1]
                 bear_open = self.hs.currentHists[s][sym_bear]['open'][z+1]
-                if(out[0] > .25):
+                if(out[0] > .5):
                     portfolio.sell_coin(sym_bull, bull_open)
                     did_buy = portfolio.buy_coin(sym_bear, bear_open)
                     #print("bought ", sym
-                elif(out[0] < -.25):
+                elif(out[0] < -.5):
                     portfolio.sell_coin(sym_bear, bear_open)
                     did_buy = portfolio.buy_coin(sym_bull, bull_open)
                 else:
@@ -351,7 +351,7 @@ class PurpleTrader:
         return
 
     def eval_fitness(self, genomes, config, grad_step=0):
-        self.epoch_len = 21
+        self.epoch_len = 144
         r_starts = {}
         for s in self.hs.currentHists:
             r_starts[s] = randint(self.hs.wrapper.start_idxs[s] + self.hd, self.hs.hist_sizes[s] - self.epoch_len)
@@ -385,9 +385,9 @@ class PurpleTrader:
     def compare_champs(self):
         r_start = 0
         champ_fit = 0
-        for ix, f in enumerate(os.listdir("./champ_data/ftx_full")):
+        for ix, f in enumerate(os.listdir("./champ_data/archive")):
             if f != ".DS_Store":
-                champ_file = open("./champ_data/ftx_full/"+f,'rb')
+                champ_file = open("./champ_data/archive/"+f,'rb')
                 g = pickle.load(champ_file)
                 champ_file.close()
                 [cppn] = create_cppn(g, self.config, self.leaf_names, ["cppn_out"])
@@ -475,6 +475,6 @@ class PurpleTrader:
         self.validate_fitness()
 
 pt = PurpleTrader(8, 255, 1)
-pt.run_training("")
-#pt.compare_champs()
+#pt.run_training("")
+pt.compare_champs()
 #run_validation()
