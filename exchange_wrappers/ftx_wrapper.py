@@ -54,7 +54,7 @@ class FtxWrapper(object):
                 df_dict["BEAR"] = df
         return df_dict
 
-    def load_all_hist_files(self, hist_list):
+    def load_all_hist_files(self, hist_list, live=False):
         df_dict = {}
         len_list = {}
         for sym in hist_list:
@@ -62,7 +62,10 @@ class FtxWrapper(object):
             if base_sym not in df_dict.keys():
                 df_dict[base_sym] = {}
             sym_type = sym.split("_")[0][-4:]
-            df = pd.read_csv("./hist_data/ftx/"+sym)
+            if live == False:
+                df = pd.read_csv("./hist_data/ftx/"+sym)
+            if live == True:
+                df = pd.read_csv("./live_data/ftx/"+sym)
             df = self.apply_features(df)
             if ("BULL" == sym_type):
                 df_dict[base_sym]["BULL"] = df
@@ -74,9 +77,14 @@ class FtxWrapper(object):
         data = self.load_hist_files(live)
         new_dict = {}
         for s in data:
-            if len(data[s]["BULL"]) == len(data[s]["BEAR"]) and len(data[s]["BULL"]) > 3000 and s not in ("", "USDT"):
-                print(s)
-                new_dict[s] = data[s]
+            if live == False:
+                if len(data[s]["BULL"]) == len(data[s]["BEAR"]) and len(data[s]["BULL"]) > 3000 and s not in ("", "USDT"):
+                    print(s)
+                    new_dict[s] = data[s]
+            else:
+                if len(data[s]["BULL"]) == len(data[s]["BEAR"]) and s not in ("", "USDT"):
+                    print(s)
+                    new_dict[s] = data[s]
         return new_dict
 
     def apply_features(self, df):
@@ -97,7 +105,7 @@ class FtxWrapper(object):
             histFiles = os.listdir(os.path.join(os.path.dirname(__file__), "../hist_data/ftx"))
         else:
             histFiles = os.listdir(os.path.join(os.path.dirname(__file__), "../live_data/ftx"))
-        data = self.load_all_hist_files(histFiles)
+        data = self.load_all_hist_files(histFiles, live)
         return data
         
         
@@ -141,8 +149,9 @@ class FtxWrapper(object):
         return coin_dict, currentHists, hist_shaped, hist_full_size
 
     def get_live_frames_all_syms(self, restrict_val = 0, feature_columns = ['std_close', 'std_low', 'std_open', 'avg_vol_3', "roc_close_short", "roc_close_mid", "roc_close_long", "roc_close_daily"]):
-        self.get_markets_hist(bar_limit=250, live=True)
+        self.get_markets_hist(bar_limit=350, live=True)
         df_dict = self.get_matching_dataframes(live=True)
+        print(df_dict)
         coin_and_hist_index = 0
         currentHists = df_dict
         hist_shaped = {}
