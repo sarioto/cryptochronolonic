@@ -170,9 +170,10 @@ class FtxWrapper(object):
         currentHists = df_dict
         hist_shaped = {}
         coin_dict = {}
-        prefixes = []
+        self.prefixes = []
         hist_lengths = {}
         for s in df_dict:
+            self.prefixes.append(s)
             df_bull = currentHists[s]["BULL"][feature_columns].copy()
             df_bear = currentHists[s]["BEAR"][feature_columns].copy()
             self.start_idxs[s] = df_bull.index[0]
