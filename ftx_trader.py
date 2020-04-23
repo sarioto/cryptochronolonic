@@ -407,7 +407,7 @@ class PurpleTrader:
         r_start = self.epoch_len
         [cppn] = create_cppn(genome, self.config, self.leaf_names, ["cppn_out"])
         builder = ESNetwork(self.substrate, cppn, self.params)
-        champ_fit = self.evaluate_champ_one_balance(builder, r_start, genome, 11)
+        champ_fit = self.evaluate_champ(builder, r_start, genome, 11)
         for ix, f in enumerate(os.listdir("./champ_data/alt_bull_bear")):
             if f != ".DS_Store":
                 champ_file = open("./champ_data/alt_bull_bear/"+f,'rb')
@@ -416,7 +416,7 @@ class PurpleTrader:
                 if g.key not in self.current_champs.keys():
                     [cppn] = create_cppn(g, self.config, self.leaf_names, ["cppn_out"])
                     net_builder = ESNetwork(self.substrate, cppn, self.params)
-                    g.fitness = self.evaluate_champ_one_balance(net_builder, r_start, g, champ_num = ix)
+                    g.fitness = self.evaluate_champ(net_builder, r_start, g, champ_num = ix)
                     self.current_champs[g.key] = g.fitness
                 if (self.current_champs[g.key] < champ_fit):
                     del self.current_champs[g.key]
