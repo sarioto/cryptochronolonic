@@ -462,7 +462,7 @@ class PurpleTrader:
                 with open("./champ_data/ftx_full/latest_greatest"+str(champ_counter)+".pkl", 'wb') as output:
                     pickle.dump(g, output)
         if grad_step == self.params["grad_steps"]:
-            #self.full_backtest(genome_dict[champ_key])
+            self.full_backtest(genome_dict[champ_key])
             self.gen_count += 1
             return
         else:
