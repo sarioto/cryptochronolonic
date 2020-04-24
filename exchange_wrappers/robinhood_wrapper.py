@@ -37,6 +37,30 @@ class RobinHoodWrapper(object):
     def load_df_from_file(self, file_name):
         df = pd.DataFrame().from_csv(file_name)
         return df
+
+    def load_single_df(self, base_sym):
+        histFiles = os.listdir(os.path.join(os.path.dirname(__file__), "../robinhhood_train/ftx"))
+        syms = [s for s in histFiles if s.split("_")[0][:-4] == base_sym]
+        print(syms)
+        dfs = self.load_hist_files_for_list(syms)
+        return dfs
+
+    def get_train_frames_single_sym(self, restrict_val = 0, feature_columns = ['std_close', 'std_low', 'std_open', 'avg_vol_3', "roc_close_short", "roc_close_mid", "roc_close_long", "roc_close_daily"]):
+        df_dict = self.load_single_df("ALT")
+        coin_and_hist_index = 0
+        currentHists = df_dict
+        hist_shaped = {}
+        coin_dict = {}
+        prefixes = []
+        for ix in df_dict:
+            df = currentHists[ix][feature_columns].copy()
+            hist_full_size = len(df)
+            as_array=np.array(df)
+            hist_shaped[coin_and_hist_index] = as_array
+            coin_dict[coin_and_hist_index] = ix
+            coin_and_hist_index += 1
+        hist_shaped = pd.Series(hist_shaped)
+        return coin_dict, currentHists, hist_shaped, hist_full_size
     
     def apply_features(self, df):
         df['std_close'] = df['close_price']/df['high_price']
