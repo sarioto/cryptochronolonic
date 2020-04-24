@@ -34,9 +34,9 @@ class PurpleTrader:
             "iteration_level": 3,
             "division_threshold": 0.21,
             "max_weight": 34.0,
-            "activation": "relu",
+            "activation": "tanh",
             "safe_baseline_depth": 3,
-            "grad_steps": 1}
+            "grad_steps": 3}
 
 
 
@@ -50,6 +50,8 @@ class PurpleTrader:
     portfolio_list = []
     leaf_names = []
     current_champs = {}
+    overall_champ = None
+    top_champ_fitness = -1000
     base_sym = "ALT"
 
     def __init__(self, hist_depth, num_gens, gen_count = 1):
@@ -63,15 +65,15 @@ class PurpleTrader:
 
     def refresh(self):
         self.in_shapes = []
-        self.out_shapes = [(1.0, -1.0, -1.0), (0.0, -1.0, 0.0), (-1.0, -1.0, 1.0)]
+        self.out_shapes = [(0.0, -1.0, 0.0)]
         self.hs = HistWorker(FtxWrapper())
-        self.hs.get_wrapper_train_frames()
+        self.hs.get_wrapper_train_frames_all_syms()
         print(self.hs.currentHists.keys())
         hist_lengths = {}
         self.end_idx = len(self.hs.hist_shaped[0])
         self.but_target = .1
         self.num_syms = self.hs.hist_shaped.shape[0]
-        self.inputs = self.hs.hist_shaped[0].shape[1] + 3
+        self.inputs = self.hs.hist_shaped[0].shape[1]
         self.outputs = len(self.out_shapes)
         sign = 1
         for ix2 in range(1,self.inputs+1):
@@ -134,17 +136,20 @@ class PurpleTrader:
             sym_data = self.hs.hist_shaped[symbol_idx][next_index]
             #print(len(sym_data))
             sym_data = sym_data.tolist()
+            '''
             sym_data.append(current_positions[0])
             sym_data.append(current_positions[1])
             if next_index in pnl_hist.keys():
                 sym_data.append(pnl_hist[next_index])
             else:
                 sym_data.append(0.0)
+            '''
             master_active.append(sym_data)
         return master_active
+
     def evaluate_champ_one_balance(self, builder, rand_start, g, champ_num, verbose=False):
         portfolio_start = 1000.0
-        portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USD")
+        portfolio = CryptoFolio(portfolio_start, {0: "BULL", 1: "BEAR"}, "USD")
         end_prices = {}
         port_hist = {}
         phenotypes = {}
@@ -153,17 +158,18 @@ class PurpleTrader:
         last_val = 1000.0
         sym_bull = "BULL"
         sym_bear = "BEAR"
+        s = "ALT"
         x = 0
         ft = 0.0
         print(rand_start)
-        start_index = self.hs.currentHists[sym_bull].index[0]
+        start_index = self.hs.currentHists[s][sym_bull].index[0]
         with open("./trade_hists/ftx/alts/" + str(champ_num) + "_hist.txt", "w") as fw:
             fw.write('0,1\n')
             for z_minus in range(start_index, self.epoch_len):
                 z = z_minus
                 pos_sizes = (portfolio.ledger[sym_bull], portfolio.ledger[sym_bear])
                 active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_sizes, port_hist)
-                if (z == start_index or (z-rand_start) % 34 == 0):
+                if (z == start_index or (z-rand_start) % 13 == 0):
                     self.reset_substrate(active[0])
                     builder.substrate = self.substrate
                     phenotypes[sym_bull] = builder.create_phenotype_network_nd()
@@ -172,28 +178,31 @@ class PurpleTrader:
                 for n in range(1, self.hd):
                     network.activate([active[self.hd-n]])
                 out = network.activate([active[0]])
-                out = F.softmax(out[0], dim=0)
-                max_output = torch.max(out, 0)[1]
-                if(max_output == 2):
-                    portfolio.sell_coin(sym_bull, self.hs.currentHists[sym_bull]['open'][z+1])
-                    did_buy = portfolio.buy_coin(sym_bear, self.hs.currentHists[sym_bear]['open'][z+1])
+                #out = F.softmax(out[0], dim=0)
+                #max_output = torch.max(out, 0)[1]
+                bull_open = self.hs.currentHists[s][sym_bull]['open'][z+1]
+                bear_open = self.hs.currentHists[s][sym_bear]['open'][z+1]
+                if(out[0] > .25):
+                    portfolio.sell_coin(sym_bull, bull_open)
+                    did_buy = portfolio.buy_coin(sym_bear, bear_open)
                     #print("bought ", sym
-                elif(max_output == 0):
-                    portfolio.sell_coin(sym_bear, self.hs.currentHists[sym_bear]['open'][z+1])
-                    did_buy = portfolio.buy_coin(sym_bull, self.hs.currentHists[sym_bull]['open'][z+1])
+                elif(out[0] < -.25):
+                    portfolio.sell_coin(sym_bear, bear_open)
+                    did_buy = portfolio.buy_coin(sym_bull, bull_open)
                 else:
-                    portfolio.sell_coin(sym_bull, self.hs.currentHists[sym_bull]['open'][z+1])
-                    portfolio.sell_coin(sym_bear, self.hs.currentHists[sym_bear]['open'][z+1])
-                end_prices[sym_bull] = self.hs.currentHists[sym_bull]['open'][z+1]
-                end_prices[sym_bear] = self.hs.currentHists[sym_bear]['open'][z+1]
+                    portfolio.sell_coin(sym_bull, bull_open)
+                    portfolio.sell_coin(sym_bear, bear_open)
+                #rng = iter(shuffle(rng))
+                end_prices[sym_bull] = bull_open
+                end_prices[sym_bear] = bear_open
                 bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0]
-                fw.write(str(self.hs.currentHists[sym_bull]['time'][z+1]) + ",")
+                fw.write(str(self.hs.currentHists[s][sym_bull]['time'][z+1]) + ",")
                 fw.write(str(bal_now)+ " \n")
                 ft += bal_now - last_val
                 last_val = bal_now
                 port_hist[x] = ft
             result_val = portfolio.get_total_btc_value(end_prices)
-            print("genome id ", g.key, " : ")
+            print("genome id ", g.key, " genome num ", champ_num, " : ")
             print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
             ft = result_val[0]
             return ft
@@ -203,43 +212,52 @@ class PurpleTrader:
         phenotypes = {}
         buys = 0
         sells = 0
-        pathlib.Path(str(pathlib.Path(__file__).parent.absolute()) + '/trade_hists/binance_per_symbol_new/champ_' + str(champ_num)).mkdir(exist_ok=True)
+        pathlib.Path(str(pathlib.Path(__file__).parent.absolute()) + '/trade_hists/ftx_full/champ_' + str(champ_num)).mkdir(exist_ok=True)
         balances = [] 
-        for x in range(self.num_syms):
-            sym = self.hs.coin_dict[x]
-            portfolio = CryptoFolio(1000.0, self.hs.coin_dict, "USD")
+        sym_bull = "BULL"
+        sym_bear = "BEAR"
+        for s in self.hs.coin_dict:
+            self.epoch_len = self.hs.hist_sizes[s] - (self.hd+1)
+            start_index = self.hs.currentHists[s][sym_bull].index[0]
+            sym = s
+            x = self.hs.coin_dict[sym]
+            portfolio = CryptoFolio(1000.0, {0: "BULL", 1: "BEAR"}, "USD")
             portfolio.target_amount = .25
             last_val = 1000.0
             port_hist = {}
             ft = 0.0
-            with open("./trade_hists/binance_per_symbol_new/champ_" + str(champ_num) + "/" + sym + "_hist.txt", "w") as f:
+            with open("./trade_hists/ftx_full/champ_" + str(champ_num) + "/" + sym + "_hist.txt", "w") as f:
                 f.write('0,1\n')
-                for z_minus in range(0, self.epoch_len - 1):
-                    z = rand_start - z_minus
-                    pos_size = portfolio.ledger[sym]
+                for z_minus in range(start_index, self.epoch_len - 1):
+                    z = z_minus
+                    pos_size = []
                     active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_size, port_hist)
-                    if(z_minus == 0 or (z_minus + 1) % 34 == 0):
+                    if(z_minus == start_index or (z_minus + 1) % 13 == 0):
                         self.reset_substrate(active[0])
                         builder.substrate = self.substrate
                         phenotypes[sym] = builder.create_phenotype_network_nd()
                         network = phenotypes[sym]
-                    network.reset()
+                        network.reset()
                     for n in range(1, self.hd):
                         network.activate([active[self.hd-n]])
                     out = network.activate([active[0]])
-                    out = F.softmax(out[0], dim=0)
-                    #print(out)
-                    max_output = torch.max(out, 0)[1]
-                    end_prices[sym] = self.hs.currentHists[sym]['close'][z]
-                    if(max_output == 2):
-                        portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
-                    if(max_output == 0):
-                        portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
-                    balance = portfolio.get_total_btc_value_no_sell(end_prices)[0]
-                    f.write(str(self.hs.currentHists[sym]['date'][z]) + ",")
-                    f.write(str(balance)+ " \n")
-                    end_prices[sym] = self.hs.currentHists[sym]['close'][z]
+                    bull_open = self.hs.currentHists[s][sym_bull]['open'][z+1]
+                    bear_open = self.hs.currentHists[s][sym_bear]['open'][z+1]
+                    if(out[0] > .25):
+                        portfolio.sell_coin(sym_bull, bull_open)
+                        did_buy = portfolio.buy_coin(sym_bear, bear_open)
+                        #print("bought ", sym
+                    elif(out[0] < -.25):
+                        portfolio.sell_coin(sym_bear, bear_open)
+                        did_buy = portfolio.buy_coin(sym_bull, bull_open)
+                    else:
+                        portfolio.sell_coin(sym_bull, bull_open)
+                        portfolio.sell_coin(sym_bear, bear_open)
+                    end_prices[sym_bull] = bull_open
+                    end_prices[sym_bear] = bear_open
                     bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0]
+                    f.write(str(self.hs.currentHists[s][sym_bull]['time'][z+1]) + ",")
+                    f.write(str(bal_now)+ " \n")
                     ft += bal_now - last_val
                     last_val = bal_now
                     port_hist[x] = ft / last_val
@@ -249,52 +267,7 @@ class PurpleTrader:
             print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
         return np.asarray(balances, dtype=np.float32).mean()
 
-    def evaluate(self, builder, rand_start, g, verbose=False):
-        portfolio_start = 1000.0
-        end_prices = {}
-        phenotypes = {}
-        balances = []
-        buys = 0
-        sells = 0
-        last_val = portfolio_start
-        ft = 0.0
-        for x in range(self.num_syms):
-            portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USD")
-            portfolio.target_amount = .25
-            sym = self.hs.coin_dict[x]
-            for z_minus in range(0, self.epoch_len):
-                z = rand_start - z_minus
-                pos_size = portfolio.ledger[sym]
-                active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_size)
-                #print(active)
-                if(z_minus == 0 or (z_minus + 1) % 8 == 0):
-                    self.reset_substrate(active[0])
-                    builder.substrate = self.substrate
-                    phenotypes[sym] = builder.create_phenotype_network_nd()
-                    network = phenotypes[sym]
-                    network.reset()
-                for n in range(1, self.hd+1):
-                    network.activate([active[self.hd-n]])
-                out = network.activate([active[0]])
-                if(out[0] < -0.5):
-                    portfolio.sell_coin(sym, self.hs.currentHists[sym]['close'][z])
-                    #print("bought ", sym)
-                elif(out[0] > 0.5):
-                    did_buy = portfolio.buy_coin(sym, self.hs.currentHists[sym]['close'][z])
-                #rng = iter(shuffle(rng))
-                end_prices[sym] = self.hs.currentHists[sym]['close'][z]
-                bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0]
-                if bal_now == last_val:
-                    ft += -.01
-                else: 
-                    ft += bal_now - last_val
-                last_val = bal_now
-        print(g.key, " : ")
-        result_val = portfolio.get_total_btc_value(end_prices)
-        print(result_val[0], "buys: ", result_val[1], "sells: ", result_val[2])
-        return ft
-
-    def evaluate_relu(self, builder, sym_index, rand_start, g, verbose=False):
+    def evaluate_single(self, builder, sym_index, rand_start, g, sym, verbose=False):
         portfolio_start = 1000.0
         end_prices = {}
         balances = []
@@ -304,7 +277,7 @@ class PurpleTrader:
         last_val = portfolio_start
         ft = 0.0
         x = sym_index
-        portfolio = CryptoFolio(portfolio_start, self.hs.coin_dict, "USD")
+        portfolio = CryptoFolio(portfolio_start, {0: "BULL", 1: "BEAR"}, "USD")
         portfolio.target_amount = .25
         sym_bull = "BULL"
         sym_bear = "BEAR"
@@ -322,29 +295,88 @@ class PurpleTrader:
             for n in range(1, self.hd):
                 network.activate([active[self.hd-n]])
             out = network.activate([active[0]])
-            out = F.softmax(out[0], dim=0)
-            max_output = torch.max(out, 0)[1]
-            if(max_output == 2):
-                portfolio.sell_coin(sym_bull, self.hs.currentHists[sym_bull]['open'][z+1])
-                did_buy = portfolio.buy_coin(sym_bear, self.hs.currentHists[sym_bear]['open'][z+1])
+            #out = F.softmax(out[0], dim=0)
+            #max_output = torch.max(out, 0)[1]
+            bull_open = self.hs.currentHists[sym][sym_bull]['open'][z+1]
+            bear_open = self.hs.currentHists[sym][sym_bear]['open'][z+1]
+            if(out[0] > .25):
+                portfolio.sell_coin(sym_bull, bull_open)
+                did_buy = portfolio.buy_coin(sym_bear, bear_open)
                 #print("bought ", sym
-            elif(max_output == 0):
-                portfolio.sell_coin(sym_bear, self.hs.currentHists[sym_bear]['open'][z+1])
-                did_buy = portfolio.buy_coin(sym_bull, self.hs.currentHists[sym_bull]['open'][z+1])
+            elif(out[0] < -.25):
+                portfolio.sell_coin(sym_bear, bear_open)
+                did_buy = portfolio.buy_coin(sym_bull, bull_open)
             else:
-                portfolio.sell_coin(sym_bull, self.hs.currentHists[sym_bull]['open'][z+1])
-                portfolio.sell_coin(sym_bear, self.hs.currentHists[sym_bear]['open'][z+1])
-            #rng = iter(shuffle(rng))
-            end_prices[sym_bull] = self.hs.currentHists[sym_bull]['open'][z+1]
-            end_prices[sym_bear] = self.hs.currentHists[sym_bear]['open'][z+1]
+                portfolio.sell_coin(sym_bull, bull_open)
+                portfolio.sell_coin(sym_bear, bear_open)
+            end_prices[sym_bull] = bull_open
+            end_prices[sym_bear] = bear_open
             bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0]
-            ft += bal_now - last_val
+            ft += (bal_now - last_val) / last_val
             last_val = bal_now
             port_hist[z] = ft / last_val
         bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0]
         balances.append(bal_now)
-        print("sym ", "ALT", " end balance: ", bal_now)
-        return bal_now - portfolio_start       
+        print("sym ", sym, " end balance: ", bal_now)
+        return ft
+
+    def evaluate_full(self, builder, sym_index, rand_starts, g, verbose=False):
+        portfolio_start = 1000.0
+        fits = []
+        phenotypes = {}
+        buys = 0
+        sells = 0
+        sym_bull = "BULL"
+        sym_bear = "BEAR"
+        for s in self.hs.coin_dict:
+            ft = 0.0
+            end_prices = {}
+            last_val = portfolio_start
+            rand_start = rand_starts[s]
+            x = self.hs.coin_dict[s]
+            portfolio = CryptoFolio(portfolio_start, {0: "BULL", 1: "BEAR"}, "USD")
+            portfolio.target_amount = .25
+            port_hist = {}
+            for z_minus in range(rand_start, rand_start + self.epoch_len):
+                z = z_minus
+                pos_sizes = (portfolio.ledger[sym_bull], portfolio.ledger[sym_bear])
+                active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_sizes, port_hist)
+                if(z_minus == rand_start or (z_minus + 1) % 13 == 0):
+                    self.reset_substrate(active[0])
+                    builder.substrate = self.substrate
+                    phenotypes[s] = builder.create_phenotype_network_nd()
+                    network = phenotypes[s]
+                    network.reset()
+                for n in range(1, self.hd):
+                    network.activate([active[self.hd-n]])
+                out = network.activate([active[0]])
+                #out = F.softmax(out[0], dim=0)
+                #max_output = torch.max(out, 0)[1]
+                bull_open = self.hs.currentHists[s][sym_bull]['open'][z+1]
+                bear_open = self.hs.currentHists[s][sym_bear]['open'][z+1]
+                if(out[0] > .25):
+                    portfolio.sell_coin(sym_bull, bull_open)
+                    did_buy = portfolio.buy_coin(sym_bear, bear_open)
+                    #print("bought ", sym
+                elif(out[0] < -.25):
+                    portfolio.sell_coin(sym_bear, bear_open)
+                    did_buy = portfolio.buy_coin(sym_bull, bull_open)
+                else:
+                    portfolio.sell_coin(sym_bull, bull_open)
+                    portfolio.sell_coin(sym_bear, bear_open)
+                #rng = iter(shuffle(rng))
+                end_prices[sym_bull] = bull_open
+                end_prices[sym_bear] = bear_open
+                bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0]
+                ft += (bal_now - last_val) / last_val
+                last_val = bal_now
+                port_hist[z] = ft / last_val
+            fits.append(ft)
+        avg_returns = statistics.mean(fits)
+        print("avg pnl", avg_returns)
+        if avg_returns == 0.0:
+            avg_returns = -.1
+        return avg_returns       
 
     def trial_run(self):
         r_start = 0
@@ -375,8 +407,42 @@ class PurpleTrader:
         return
 
     def eval_fitness(self, genomes, config, grad_step=0):
-        self.epoch_len = 144
-        r_start = randint(self.hs.wrapper.start_idx + self.hd, self.hs.hist_full_size - self.epoch_len)
+        self.epoch_len = 255
+        r_start = 0
+        rand_prefix_index = randint(0, len(self.hs.wrapper.prefixes) - 1)
+        sym = self.hs.wrapper.prefixes[rand_prefix_index]
+        sym_idx = self.hs.coin_dict[sym]
+        r_start = randint(self.hs.wrapper.start_idxs[sym] + self.hd, self.hs.hist_sizes[sym] - self.epoch_len)
+        champ_counter = self.gen_count % 10
+        genome_dict = {}
+        champ_key = 0
+        best_g_fit = -10000.0
+        for idx, g in genomes:
+            genome_dict[g.key] = g
+            [cppn] = create_cppn(g, config, self.leaf_names, ["cppn_out"])
+            net_builder = ESNetwork(self.substrate, cppn, self.params)
+            #net = net_builder.create_phenotype_network_nd()
+            train_ft = self.evaluate_single(net_builder, sym_idx, r_start, g, sym)
+            g.fitness = train_ft
+            if(g.fitness > best_g_fit):
+                best_g_fit = g.fitness
+                champ_key = g.key              
+                with open("./champ_data/ftx_full/latest_greatest"+str(champ_counter)+".pkl", 'wb') as output:
+                    pickle.dump(g, output)
+        if grad_step == self.params["grad_steps"]:
+            #self.full_backtest(genome_dict[champ_key])
+            self.gen_count += 1
+            return
+        else:
+            self.execute_back_prop(genome_dict, champ_key, config)
+            grad_step += 1
+            self.eval_fitness(genomes, config, grad_step)
+
+    def eval_fitness_full(self, genomes, config, grad_step=0):
+        self.epoch_len = 55
+        r_starts = {}
+        for s in self.hs.currentHists:
+            r_starts[s] = randint(self.hs.wrapper.start_idxs[s] + self.hd, self.hs.hist_sizes[s] - self.epoch_len)
         champ_counter = self.gen_count % 10
         sym_idx = randint(0,self.num_syms - 1)
         genome_dict = {}
@@ -388,15 +454,13 @@ class PurpleTrader:
             [cppn] = create_cppn(g, config, self.leaf_names, ["cppn_out"])
             net_builder = ESNetwork(self.substrate, cppn, self.params)
             #net = net_builder.create_phenotype_network_nd()
-            train_ft = self.evaluate_relu(net_builder, 0, r_start, g, 0)
+            train_ft = self.evaluate_full(net_builder, 0, r_starts, g, 0)
             g.fitness = train_ft
             if(g.fitness > best_g_fit):
                 best_g_fit = g.fitness
-                champ_key = g.key
-                '''
-                with open("./champ_data/alt_bull_bear/latest_greatest"+str(champ_counter)+".pkl", 'wb') as output:
+                champ_key = g.key              
+                with open("./champ_data/ftx_full/latest_greatest"+str(champ_counter)+".pkl", 'wb') as output:
                     pickle.dump(g, output)
-                '''
         if grad_step == self.params["grad_steps"]:
             self.full_backtest(genome_dict[champ_key])
             self.gen_count += 1
@@ -407,23 +471,22 @@ class PurpleTrader:
             self.eval_fitness(genomes, config, grad_step)
 
     def compare_champs(self):
-        self.epoch_len = self.hs.hist_full_size - (self.hd+1)
-        r_start = self.epoch_len
+        r_start = 0
         champ_fit = 0
-        for ix, f in enumerate(os.listdir("./champ_data/alt_bull_bear")):
+        for ix, f in enumerate(os.listdir("./champ_data/archive")):
             if f != ".DS_Store":
-                champ_file = open("./champ_data/alt_bull_bear/"+f,'rb')
+                champ_file = open("./champ_data/archive/"+f,'rb')
                 g = pickle.load(champ_file)
                 champ_file.close()
                 [cppn] = create_cppn(g, self.config, self.leaf_names, ["cppn_out"])
                 net_builder = ESNetwork(self.substrate, cppn, self.params)
                 #net = net_builder.create_phenotype_network_nd()
-                g.fitness = self.evaluate_champ_one_balance(net_builder, r_start, g, champ_num = ix)
+                g.fitness = self.evaluate_champ(net_builder, r_start, g, champ_num = int(f.split(".")[0][-1]))
         return
 
     def full_backtest(self, genome):
         self.epoch_len = self.hs.hist_full_size - (self.hd+1)
-        r_start = self.hd + 1
+        r_start = self.epoch_len
         [cppn] = create_cppn(genome, self.config, self.leaf_names, ["cppn_out"])
         builder = ESNetwork(self.substrate, cppn, self.params)
         champ_fit = self.evaluate_champ_one_balance(builder, r_start, genome, 11)
@@ -499,7 +562,7 @@ class PurpleTrader:
     def run_validation(self):
         self.validate_fitness()
 
-pt = PurpleTrader(8, 255, 1)
-pt.run_training("")
-#pt.compare_champs()
+pt = PurpleTrader(21, 255, 1)
+#pt.run_training("")
+pt.compare_champs()
 #run_validation()

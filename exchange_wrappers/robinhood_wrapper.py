@@ -45,9 +45,9 @@ class RobinHoodWrapper(object):
             sym_base = sym.split(".")[0]
             df = pd.read_csv("./hist_data/robinhood_train/" +sym)
             df = self.apply_features(df)
-            if("SPXL" == sym):
+            if("SPXL" == sym_base):
                 df_dict["BULL"] = df
-            if("SPXS" == sym):
+            if("SPXS" == sym_base):
                 df_dict["BEAR"] = df
         return df_dict
 
@@ -74,7 +74,20 @@ class RobinHoodWrapper(object):
             coin_and_hist_index += 1
         hist_shaped = pd.Series(hist_shaped)
         return coin_dict, currentHists, hist_shaped, hist_full_size
-    
+
+    def get_matching_dataframes(self, live=False):
+        data = self.load_hist_files(live)
+        new_dict = {}
+        for s in data:
+            if live == False:
+                if len(data[s]["BULL"]) == len(data[s]["BEAR"]) and len(data[s]["BULL"]) > 3000 and s not in ("", "USDT"):
+                    print(s)
+                    new_dict[s] = data[s]
+            else:
+                if len(data[s]["BULL"]) == len(data[s]["BEAR"]) and s not in ("", "USDT"):
+                    new_dict[s] = data[s]
+        return new_dict
+        
     def apply_features(self, df):
         df['std_close'] = df['close_price']/df['high_price']
         df['std_low'] = df['low_price']/df['high_price']
@@ -118,44 +131,30 @@ class RobinHoodWrapper(object):
         df_short.to_csv("./hist_data/robinhood_train/SPXS.txt")
         return 
 
-    def load_train_data(self, restrict_val = 0):
-        fileNames = self.get_train_filenames()
+    def get_train_frames_all_syms(self, restrict_val = 0, feature_columns = ['std_close', 'std_low', 'std_open', 'avg_vol_3', "roc_close_short", "roc_close_mid", "roc_close_long", "roc_close_daily"]):
+        df_dict = self.get_matching_dataframes()
         coin_and_hist_index = 0
-        file_lens = []
-        currentHists = {}
+        currentHists = df_dict
         hist_shaped = {}
         coin_dict = {}
-        vollist = []
-        prefixes = []
-        hist_full_sized = 0
-        for x in range(0, len(fileNames)):
-            df = self.load_df_from_file("./hist_data/robinhood_train/"+fileNames[x])
-            as_array = np.array(df)
-            col_prefix = self.get_file_symbol(fileNames[x])
-            #print(as_array)
-            prefixes.append(col_prefix)
-            currentHists[col_prefix] = df
-            hist_full_sized = len(df)
-            print(len(df))
-        #print(vollist)
-        for s in currentHists:
-            if(hist_full_sized > len(currentHists[s])):
-                print("trimming df")
-                currentHists[s].drop(currentHists[s].tail(hist_full_sized-len(currentHists[s])).index, inplace=True)
-        for ix in range(0,len(prefixes)):
-            #print(prefixes[ix])
-            df = currentHists[prefixes[ix]]
-            df = df[self.feature_list].copy()
-            #norm_df = (df - df.mean()) / (df.max() - df.min())
-            as_array=np.array(df)
-            #print(as_array)
-            hist_shaped[ix] = as_array
-            coin_dict[ix] = prefixes[ix]
+        self.prefixes = []
+        hist_lengths = {}
+        for s in df_dict:
+            self.prefixes.append(s)
+            df_bull = currentHists[s]["BULL"][feature_columns].copy()
+            df_bear = currentHists[s]["BEAR"][feature_columns].copy()
+            self.start_idxs[s] = df_bull.index[0]
+            hist_lengths[s] = len(df_bull)
+            as_array_bull = np.array(df_bull)
+            as_array_bear = np.array(df_bear)
+            hist_shaped[coin_and_hist_index] = as_array_bull
+            coin_dict[s] = coin_and_hist_index
+            coin_and_hist_index += 1
+            hist_shaped[coin_and_hist_index] = as_array_bear
+            coin_and_hist_index += 1
         hist_shaped = pd.Series(hist_shaped)
-        #print(hist_shaped[0][0])
-        #print(hist_shaped[0][1])
-        return coin_dict, currentHists, hist_shaped, hist_full_sized
+        return coin_dict, currentHists, hist_shaped, hist_lengths
 
 rh = RobinHoodWrapper()
-rh.get_spxl_spxs_hist()
+rh.get_train_frames()
 #print(rh.load_train_data()[1]["SPXL"])

@@ -6,7 +6,7 @@ from datetime import date, timedelta, datetime
 import os
 from statistics import mode
 
-class FtxWrapper(object):
+class RhWrapper(object):
 
     base_url = "https://ftx.com/api"
     
@@ -44,7 +44,7 @@ class FtxWrapper(object):
         len_list = {}
         for sym in histFiles:
             sym_base = sym.split("_")[0][:-4]
-            df = pd.read_csv("./hist_data/ftx/" +sym)
+            df = pd.read_csv("./hist_data/robinhood_train/" +sym)
             df = self.apply_features(df)
             if (len(df) < 3000):
                 continue
@@ -63,9 +63,9 @@ class FtxWrapper(object):
                 df_dict[base_sym] = {}
             sym_type = sym.split("_")[0][-4:]
             if live == False:
-                df = pd.read_csv("./hist_data/ftx/"+sym)
+                df = pd.read_csv("./hist_data/robinhood_train/"+sym)
             if live == True:
-                df = pd.read_csv("./live_data/ftx/"+sym)
+                df = pd.read_csv("./live_data/robinhood_train/"+sym)
             df = self.apply_features(df)
             if ("BULL" == sym_type):
                 df_dict[base_sym]["BULL"] = df
@@ -87,23 +87,23 @@ class FtxWrapper(object):
         return new_dict
 
     def apply_features(self, df):
-        df['std_close'] = df['close']/df['high']
-        df['std_low'] = df['low']/df['high']
-        df['std_open'] = df['open']/df['high']
+        df['std_close'] = df['close_price']/df['high_price']
+        df['std_low'] = df['low_price']/df['high_price']
+        df['std_open'] = df['open_price']/df['high_price']
         df['avg_vol_3'] = pd.Series(np.where(df.volume.rolling(34).mean() > df.volume, 1, -1), df.index)
-        df["roc_close_mid"] = df["close"].pct_change(periods=34)
-        df["roc_close_short"] = df["close"].pct_change(periods=13)
-        df["roc_close_daily"] = df["close"].pct_change(periods=1)
-        df["roc_close_long"] = df["close"].pct_change(periods=144)
+        df["roc_close_mid"] = df["close_price"].pct_change(periods=34)
+        df["roc_close_short"] = df["close_price"].pct_change(periods=13)
+        df["roc_close_daily"] = df["close_price"].pct_change(periods=1)
+        df["roc_close_long"] = df["close_price"].pct_change(periods=144)
         df.dropna(inplace=True)
         self.start_idx = df.index[0]
         return df
-
+        
     def load_hist_files(self, live=False):
         if live == False:
-            histFiles = os.listdir(os.path.join(os.path.dirname(__file__), "../hist_data/ftx"))
+            histFiles = os.listdir(os.path.join(os.path.dirname(__file__), "../hist_data/robinhood_train"))
         else:
-            histFiles = os.listdir(os.path.join(os.path.dirname(__file__), "../live_data/ftx"))
+            histFiles = os.listdir(os.path.join(os.path.dirname(__file__), "../live_data/robinhood_train"))
         data = self.load_all_hist_files(histFiles, live)
         return data
         
