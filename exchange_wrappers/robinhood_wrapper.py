@@ -38,15 +38,29 @@ class RobinHoodWrapper(object):
         df = pd.DataFrame().from_csv(file_name)
         return df
     
+    def apply_features(self, df):
+        df['std_close'] = df['close_price']/df['high_price']
+        df['std_low'] = df['low_price']/df['high_price']
+        df['std_open'] = df['open_price']/df['high_price']
+        df['avg_vol_3'] = pd.Series(np.where(df.volume.rolling(34).mean() > df.volume, 1, -1), df.index)
+        df["roc_close_mid"] = df["close_price"].pct_change(periods=34)
+        df["roc_close_short"] = df["close_price"].pct_change(periods=13)
+        df["roc_close_daily"] = df["close_price"].pct_change(periods=1)
+        df["roc_close_long"] = df["close_price"].pct_change(periods=144)
+        df.dropna(inplace=True)
+        self.start_idx = df.index[0]
+        return df
+
     def get_spxl_spxs_hist(self, tf="year"):
         self.api_init()
         df_dict = {}
         results = r.get_historicals("SPXL", span=tf)
         df = pd.DataFrame().from_dict(results)
-        df_dict["SPXL"] = df
+        df_long = df
         results = r.get_historicals("SPXS", span=tf)
         df = pd.DataFrame().from_dict(results)
-        df_dict["SPXS"] = df
+        df_short = df
+        '''
         for x in df_dict:
             frame = df_dict[x]
             frame["close_price"] = pd.to_numeric(frame["close_price"])
@@ -62,6 +76,9 @@ class RobinHoodWrapper(object):
             frame['std_high'] = frame['low_price']/frame['high_price']
             frame = frame.iloc[::-1].reset_index()
             frame.to_csv("./hist_data/robinhood_train/"+x+".txt")
+        '''
+        df_long.to_csv("./hist_data/robinhood_train/SPXL.txt")
+        df_short.to_csv("./hist_data/robinhood_train/SPXS.txt")
         return 
 
     def load_train_data(self, restrict_val = 0):
@@ -91,7 +108,6 @@ class RobinHoodWrapper(object):
         for ix in range(0,len(prefixes)):
             #print(prefixes[ix])
             df = currentHists[prefixes[ix]]
-            df['volume'] = (df['volume'] - df['volume'].mean())/(df['volume'].max() - df['volume'].min())
             df = df[self.feature_list].copy()
             #norm_df = (df - df.mean()) / (df.max() - df.min())
             as_array=np.array(df)

@@ -83,7 +83,6 @@ class FtxWrapper(object):
                     new_dict[s] = data[s]
             else:
                 if len(data[s]["BULL"]) == len(data[s]["BEAR"]) and s not in ("", "USDT"):
-                    print(s)
                     new_dict[s] = data[s]
         return new_dict
 
@@ -151,7 +150,6 @@ class FtxWrapper(object):
     def get_live_frames_all_syms(self, restrict_val = 0, feature_columns = ['std_close', 'std_low', 'std_open', 'avg_vol_3', "roc_close_short", "roc_close_mid", "roc_close_long", "roc_close_daily"]):
         self.get_markets_hist(bar_limit=350, live=True)
         df_dict = self.get_matching_dataframes(live=True)
-        print(df_dict)
         coin_and_hist_index = 0
         currentHists = df_dict
         hist_shaped = {}
@@ -196,3 +194,7 @@ class FtxWrapper(object):
             coin_and_hist_index += 1
         hist_shaped = pd.Series(hist_shaped)
         return coin_dict, currentHists, hist_shaped, hist_lengths
+
+
+wrap = FtxWrapper()
+wrap.get_live_frames_all_syms()

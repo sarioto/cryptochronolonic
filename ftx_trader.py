@@ -191,7 +191,8 @@ class PurpleTrader:
                 end_prices[sym_bull] = bull_open
                 end_prices[sym_bear] = bear_open
                 bal_now = portfolio.get_total_btc_value_no_sell(end_prices)[0]
-                f.write(str(self.hs.currentHists[s][sym_bull]['time'][z]) + ",")
+                last_idx = self.hs.currentHists[s][sym_bull].index[-1]
+                f.write(str(self.hs.currentHists[s][sym_bull]['time'][last_idx]) + ",")
                 f.write(str(bal_now)+ " \n")
                 ft += bal_now - last_val
                 last_val = bal_now
