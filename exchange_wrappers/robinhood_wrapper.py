@@ -37,16 +37,29 @@ class RobinHoodWrapper(object):
     def load_df_from_file(self, file_name):
         df = pd.DataFrame().from_csv(file_name)
         return df
+    
+    def load_hist_files_for_list(self, histFiles):
+        df_dict = {}
+        len_list = {}
+        for sym in histFiles:
+            sym_base = sym.split(".")[0]
+            df = pd.read_csv("./hist_data/robinhood_train/" +sym)
+            df = self.apply_features(df)
+            if("SPXL" == sym):
+                df_dict["BULL"] = df
+            if("SPXS" == sym):
+                df_dict["BEAR"] = df
+        return df_dict
 
-    def load_single_df(self, base_sym):
-        histFiles = os.listdir(os.path.join(os.path.dirname(__file__), "../robinhhood_train/ftx"))
-        syms = [s for s in histFiles if s.split("_")[0][:-4] == base_sym]
+    def load_single_df(self):
+        histFiles = os.listdir(os.path.join(os.path.dirname(__file__), "../hist_data/robinhood_train"))
+        syms = [s for s in histFiles]
         print(syms)
         dfs = self.load_hist_files_for_list(syms)
         return dfs
 
-    def get_train_frames_single_sym(self, restrict_val = 0, feature_columns = ['std_close', 'std_low', 'std_open', 'avg_vol_3', "roc_close_short", "roc_close_mid", "roc_close_long", "roc_close_daily"]):
-        df_dict = self.load_single_df("ALT")
+    def get_train_frames(self, restrict_val = 0, feature_columns = ['std_close', 'std_low', 'std_open', 'avg_vol_3', "roc_close_short", "roc_close_mid", "roc_close_long", "roc_close_daily"]):
+        df_dict = self.load_single_df()
         coin_and_hist_index = 0
         currentHists = df_dict
         hist_shaped = {}
