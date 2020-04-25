@@ -232,7 +232,7 @@ class PurpleTrader:
                     z = z_minus
                     pos_size = []
                     active = self.get_single_symbol_epoch_recurrent_with_position_size(z, x, pos_size, port_hist)
-                    if(z_minus == start_index or (z_minus + 1) % 13 == 0):
+                    if(z_minus == start_index or (z_minus + 1) % 34 == 0):
                         self.reset_substrate(active[0])
                         builder.substrate = self.substrate
                         phenotypes[sym] = builder.create_phenotype_network_nd()

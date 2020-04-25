@@ -48,9 +48,9 @@ class RhWrapper(object):
             df = self.apply_features(df)
             if (len(df) < 3000):
                 continue
-            if("BULL" in sym):
+            if("SPXL" == sym):
                 df_dict["BULL"] = df
-            if("BEAR" in sym):
+            if("SPXS" == sym):
                 df_dict["BEAR"] = df
         return df_dict
 
@@ -78,7 +78,7 @@ class RhWrapper(object):
         new_dict = {}
         for s in data:
             if live == False:
-                if len(data[s]["BULL"]) == len(data[s]["BEAR"]) and len(data[s]["BULL"]) > 3000 and s not in ("", "USDT"):
+                if len(data[s]["BULL"]) == len(data[s]["BEAR"]) and s not in ("", "USDT"):
                     print(s)
                     new_dict[s] = data[s]
             else:
@@ -98,7 +98,7 @@ class RhWrapper(object):
         df.dropna(inplace=True)
         self.start_idx = df.index[0]
         return df
-        
+
     def load_hist_files(self, live=False):
         if live == False:
             histFiles = os.listdir(os.path.join(os.path.dirname(__file__), "../hist_data/robinhood_train"))
