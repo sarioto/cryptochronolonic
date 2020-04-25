@@ -72,12 +72,19 @@ def get_exchange(exchange="binance"):
 def get_genome_performance(g_name):
     hist_files = os.listdir("../trade_hists/ftx_live/" + g_name)
     data_dict = {}
+    first_loop = True
     for f in hist_files:
         if f != ".DS_Store":
             frame = pd.read_csv("../trade_hists/ftx_live/"+ g_name +"/" + f)
+            if first_loop == True:
+                df_avg = frame.copy()
+                first_loop = False
+            else:
+                df_avg["1"] = (df_avg["1"] + frame["1"]) / 2.0
             if (frame["1"][0]) < frame["1"][len(frame) - 1]:
                 print(f, " ", frame["1"][0], frame["1"][len(frame) - 1])
-            data_dict[f] = [list(v.values()) for v in frame.T.to_dict().values()]
+            #data_dict[f] = [list(v.values()) for v in frame.T.to_dict().values()]
+            data_dict["avg"] = [list(v.values()) for v in df_avg.T.to_dict().values()]
     return data_dict
 
 

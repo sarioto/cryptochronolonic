@@ -6,7 +6,7 @@ from functools import partial
 from itertools import product
 # Libs
 import numpy as np
-from exchange_wrappers.ftx_wrapper import FtxWrapper
+from exchange_wrappers.rh_new import RhWrapper
 from new_hist_service import HistWorker
 from crypto_evolution import CryptoFolio
 from random import randint, shuffle
@@ -66,7 +66,7 @@ class PurpleTrader:
     def refresh(self):
         self.in_shapes = []
         self.out_shapes = [(0.0, -1.0, 0.0)]
-        self.hs = HistWorker(FtxWrapper())
+        self.hs = HistWorker(RhWrapper())
         self.hs.get_wrapper_train_frames_all_syms()
         print(self.hs.currentHists.keys())
         hist_lengths = {}
@@ -212,7 +212,7 @@ class PurpleTrader:
         phenotypes = {}
         buys = 0
         sells = 0
-        pathlib.Path(str(pathlib.Path(__file__).parent.absolute()) + '/trade_hists/ftx_full/champ_' + str(champ_num)).mkdir(exist_ok=True)
+        pathlib.Path(str(pathlib.Path(__file__).parent.absolute()) + '/trade_hists/rh_train/champ_' + str(champ_num)).mkdir(exist_ok=True)
         balances = [] 
         sym_bull = "BULL"
         sym_bear = "BEAR"
@@ -226,7 +226,7 @@ class PurpleTrader:
             last_val = 1000.0
             port_hist = {}
             ft = 0.0
-            with open("./trade_hists/ftx_full/champ_" + str(champ_num) + "/" + sym + "_hist.txt", "w") as f:
+            with open("./trade_hists/rh_train/champ_" + str(champ_num) + "/" + sym + "_hist.txt", "w") as f:
                 f.write('0,1\n')
                 for z_minus in range(start_index, self.epoch_len - 1):
                     z = z_minus
