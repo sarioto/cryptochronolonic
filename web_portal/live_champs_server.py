@@ -35,6 +35,10 @@ def high_chart():
 def high_chart_single():
     return render_template("hc_single.html")
 
+@app.route("/bootstrap_sample")
+def bootstrap_sample():
+    return render_template("bstrap_template.html")
+
 @app.route("/trade_hist")
 def get_trade_hist(request):
     frame = pd.read_csv('./live_hist/latest_hist')
@@ -42,7 +46,11 @@ def get_trade_hist(request):
 
 @app.route("/trade_hist/<genome>/all")
 def get_all_trade_hist_genome(genome):
-    return jsonify(get_genome_performance(genome))
+    return jsonify(get_genome_performance_backtest(genome))
+
+@app.route("/trade_hist_live/<genome>/all")
+def get_all_trade_hist_genome(genome):
+    return jsonify(get_genome_performance_live(genome))
 
 
 @app.route("/test_single_portfolio")
@@ -65,37 +73,48 @@ def get_exchange(exchange="binance"):
     hist_files = os.listdir("../trade_hists/binance/")
     hist_data = []
     return hist_files
-    
 
+def get_genome_performance_backtest(g_name):
+    hist_files = os.listdir("../trade_hists/ftx_full/" + g_name)
+    data_dict = {}
+    first_loop = True
+    total_balances = 0
+    for f in hist_files:
+        if f != ".DS_Store":
+            total_balances += 1
+            frame = pd.read_csv("../trade_hists/ftx_full/"+ g_name +"/" + f)
+            if first_loop == True:
+                df_avg = frame.copy()
+                first_loop = False
+            else:
+                df_avg["1"] = (df_avg["1"] + frame["1"])
+            if (frame["1"][0]) < frame["1"][len(frame) - 1]:
+                print(f, " ", frame["1"][0], frame["1"][len(frame) - 1])
+            #data_dict[f] = [list(v.values()) for v in frame.T.to_dict().values()]
+    df_avg["1"] = df_avg["1"] / total_balances
+    data_dict["total"] = [list(v.values()) for v in df_avg.T.to_dict().values()]
+    return data_dict
 
-
-def get_genome_performance(g_name):
+def get_genome_performance_live(g_name):
     hist_files = os.listdir("../trade_hists/ftx_live/" + g_name)
     data_dict = {}
     first_loop = True
+    total_balances = 0
     for f in hist_files:
         if f != ".DS_Store":
+            total_balances += 1
             frame = pd.read_csv("../trade_hists/ftx_live/"+ g_name +"/" + f)
             if first_loop == True:
                 df_avg = frame.copy()
                 first_loop = False
             else:
-                df_avg["1"] = (df_avg["1"] + frame["1"]) / 2.0
+                df_avg["1"] = (df_avg["1"] + frame["1"])
             if (frame["1"][0]) < frame["1"][len(frame) - 1]:
                 print(f, " ", frame["1"][0], frame["1"][len(frame) - 1])
             #data_dict[f] = [list(v.values()) for v in frame.T.to_dict().values()]
-            data_dict["avg"] = [list(v.values()) for v in df_avg.T.to_dict().values()]
+    df_avg["1"] = df_avg["1"] / total_balances
+    data_dict["total"] = [list(v.values()) for v in df_avg.T.to_dict().values()]
     return data_dict
-
-
-'''def get_genome_performance(g_name):
-    hist_files = os.listdir("../trade_hists/binance_per_symbol/" + g_name)
-    data_dict = {}
-    for f in hist_files:
-        frame = pd.read_csv("../trade_hists/binance_per_symbol/"+ g_name +"/" + f)
-        data_dict[f] = [list(v.values()) for v in frame.T.to_dict().values()]
-    return data_dict'''
-
 
 # If run as script.
 

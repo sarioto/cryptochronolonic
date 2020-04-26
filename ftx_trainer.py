@@ -473,9 +473,9 @@ class PurpleTrader:
     def compare_champs(self):
         r_start = 0
         champ_fit = 0
-        for ix, f in enumerate(os.listdir("./champ_data/ftx_full")):
+        for ix, f in enumerate(os.listdir("./champ_data/archive")):
             if f != ".DS_Store":
-                champ_file = open("./champ_data/ftx_full/"+f,'rb')
+                champ_file = open("./champ_data/archive/"+f,'rb')
                 g = pickle.load(champ_file)
                 champ_file.close()
                 [cppn] = create_cppn(g, self.config, self.leaf_names, ["cppn_out"])
@@ -507,6 +507,13 @@ class PurpleTrader:
                         pickle.dump(genome, output)
                     return
         return
+
+    def full_backtest_single_genome(self, genome, champ_num = 11):
+        r_start = self.self.hd
+        [cppn] = create_cppn(genome, self.config, self.leaf_names, ["cppn_out"])
+        builder = ESNetwork(self.substrate, cppn, self.params)
+        champ_fit = self.evaluate_champ_one_balance(builder, r_start, genome, champ_num)
+        return champ_fit
 
     def validate_fitness(self):
         config = self.config
@@ -562,7 +569,7 @@ class PurpleTrader:
     def run_validation(self):
         self.validate_fitness()
 
-pt = PurpleTrader(21, 255, 1)
-pt.run_training("")
-#pt.compare_champs()
+pt = PurpleTrader(8, 255, 1)
+#pt.run_training("")
+pt.compare_champs()
 #run_validation()

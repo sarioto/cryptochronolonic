@@ -58,10 +58,11 @@ class RhWrapper(object):
         df_dict = {}
         len_list = {}
         for sym in hist_list:
-            base_sym = sym.split("_")[0][:-4]
+            print(sym)
+            base_sym = sym.split("_")[0]
             if base_sym not in df_dict.keys():
                 df_dict[base_sym] = {}
-            sym_type = sym.split("_")[0][-4:]
+            sym_type = sym.split("_")[-1].split(".")[0]
             if live == False:
                 df = pd.read_csv("./hist_data/robinhood_train/"+sym)
             if live == True:
@@ -71,18 +72,17 @@ class RhWrapper(object):
                 df_dict[base_sym]["BULL"] = df
             if ("BEAR" == sym_type):
                 df_dict[base_sym]["BEAR"] = df
+        print(df_dict)
         return df_dict
 
     def get_matching_dataframes(self, live=False):
         data = self.load_hist_files(live)
+        print(data)
         new_dict = {}
         for s in data:
             if live == False:
                 if len(data[s]["BULL"]) == len(data[s]["BEAR"]) and s not in ("", "USDT"):
                     print(s)
-                    new_dict[s] = data[s]
-            else:
-                if len(data[s]["BULL"]) == len(data[s]["BEAR"]) and s not in ("", "USDT"):
                     new_dict[s] = data[s]
         return new_dict
 
@@ -103,7 +103,7 @@ class RhWrapper(object):
         if live == False:
             histFiles = os.listdir(os.path.join(os.path.dirname(__file__), "../hist_data/robinhood_train"))
         else:
-            histFiles = os.listdir(os.path.join(os.path.dirname(__file__), "../live_data/robinhood_train"))
+            histFiles = os.listdir(os.path.join(os.path.dirname(__file__), "../live_data/robinhood_live"))
         data = self.load_all_hist_files(histFiles, live)
         return data
         
