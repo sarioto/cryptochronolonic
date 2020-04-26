@@ -44,12 +44,12 @@ def get_trade_hist(request):
     frame = pd.read_csv('./live_hist/latest_hist')
     return frame.to_json()
 
-@app.route("/trade_hist/<genome>/all")
+@app.route("/trade_hist_all/<genome>/all")
 def get_all_trade_hist_genome(genome):
     return jsonify(get_genome_performance_backtest(genome))
 
-@app.route("/trade_hist_live/<genome>/all")
-def get_all_trade_hist_genome(genome):
+@app.route("/trade_hist_avg/<genome>/all")
+def get_avg_trade_hist_genome(genome):
     return jsonify(get_genome_performance_live(genome))
 
 
