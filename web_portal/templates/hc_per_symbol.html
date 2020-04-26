@@ -111,6 +111,7 @@ Highcharts.getJSON(
 function get_data(genome_name)
 {
     chart_type = get_chart_type();
+    console.log(chart_type);
     Highcharts.getJSON(
     'http://127.0.0.1:5000/trade_hist_'+chart_type+'/'+genome_name+'/all',
     crypto_success

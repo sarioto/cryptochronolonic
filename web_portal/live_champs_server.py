@@ -92,6 +92,7 @@ def get_genome_performance_backtest(g_name):
                 print(f, " ", frame["1"][0], frame["1"][len(frame) - 1])
             #data_dict[f] = [list(v.values()) for v in frame.T.to_dict().values()]
     df_avg["1"] = df_avg["1"] / total_balances
+    print(df_avg.head())
     data_dict["total"] = [list(v.values()) for v in df_avg.T.to_dict().values()]
     return data_dict
 
