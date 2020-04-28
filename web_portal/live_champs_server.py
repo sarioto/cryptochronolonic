@@ -44,13 +44,13 @@ def get_trade_hist(request):
     frame = pd.read_csv('./live_hist/latest_hist')
     return frame.to_json()
 
-@app.route("/trade_hist_all/<genome>/all")
-def get_all_trade_hist_genome(genome):
-    return jsonify(get_genome_performance_backtest(genome))
+@app.route("/trade_hist_all/<genome>/<data_set>")
+def get_all_trade_hist_genome(genome, data_set):
+    return jsonify(get_genome_performance_backtest(genome, data_set))
 
-@app.route("/trade_hist_avg/<genome>/all")
-def get_avg_trade_hist_genome(genome):
-    return jsonify(get_genome_performance_live(genome))
+@app.route("/trade_hist_avg/<genome>/<data_set>")
+def get_avg_trade_hist_genome(genome, data_set):
+    return jsonify(get_genome_performance_live(genome, data_set))
 
 
 @app.route("/test_single_portfolio")
@@ -79,7 +79,6 @@ def get_genome_performance_backtest(g_name, data_set):
     data_dict = {}
     for f in hist_files:
         if f != ".DS_Store":
-            total_balances += 1
             frame = pd.read_csv("../trade_hists/ftx_" + data_set + "/" + g_name +"/" + f)
             if (frame["1"][0]) < frame["1"][len(frame) - 1]:
                 print(f, " ", frame["1"][0], frame["1"][len(frame) - 1])

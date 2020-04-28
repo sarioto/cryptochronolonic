@@ -26,9 +26,9 @@
   </select>
   </div>
   <div class="col-sm">
-    <select id = "chart_type" name="chart_type">
+    <select id = "data_set" name="chart_type">
       <option value="live">live data</option>
-      <option value="historical">historical data</option>
+      <option value="full">historical data</option>
   </select>
   </div>
 </div>
@@ -117,9 +117,10 @@ Highcharts.getJSON(
 function get_data(genome_name)
 {
     chart_type = get_chart_type();
+    data_set = $("#data_set option:selected").val();
     console.log(chart_type);
     Highcharts.getJSON(
-    'http://127.0.0.1:5000/trade_hist_'+chart_type+'/'+genome_name+'/all',
+    'http://127.0.0.1:5000/trade_hist_'+chart_type+'/'+genome_name+'/' + data_set,
     crypto_success
     );
 }
