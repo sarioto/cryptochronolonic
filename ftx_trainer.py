@@ -81,6 +81,7 @@ class PurpleTrader:
             self.in_shapes.append((0.0+(sign*.01*ix2), 0.0-(sign*.01*ix2), 0.0))
         self.substrate = Substrate(self.in_shapes, self.out_shapes)
         self.set_leaf_names()
+        self.set_validation_champs()
 
     # informing the substrate
     def reset_substrate(self, input_row):
@@ -387,8 +388,8 @@ class PurpleTrader:
         fitness = self.evaluate(net, network, r_start)
         return fitness
 
-    def execute_back_prop(self, genome_dict, champ_key, config):
-        [cppn] = create_cppn(genome_dict[champ_key], config, self.leaf_names, ['cppn_out'])
+    def execute_back_prop(self, genome_dict, config):
+        [cppn] = create_cppn(self.overall_champ, config, self.leaf_names, ['cppn_out'])
         net_builder = ESNetwork(Substrate(self.in_shapes, self.out_shapes), cppn, self.params)
         champ_output = net_builder.safe_baseline(False)
         for key in genome_dict:
@@ -427,14 +428,12 @@ class PurpleTrader:
             if(g.fitness > best_g_fit):
                 best_g_fit = g.fitness
                 champ_key = g.key              
-                with open("./champ_data/ftx_full/latest_greatest"+str(champ_counter)+".pkl", 'wb') as output:
-                    pickle.dump(g, output)
         if grad_step == self.params["grad_steps"]:
-            #self.full_backtest(genome_dict[champ_key])
+            self.run_validation(genome_dict[champ_key])
             self.gen_count += 1
             return
         else:
-            self.execute_back_prop(genome_dict, champ_key, config)
+            self.execute_back_prop(genome_dict, config)
             grad_step += 1
             self.eval_fitness(genomes, config, grad_step)
 
@@ -462,7 +461,6 @@ class PurpleTrader:
                 with open("./champ_data/ftx_full/latest_greatest"+str(champ_counter)+".pkl", 'wb') as output:
                     pickle.dump(g, output)
         if grad_step == self.params["grad_steps"]:
-            self.full_backtest(genome_dict[champ_key])
             self.gen_count += 1
             return
         else:
@@ -484,32 +482,46 @@ class PurpleTrader:
                 g.fitness = self.evaluate_champ(net_builder, r_start, g, champ_num = int(f.split(".")[0][-1]))
         return
 
-    def full_backtest(self, genome):
-        self.epoch_len = self.hs.hist_full_size - (self.hd+1)
-        r_start = self.epoch_len
-        [cppn] = create_cppn(genome, self.config, self.leaf_names, ["cppn_out"])
-        builder = ESNetwork(self.substrate, cppn, self.params)
-        champ_fit = self.evaluate_champ_one_balance(builder, r_start, genome, 11)
-        for ix, f in enumerate(os.listdir("./champ_data/alt_bull_bear")):
-            if f != ".DS_Store":
-                champ_file = open("./champ_data/alt_bull_bear/"+f,'rb')
-                g = pickle.load(champ_file)
-                champ_file.close()
-                if g.key not in self.current_champs.keys():
-                    [cppn] = create_cppn(g, self.config, self.leaf_names, ["cppn_out"])
-                    net_builder = ESNetwork(self.substrate, cppn, self.params)
-                    g.fitness = self.evaluate_champ_one_balance(net_builder, r_start, g, champ_num = ix)
-                    self.current_champs[g.key] = g.fitness
-                if (self.current_champs[g.key] < champ_fit):
-                    del self.current_champs[g.key]
-                    self.current_champs[genome.key] = champ_fit
-                    with open("./champ_data/alt_bull_bear/" + f, 'wb') as output:
+    def run_validation(self, genome):
+        new_genome_score = self.full_backtest_single_genome(genome)
+        if len(self.current_champs) > 0:
+            for g_key in self.current_champs:
+                if new_genome_score > self.current_champs[g_key]["score"]:
+                    self.current_champs[genome.key] = {
+                        "genome": genome,
+                        "score": new_genome_score,
+                        "filename": self.current_champs[g_key]["filename"]
+                    }
+                    if new_genome_score > self.top_champ_fitness:
+                        self.top_champ_fitness = new_genome_score
+                        self.overall_champ = genome
+                    with open("./champ_data/ftx_full/"+self.current_champs[genome.key]["filename"], 'wb') as output:
                         pickle.dump(genome, output)
+                    del self.current_champs[g_key]
                     return
         return
 
+    def set_validation_champs(self):
+        champ_files = os.listdir("./champ_data/ftx_full")
+        if len(champ_files) > 0:
+            for ix, f in enumerate(champ_files):
+                if f != ".DS_Store":
+                    champ_file = open("./champ_data/ftx_full/"+f,'rb')
+                    g = pickle.load(champ_file)
+                    champ_file.close()
+                    validation_fitness = self.full_backtest_single_genome(g, int(f.split(".")[0][-1]))
+                    self.current_champs[g.key] = {
+                        "genome": g,
+                        "score": validation_fitness,
+                        "filename": f
+                    }
+                    if validation_fitness > self.top_champ_fitness:
+                        self.top_champ_fitness = validation_fitness
+                        self.overall_champ = g
+        return
+
     def full_backtest_single_genome(self, genome, champ_num = 11):
-        r_start = self.self.hd
+        r_start = self.hd
         [cppn] = create_cppn(genome, self.config, self.leaf_names, ["cppn_out"])
         builder = ESNetwork(self.substrate, cppn, self.params)
         champ_fit = self.evaluate_champ_one_balance(builder, r_start, genome, champ_num)
